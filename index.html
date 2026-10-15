@@ -2475,10 +2475,18 @@ function doSave(value) {
     }
   }
   var delSched = $("hdelBox").style.display !== "none" && $("hdel").checked;
+  // ⚡ 칸 비우기: 지금 값은 폰에 이미 있으니 확인을 폰에서 바로 묻고 서버는 한 번만 부름 (예전엔 확인 받으러 서버를 한 번 더 왕복)
+  var overwrite = H.confirm;
+  if (value === "__CLEAR__" && !overwrite) {
+    var curv = "";
+    try { curv = String(H.meta.grid.rows[name].v[+date.slice(8, 10) - 1] || "").trim(); } catch (ec) {}
+    if (curv && !/^(일|토)$/.test(curv) && !window.confirm(name + " " + date.slice(5).replace("-", "/") + "의 '" + curv + "' 값을 비울까요?")) return;
+    overwrite = true;
+  }
   H.busy = true;
   $("hsave").disabled = true; $("hclr").disabled = true;
   $("hsave").textContent = "저장 중…";
-  callEdit("saveHours", [name, date, value, H.confirm, note, leave, delSched])
+  callEdit("saveHours", [name, date, value, overwrite, note, leave, delSched])
     .then(function (r) {
       H.busy = false;
       $("hsave").disabled = false; $("hclr").disabled = false;
@@ -2545,7 +2553,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-15-2";
+var APP_VER = "2026-10-15-3";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
