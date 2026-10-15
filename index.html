@@ -537,7 +537,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <script>
 /* ★ 실행 환경 (본 앱 index.html / 테스트 test.html 는 이 3줄만 달라요) */
 var IS_TEST = false;   // 테스트 화면이면 true (위쪽에 🧪 테스트 표시, 저장 공간 따로 씀)
-var API_URL = "https://script.google.com/macros/s/AKfycbwsWtkwFYEiuIoelB1i3yYq0CsFk0UckM3GVTGrHHH7FK0Loc7j1DKOKkda215wjbUL/exec";
+var API_URL = "https://script.google.com/macros/s/AKfycbz3mrhV5Q8qQLcnO1GDNho-u1DfsDCnyHkfcgonBl6_g7vSi-55_-JkJhZ1c6cQO-WN/exec";
 var SP = IS_TEST ? "ta_" : "a_";   // B팀 앱과 같은 github.io 주소라 저장 공간이 겹침 → 앞에 a_ 붙여서 PIN·캐시 분리
 var MAX_FAILS = 3;   // PIN 연속 오입력 허용 횟수
 var LOCK_MIN = 10;   // 초과 시 잠금 시간(분)
@@ -2553,7 +2553,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-15-3";
+var APP_VER = "2026-10-15-4";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
