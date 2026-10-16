@@ -146,6 +146,8 @@ main,#hours,#upload,#leave,#stats,#sched,#srch{padding:12px 16px 40px;display:gr
 .card.empty .cnt{color:var(--sub);font-size:15px;font-weight:600}
 ul{list-style:none;margin:8px 0 0;padding:0}
 li{padding:8px 0;border-top:1px solid var(--line);font-size:14px;line-height:1.5}
+li.go{cursor:pointer}
+li.go:active{background:rgba(47,111,237,.07)}
 li:first-child{border-top:0}
 .t{color:var(--sub);font-size:12px;margin-left:6px}
 .own{font-weight:700;margin-left:6px}
@@ -927,6 +929,7 @@ function render() {
         if (it.loc) li.appendChild(locEl(it.loc));
         else if (it.noLoc) li.appendChild(el("span", "noloc", "📍 자리 정보 없음"));
         if (it.unassigned) li.appendChild(el("span", "tmtag u unas", "▲미지정"));
+        eqLink(li, it.n);
         ul.appendChild(li);
       });
       card.appendChild(ul);
@@ -1030,6 +1033,7 @@ function schedDayCard(d, today) {
     if (it.t) li.appendChild(el("span", "t", it.t));
     if (it.loc) li.appendChild(locEl(it.loc));
     else if (it.noLoc) li.appendChild(el("span", "nl", "📍 자리 미배정"));
+    eqLink(li, it.n);
     ul.appendChild(li);
   });
   card.appendChild(ul);
@@ -1685,7 +1689,7 @@ for (var ti = 0; ti < 7; ti++) (function (k) { $("t" + k).onclick = function () 
  * 장비 목록은 🔍를 처음 눌렀을 때 한 번만 받아서 폰에 저장 (서버가 10분마다 미리 만들어 둠)
  * → 글자를 칠 때마다 폰 안에서 바로 찾음 (서버 요청 없음, 평소 화면 속도 영향 없음)
  */
-var SR = { open: false, idx: null, loading: false, at: 0, sel: -1, err: "" };
+var SR = { open: false, idx: null, loading: false, at: 0, sel: -1, err: "", want: "" };
 var SECTIONS = ["main", "upload", "hours", "leave", "stats", "sched"];
 
 function normQ(s) { return String(s || "").toUpperCase().replace(/[\s\-_#.]/g, ""); }
@@ -1714,14 +1718,15 @@ function loadEquipIndex(force) {
   return SR.loading;
 }
 
-function openSearch() {
-  SR.open = true; SR.sel = -1;
+function openSearch(noFocus) {
+  SR.open = true; SR.sel = -1; SR.want = "";
+  $("sq").value = "";   // 🔍 누를 때마다 빈 검색창으로 시작
   $("sbar").style.display = "flex";
   SECTIONS.forEach(function (id) { $(id).style.display = "none"; });
   $("srch").style.display = "grid";
   loadEquipIndex(false);
   renderSearch();
-  setTimeout(function () { try { $("sq").focus(); } catch (e) {} }, 50);
+  if (!noFocus) setTimeout(function () { try { $("sq").focus(); } catch (e) {} }, 50);
 }
 
 function closeSearch(silent) {
@@ -1733,7 +1738,20 @@ function closeSearch(silent) {
   if (!silent) setTab(cur);
 }
 
-$("srchbtn").onclick = function () { if (SR.open) closeSearch(); else openSearch(); };
+$("srchbtn").onclick = function () { openSearch(); window.scrollTo(0, 0); };   // 열려 있어도 초기화 (닫기는 '닫기' 버튼)
+
+// 📋 금일·명일·입고 일정 목록에서 장비를 누르면 → 그 장비 일정(검색 상세)
+function openEquip(name) {
+  openSearch(true);   // 키보드 안 올라오게
+  $("sq").value = name; SR.want = name;
+  try { $("sq").blur(); } catch (e) {}
+  renderSearch(); window.scrollTo(0, 0);
+}
+function eqLink(li, name) {
+  if (!name) return;
+  li.className = (li.className ? li.className + " " : "") + "go";
+  li.onclick = function () { openEquip(name); };
+}
 $("sclose").onclick = function () { closeSearch(); };
 $("sq").oninput = function () { SR.sel = -1; renderSearch(); };
 $("sq").onkeydown = function (e) { if (e.key === "Enter") { try { $("sq").blur(); } catch (x) {} } };
@@ -1805,6 +1823,10 @@ function renderSearch() {
 
   if (!hits.length) { box.appendChild(el("div", "msg", "'" + $("sq").value.trim() + "' 장비를 찾지 못했어요.")); return; }
   if (SR.sel < 0 && hits.length === 1) SR.sel = hits[0].i;
+  if (SR.sel < 0 && SR.want) {   // 목록에서 누른 장비는 이름이 똑같은 것으로 바로 상세
+    for (var wi = 0; wi < idx.rows.length; wi++) if (idx.rows[wi][0] === SR.want) { SR.sel = wi; break; }
+  }
+  if (SR.sel >= 0) SR.want = "";
 
   if (SR.sel >= 0) { renderEquipDetail(box, idx.rows[SR.sel], idx.stages, today, hits.length > 1); return; }
 
@@ -2553,7 +2575,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-15-4";
+var APP_VER = "2026-10-16-1";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
