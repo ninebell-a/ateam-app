@@ -8,6 +8,7 @@
 <meta name="apple-mobile-web-app-title" content="제조1-A">
 <meta name="theme-color" content="#2f6fed">
 <link rel="apple-touch-icon" href="icon.png">
+<link rel="manifest" href="manifest.json">
 <link rel="icon" type="image/png" href="icon.png">
 <title>제조1-A</title>
 <style>
@@ -1689,7 +1690,7 @@ for (var ti = 0; ti < 7; ti++) (function (k) { $("t" + k).onclick = function () 
  * 장비 목록은 🔍를 처음 눌렀을 때 한 번만 받아서 폰에 저장 (서버가 10분마다 미리 만들어 둠)
  * → 글자를 칠 때마다 폰 안에서 바로 찾음 (서버 요청 없음, 평소 화면 속도 영향 없음)
  */
-var SR = { open: false, idx: null, loading: false, at: 0, sel: -1, err: "", want: "" };
+var SR = { open: false, idx: null, loading: false, at: 0, sel: -1, err: "", want: "", backY: -1 };
 var SECTIONS = ["main", "upload", "hours", "leave", "stats", "sched"];
 
 function normQ(s) { return String(s || "").toUpperCase().replace(/[\s\-_#.]/g, ""); }
@@ -1719,7 +1720,7 @@ function loadEquipIndex(force) {
 }
 
 function openSearch(noFocus) {
-  SR.open = true; SR.sel = -1; SR.want = "";
+  SR.open = true; SR.sel = -1; SR.want = ""; SR.backY = -1;
   $("sq").value = "";   // 🔍 누를 때마다 빈 검색창으로 시작
   $("sbar").style.display = "flex";
   SECTIONS.forEach(function (id) { $(id).style.display = "none"; });
@@ -1736,13 +1737,21 @@ function closeSearch(silent) {
   $("srch").innerHTML = "";
   try { $("sq").blur(); } catch (e) {}
   if (!silent) setTab(cur);
+  if (!silent && SR.backY >= 0) {   // 목록에서 장비 눌러 들어왔으면 보던 위치 그대로
+    var y = SR.backY;
+    window.scrollTo(0, y);
+    requestAnimationFrame(function () { window.scrollTo(0, y); });
+  }
+  SR.backY = -1;
 }
 
 $("srchbtn").onclick = function () { openSearch(); window.scrollTo(0, 0); };   // 열려 있어도 초기화 (닫기는 '닫기' 버튼)
 
 // 📋 금일·명일·입고 일정 목록에서 장비를 누르면 → 그 장비 일정(검색 상세)
 function openEquip(name) {
+  var y = window.scrollY || 0;   // 닫으면 보던 위치로 돌아가게 기억
   openSearch(true);   // 키보드 안 올라오게
+  SR.backY = y;
   $("sq").value = name; SR.want = name;
   try { $("sq").blur(); } catch (e) {}
   renderSearch(); window.scrollTo(0, 0);
@@ -2575,7 +2584,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-16-1";
+var APP_VER = "2026-10-16-3";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
