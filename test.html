@@ -226,6 +226,7 @@ li:first-child{border-top:0}
 .dlc .em{color:var(--warn);font-size:12px;margin-top:6px;white-space:pre-line;word-break:keep-all}
 #nmchips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #nmchips .chip.devc{border-style:dashed;color:var(--sub);font-weight:600}
+.nmdev{justify-self:end;border:0;background:none;color:var(--sub);font-size:12px;padding:0;font-family:inherit;opacity:.7}
 #nmchips .chip.devc.on{color:#fff;border-style:solid}
 .unl{display:grid;gap:6px}
 .unl .lk{border:0;background:none;color:var(--sub);font-size:12px;text-decoration:underline;font-family:inherit;justify-self:start;padding:0}
@@ -702,6 +703,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
     <p id="nmdesc">처음 한 번만 선택해요. 선택하면 이 폰에 <b style="color:var(--accent)">고정</b>되고, 바꾸려면 관리자에게 요청해야 해요.</p>
     <div class="chips" id="nmchips"><span class="hint">이름 불러오는 중…</span></div>
     <p class="sub" id="nmmsg"></p>
+    <button type="button" id="nmdev" class="nmdev">🛠 개발자</button>
     <div class="ob" id="nmob" style="grid-template-columns:1fr"><button id="nmno" type="button" style="display:none">취소</button><button id="nmgo" type="button" class="go" style="background:var(--accent);border-color:var(--accent)" disabled>이 이름으로 정하기</button></div>
   </div>
 </div>
@@ -2903,7 +2905,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-18-3";
+var APP_VER = "2026-10-19-1";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -2953,7 +2955,7 @@ var NM = { pick: "", confirm: false };
 function nmChips(names) {
   var b = $("nmchips"); b.innerHTML = "";
   names = (names || []).slice();
-  if (names.indexOf(DEV_NAME) < 0) names.push(DEV_NAME);   // (A팀) 개발자는 명단에 없어서 맨 끝에 따로
+  if (NM.change && DV.pin && names.indexOf(DEV_NAME) < 0) names.push(DEV_NAME);   // (A팀) 개발자 이름은 개발자 PIN 확인 뒤에만 보임
   names.forEach(function (n) {
     var c = el("button", "chip" + (n === NM.pick ? " on" : "") + (n === DEV_NAME ? " devc" : ""), n === DEV_NAME ? "🛠 " + n + " (개발자)" : n); c.type = "button";
     c.onclick = function () { NM.pick = n; NM.confirm = false; $("nmgo").disabled = false; $("nmgo").textContent = NM.change ? "이 이름으로 바꾸기" : "이 이름으로 정하기"; $("nmmsg").textContent = ""; nmChips(names); };
@@ -2976,6 +2978,7 @@ function nmMode(change) {
     d.appendChild(document.createTextNode("되고, 바꾸려면 관리자에게 요청해야 해요."));
   }
   $("nmno").style.display = change ? "" : "none";
+  $("nmdev").style.display = change ? "none" : "";
   $("nmob").style.gridTemplateColumns = change ? "1fr 1.6fr" : "1fr";
 }
 // 🔒 관리자 PIN 확인 후 이름 바꾸기 (메뉴 → 내 이름, 알림 설정 → 이름 바꾸기)
@@ -2989,6 +2992,8 @@ function openNameChange() {
   $("nmov").className = "ov on";
 }
 $("nmno").onclick = function () { $("nmov").className = "ov"; nmMode(false); };
+// 🛠 개발자: 개발자 PIN 확인 → 이 폰 이름을 개발자로 (다른 사람 화면엔 개발자 이름이 안 나옴)
+$("nmdev").onclick = function () { $("nmov").className = "ov"; openAdminGate("devname"); };
 
 function nameAsk() {
   if (nameDone()) return;   // 이미 직접 고른 사람만 통과 (예전에 알림 켠 사람도 한 번은 다시 고름)
@@ -3249,6 +3254,7 @@ function noticeBtn() {
 function ntChips() {
   var f = $("ntfrom"); f.innerHTML = "";
   NOTICE_ADMINS.forEach(function (n) {
+    if (n === DEV_NAME && myName() !== DEV_NAME) return;   // 개발자 이름은 다른 사람 화면에 안 보임
     var c = el("button", "chip" + (n === NT.from ? " on" : ""), n); c.type = "button";
     c.onclick = function () { NT.from = n; ntChips(); ntPreview(); };
     f.appendChild(c);
@@ -3317,9 +3323,9 @@ function adminUI() {
 function isOther(name) { return !!(name && myName() && name !== myName()); }
 function leaveLocked() { return isOther($("hname").value) && !adminOn(); }
 function openAdminGate(next) {
-  NT.next = next === "dev" ? "dev" : next === "mode" ? "mode" : "notice";
+  NT.next = next === "dev" || next === "devname" || next === "mode" ? next : "notice";
   if (NT.next === "notice" && adminOn()) { NT.pin = sget("admPin"); openNotice(); mnBackShow("ntov"); return; }   // 관리자 모드면 PIN 생략
-  var dev = NT.next === "dev";
+  var dev = NT.next === "dev" || NT.next === "devname";
   $("apttl").textContent = dev ? "🛠 개발자 PIN" : "🔒 관리자 PIN";
   $("apdesc").textContent = dev ? "개발자 전용 메뉴예요." : NT.next === "mode" ? "관리자 모드는 오늘 자정까지 유지돼요.\n(다른 사람 연차류·칸 비우기 · 공지 보내기 PIN 생략)" : "공지 보내기는 관리자만 할 수 있어요.";
   $("apdesc").style.whiteSpace = "pre-line";
@@ -3331,19 +3337,29 @@ function openAdminGate(next) {
   setTimeout(function () { try { $("appin").focus(); } catch (e) {} }, 200);
 }
 function closeAdminGate() { $("apov").className = "ov"; }
-$("apno").onclick = closeAdminGate;
+$("apno").onclick = function () { var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); };   // 개발자 확인 취소 → 이름 고르기로
 $("apov").onclick = function (e) { if (e.target === this) closeAdminGate(); };
 $("appin").onkeydown = function (e) { if (e.key === "Enter") $("apgo").click(); };
 $("apgo").onclick = function () {
   var pin = $("appin").value.trim(), msg = $("apmsg");
   msg.style.color = "var(--warn)";
-  var dev = NT.next === "dev";
+  var dev = NT.next === "dev" || NT.next === "devname";
   if (!pin) { msg.textContent = (dev ? "개발자" : "관리자") + " PIN을 입력해 주세요."; return; }
   $("apgo").disabled = true; $("apgo").textContent = "확인 중…";
   call(dev ? "checkDev" : "checkAdmin", [pin]).then(function (r) {
     $("apgo").disabled = false; $("apgo").textContent = "확인";
     if (r && r.error) { msg.textContent = r.error; $("appin").value = ""; return; }
     var back = $("apov").querySelector(".mnback"), fromMenu = back && back.style.display !== "none";
+    if (dev) DV.devPush = !!r.devPush;
+    if (NT.next === "devname") {   // 🛠 이 폰을 개발자 이름으로
+      DV.pin = pin; closeAdminGate();
+      sset("myName", DEV_NAME); sset("nameOK", "1");
+      toast("🛠 개발자(" + DEV_NAME + ")로 정해졌어요");
+      devRegister(true);
+      if (cur === 0 && !SR.open) render();
+      setTimeout(pushAutoAsk, 800);
+      return;
+    }
     if (dev) { DV.pin = pin; closeAdminGate(); mnBackHide(); openDevPanel(); return; }
     if (NT.next === "mode") { adminSet(pin); closeAdminGate(); mnBackHide(); toast("🔑 관리자 모드 켜짐 · 오늘 자정까지"); return; }   // 관리자 모드는 이 메뉴로만 켜짐 (공지 보내기로는 안 켜짐)
     NT.pin = pin;
@@ -3522,7 +3538,7 @@ $("dlback").onclick = function () { closeDevList(); openDevPanel(); };
 $("dlov").onclick = function (e) { if (e.target === this) closeDevList(); };
 
 /* ---------- 🛠 Developer (개발자 PIN 확인 후, 이 폰에서만) ---------- */
-var DV = { reset: false, pin: "" };
+var DV = { reset: false, pin: "", devPush: false };
 function openDevPanel() {
   DV.reset = false;
   var I = $("dvinfo"); I.innerHTML = "";
@@ -3552,6 +3568,16 @@ function openDevPanel() {
     if (window.OneSignalDeferred) window.OneSignalDeferred.push(async function (OS) { try { await OS.login(n); await OS.User.PushSubscription.optIn(); } catch (e) {} });
     call("pushRegister", [n]).then(function () { b.disabled = false; $("dvmsg").textContent = "✅ '" + n + "' 이름으로 다시 연결했어요."; })
       .catch(function (e) { b.disabled = false; $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = "연결 실패: " + errText(e); });
+  });
+  if (ONESIGNAL_APP_ID && myName() === DEV_NAME) item("🔔 개발자 알림 받기", DV.devPush ? "켜짐 · 누르면 끄기" : "꺼짐 · 누르면 켜기", function (b) {
+    b.disabled = true; $("dvmsg").style.color = ""; $("dvmsg").textContent = "바꾸는 중…";
+    call("devPushSet", [DV.pin, !DV.devPush]).then(function (r) {
+      b.disabled = false;
+      if (r && r.error) { $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = r.error; return; }
+      DV.devPush = !!r.devPush;
+      b.lastChild.textContent = DV.devPush ? "켜짐 · 누르면 끄기" : "꺼짐 · 누르면 켜기";
+      $("dvmsg").textContent = DV.devPush ? "✅ 켰어요. 공지·아침 알림이 개발자에게도 와요.\n(다른 사람 화면·알림 현황엔 안 보여요)" : "🔕 껐어요. 개발자에게는 알림이 안 와요.";
+    }).catch(function (e) { b.disabled = false; $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = "실패: " + errText(e); });
   });
   item("🧹 이 폰 앱 초기화", "PIN·이름 다시 입력", function (b) {
     if (!DV.reset) {
