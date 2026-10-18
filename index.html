@@ -2903,7 +2903,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-18-1";
+var APP_VER = "2026-10-18-3";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -3082,7 +3082,7 @@ function pushInit() {
         serviceWorkerPath: dir.replace(/^\//, "") + "sw.js",
         serviceWorkerParam: { scope: dir },
         notifyButton: { enable: false },
-        welcomeNotification: { title: "제조1-A", message: "알림이 켜졌어요. 평일 아침 8시에 오늘 할 일을 알려드릴게요." }
+        welcomeNotification: { disable: true }   // 환영 알림 끔 (2번 오는 문제) — 켜지면 앱 안에서 "🔔 알림이 켜졌어요" 표시
       });
       PUSH.ready = true;
       var n = sget("pushName");
@@ -3215,7 +3215,7 @@ $("pushgo").onclick = function () {
 };
 
 /* ---------- 📢 관리자 공지 ---------- */
-var NOTICE_ADMINS = ["김은수", "김병준", "엄경준"];   // 공지 보내기 버튼이 보이는 사람 (실제로 보내려면 관리자 PIN 필요)
+var NOTICE_ADMINS = ["김은수", "김병준", "엄경준", "손성민"];   // 공지 보내기 버튼이 보이는 사람 (실제로 보내려면 관리자 PIN 필요)
 var NT = { from: "", pin: "" };
 
 function noticeCard() {
