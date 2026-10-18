@@ -2905,7 +2905,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-19-1";
+var APP_VER = "2026-10-19-4";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -3253,17 +3253,19 @@ function noticeBtn() {
 
 function ntChips() {
   var f = $("ntfrom"); f.innerHTML = "";
-  NOTICE_ADMINS.forEach(function (n) {
-    if (n === DEV_NAME && myName() !== DEV_NAME) return;   // 개발자 이름은 다른 사람 화면에 안 보임
-    var c = el("button", "chip" + (n === NT.from ? " on" : ""), n); c.type = "button";
+  var list = NOTICE_ADMINS.filter(function (n) { return n !== DEV_NAME; });   // 손성민 이름은 보낸 사람에 안 나옴
+  if (myName() === DEV_NAME) list.push(DEV_SENDER);   // 🛠 개발자로 보내기 (개발자 폰에서만, 개발자 PIN 필요)
+  list.forEach(function (n) {
+    var c = el("button", "chip" + (n === NT.from ? " on" : ""), n === DEV_SENDER ? "🛠 " + n : n); c.type = "button";
     c.onclick = function () { NT.from = n; ntChips(); ntPreview(); };
     f.appendChild(c);
   });
 }
 
+var DEV_SENDER = "개발자";   // 공지 보낸 사람에 손성민 대신 "개발자"로 표시
 function openNotice() {
   var me = myName() || sget("pushName") || "";
-  NT.from = NOTICE_ADMINS.indexOf(me) >= 0 ? me : "";
+  NT.from = me === DEV_NAME ? DEV_SENDER : NOTICE_ADMINS.indexOf(me) >= 0 ? me : "";
   $("ntbody").value = "";
   $("ntmsg").textContent = "알림을 켠 사람 전체의 폰에 바로 알림으로 가요.";
   $("ntmsg").style.color = "";
@@ -3323,11 +3325,11 @@ function adminUI() {
 function isOther(name) { return !!(name && myName() && name !== myName()); }
 function leaveLocked() { return isOther($("hname").value) && !adminOn(); }
 function openAdminGate(next) {
-  NT.next = next === "dev" || next === "devname" || next === "mode" ? next : "notice";
+  NT.next = next === "dev" || next === "devname" || next === "devnotice" || next === "mode" ? next : "notice";
   if (NT.next === "notice" && adminOn()) { NT.pin = sget("admPin"); openNotice(); mnBackShow("ntov"); return; }   // 관리자 모드면 PIN 생략
-  var dev = NT.next === "dev" || NT.next === "devname";
+  var dev = NT.next === "dev" || NT.next === "devname" || NT.next === "devnotice";
   $("apttl").textContent = dev ? "🛠 개발자 PIN" : "🔒 관리자 PIN";
-  $("apdesc").textContent = dev ? "개발자 전용 메뉴예요." : NT.next === "mode" ? "관리자 모드는 오늘 자정까지 유지돼요.\n(다른 사람 연차류·칸 비우기 · 공지 보내기 PIN 생략)" : "공지 보내기는 관리자만 할 수 있어요.";
+  $("apdesc").textContent = NT.next === "devnotice" ? "개발자로 공지를 보내려면 개발자 PIN이 필요해요." : NT.next === "devname" ? "이 폰을 개발자 이름으로 정해요." : dev ? "개발자 전용 메뉴예요." : NT.next === "mode" ? "관리자 모드는 오늘 자정까지 유지돼요.\n(다른 사람 연차류·칸 비우기 · 공지 보내기 PIN 생략)" : "공지 보내기는 관리자만 할 수 있어요.";
   $("apdesc").style.whiteSpace = "pre-line";
   $("appin").placeholder = dev ? "개발자 PIN" : "관리자 PIN";
   NT.pin = "";
@@ -3337,20 +3339,28 @@ function openAdminGate(next) {
   setTimeout(function () { try { $("appin").focus(); } catch (e) {} }, 200);
 }
 function closeAdminGate() { $("apov").className = "ov"; }
-$("apno").onclick = function () { var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); };   // 개발자 확인 취소 → 이름 고르기로
+$("apno").onclick = function () { var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); else if (nx === "devnotice") { var kp = NT.keepPin || "", kb = NT.keep || ""; openNotice(); NT.pin = kp; $("ntbody").value = kb; ntPreview(); } };   // 개발자 확인 취소 → 이름 고르기로
 $("apov").onclick = function (e) { if (e.target === this) closeAdminGate(); };
 $("appin").onkeydown = function (e) { if (e.key === "Enter") $("apgo").click(); };
 $("apgo").onclick = function () {
   var pin = $("appin").value.trim(), msg = $("apmsg");
   msg.style.color = "var(--warn)";
-  var dev = NT.next === "dev" || NT.next === "devname";
+  var dev = NT.next === "dev" || NT.next === "devname" || NT.next === "devnotice";
   if (!pin) { msg.textContent = (dev ? "개발자" : "관리자") + " PIN을 입력해 주세요."; return; }
   $("apgo").disabled = true; $("apgo").textContent = "확인 중…";
   call(dev ? "checkDev" : "checkAdmin", [pin]).then(function (r) {
     $("apgo").disabled = false; $("apgo").textContent = "확인";
     if (r && r.error) { msg.textContent = r.error; $("appin").value = ""; return; }
     var back = $("apov").querySelector(".mnback"), fromMenu = back && back.style.display !== "none";
-    if (dev) DV.devPush = !!r.devPush;
+    if (dev) { DV.devPush = !!r.devPush; sset("devPush", DV.devPush ? "1" : "0"); }
+    if (NT.next === "devnotice") {   // 🛠 개발자로 공지: PIN 확인 뒤 쓰던 내용 그대로 다시 열기
+      DV.pin = pin; closeAdminGate();
+      var keepPin = NT.keepPin || "", keepBody = NT.keep || "";
+      openNotice(); NT.pin = keepPin; NT.from = DEV_SENDER; ntChips();
+      $("ntbody").value = keepBody; ntPreview();
+      $("ntmsg").style.color = ""; $("ntmsg").textContent = "🛠 개발자로 보내요. 다시 '보내기'를 눌러 주세요.";
+      return;
+    }
     if (NT.next === "devname") {   // 🛠 이 폰을 개발자 이름으로
       DV.pin = pin; closeAdminGate();
       sset("myName", DEV_NAME); sset("nameOK", "1");
@@ -3378,8 +3388,9 @@ $("ntgo").onclick = function () {
   if (!NT.from) { msg.textContent = "보낸 사람을 골라 주세요."; return; }
   if (!body) { msg.textContent = "내용을 입력해 주세요."; return; }
   if (!pin) { closeNotice(); openAdminGate(); return; }
+  if (NT.from === DEV_SENDER && !DV.pin) { NT.keep = body; NT.keepPin = pin; closeNotice(); openAdminGate("devnotice"); return; }   // 🛠 개발자로 보내려면 개발자 PIN
   $("ntgo").disabled = true; $("ntgo").textContent = "보내는 중…";
-  call("sendNotice", [{ pin: pin, sender: NT.from, title: "", body: body, to: [] }])   // 제목은 서버 기본값 "📢 공지", 받는 사람은 전체
+  call("sendNotice", [{ pin: pin, sender: NT.from, title: "", body: body, to: [], devPin: NT.from === DEV_SENDER ? DV.pin : "" }])   // 제목은 서버 기본값 "📢 공지", 받는 사람은 전체
     .then(function (r) {
       $("ntgo").disabled = false; $("ntgo").textContent = "보내기";
       if (r && r.error) { msg.textContent = r.error; if (r.adminPin) { NT.pin = ""; if (adminOn()) adminOff(); } return; }
@@ -3406,7 +3417,9 @@ function openMenu() {
     L.appendChild(b);
   }
   if (myName()) item("👤 내 이름", myName() + " (고정)", function () { toast("이름이 틀렸으면 " + DEV_NAME + "에게 말해 주세요"); });
-  if (ONESIGNAL_APP_ID) item("🔔 알림 설정", pushOn() ? "켜짐" : "꺼짐", openPush, "pushov");
+  var pushSub = pushOn() ? "켜짐" : "꺼짐";
+  if (myName() === DEV_NAME && sget("devPush") != null) pushSub = sget("devPush") === "1" ? "개발자 알림 켜짐" : "개발자 알림 꺼짐";   // 🛠 개발자는 실제로 받는지 기준
+  if (ONESIGNAL_APP_ID) item("🔔 알림 설정", pushSub, openPush, "pushov");
   if (noticeIsAdmin()) item("🔑 관리자 모드", adminOn() ? "켜짐 · 누르면 끄기" : "꺼짐", function () {
     if (adminOn()) { adminOff(); toast("🔑 관리자 모드 꺼짐"); } else openAdminGate("mode");
   }, adminOn() ? null : "apov");
@@ -3546,7 +3559,8 @@ function openDevPanel() {
   try { perm = window.Notification ? ({ granted: "허용", denied: "거절", "default": "안 정함" })[Notification.permission] || Notification.permission : "지원 안 함"; } catch (e) {}
   var standalone = window.navigator.standalone === true || (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
   [["이 폰 이름", myName() || "(없음)"],
-   ["알림", (pushOn() ? "켜짐" : "꺼짐") + " · 권한 " + perm + (sget("pushName") ? " · " + sget("pushName") : "")],
+   ["폰 알림 연결", (pushOn() ? "연결됨" : "안 됨") + " · 권한 " + perm + (sget("pushName") ? " · " + sget("pushName") : "")],
+   ["개발자 알림 받기", DV.devPush ? "켜짐 (공지·아침 알림 옴)" : "꺼짐 (알림 안 옴)"],
    ["기기 번호", "기기-" + devId()],
    ["버전", "v" + APP_VER.slice(5).replace("-", ".") + (IS_TEST ? " (테스트)" : "")],
    ["실행", standalone ? "홈 화면 앱" : "브라우저"]
@@ -3574,8 +3588,10 @@ function openDevPanel() {
     call("devPushSet", [DV.pin, !DV.devPush]).then(function (r) {
       b.disabled = false;
       if (r && r.error) { $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = r.error; return; }
-      DV.devPush = !!r.devPush;
+      DV.devPush = !!r.devPush; sset("devPush", DV.devPush ? "1" : "0");
       b.lastChild.textContent = DV.devPush ? "켜짐 · 누르면 끄기" : "꺼짐 · 누르면 켜기";
+      var I = $("dvinfo").children;   // 위쪽 정보칸도 바로 바꿈
+      for (var k = 0; k < I.length; k++) if (I[k].textContent === "개발자 알림 받기" && I[k + 1]) I[k + 1].textContent = DV.devPush ? "켜짐 (공지·아침 알림 옴)" : "꺼짐 (알림 안 옴)";
       $("dvmsg").textContent = DV.devPush ? "✅ 켰어요. 공지·아침 알림이 개발자에게도 와요.\n(다른 사람 화면·알림 현황엔 안 보여요)" : "🔕 껐어요. 개발자에게는 알림이 안 와요.";
     }).catch(function (e) { b.disabled = false; $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = "실패: " + errText(e); });
   });
