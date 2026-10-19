@@ -191,8 +191,12 @@ li:first-child{border-top:0}
 .pben div{display:grid;grid-template-columns:22px 1fr;align-items:start}
 .pben b{color:var(--text)}
 .pnote{font-size:12.5px;color:var(--sub);white-space:pre-line;line-height:1.5;margin:6px 0 0}
+#pask{display:none;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#fff4e0;border:1px solid #f5c26b;color:#8a5300;font-size:14px;font-weight:700;line-height:1.45;word-break:keep-all}
+.psask{width:100%;margin-top:2px;padding:12px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:14px;font-family:inherit}
+.psask:disabled{opacity:.6}
+.psaskh{font-size:12.5px;color:var(--sub);margin-top:-4px;word-break:keep-all}
 .psoc{font-size:13px;font-weight:700;color:var(--ok);margin:6px 0 0}
-.pscopy{width:100%;margin-top:2px;padding:11px;border-radius:10px;border:1px solid var(--accent);background:var(--card);color:var(--accent);font-weight:700;font-size:14px;font-family:inherit}
+
 .ntbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-size:14px;font-weight:700;color:var(--accent);text-align:left;cursor:pointer;font-family:inherit;width:100%}
 #ntov textarea,#ntov input,#apov input,#nmcpin{font-size:16px;padding:12px 14px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box;font-family:inherit}
 #ntfrom .chip.on,#ntto .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -666,6 +670,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 
 <div class="ov" id="pushov">
   <div class="box">
+    <div id="pask"></div>
     <h3>🔔 알림 켜 두면 이런 게 와요</h3>
     <div class="pben">
       <div><span>📢</span><span><b>팀 공지</b> · 올라오면 바로 폰으로</span></div>
@@ -1233,6 +1238,8 @@ function applyDash(r) {
   if (r.ship) store.ship = r.ship;
   if (r.leave) store.leave = r.leave;
   store.notice = r.notice || null;
+  store.ask = r.ask || null;
+  setTimeout(pushAskCheck, 1500);
   $("d0").textContent = r.d0.label || "";
   $("d1").textContent = r.d1.label || "";
   schedBadge();
@@ -2968,7 +2975,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-19-8";
+var APP_VER = "2026-10-19-10";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -3150,15 +3157,19 @@ function psRender(r, loading) {
   L.appendChild(a); L.appendChild(b);
   L.appendChild(el("div", "hint", loading ? "🔄 최신 현황 확인 중…" : "'기기 2'는 같은 이름으로 폰이 2대 등록된 경우예요."));
   var off = r.off.filter(function (n) { return n !== CHIEF_NAME; });   // 총괄팀장은 문구에서 뺌
-  if (off.length && !loading) {   // 📋 안 켠 사람에게 카톡으로 보낼 문구
-    var cb = el("button", "pscopy", "📋 안 켠 사람 카톡 문구 복사"); cb.type = "button";
-    cb.onclick = function () {
-      var t = "[제조1-A] 앱 알림 아직 안 켜신 분 🙏\n" + off.join(", ") +
-        "\n\n앱을 열고 맨 위 '🔕 알림 꺼짐' 줄을 눌러 켜 주세요.\n공지랑 오늘 내 장비 일정이 폰으로 와요.\nhttps://ninebell-a.github.io/ateam-app/";
-      var done = function () { cb.textContent = "✅ 복사했어요 · 카톡방에 붙여넣기"; setTimeout(function () { cb.textContent = "📋 안 켠 사람 카톡 문구 복사"; }, 3000); };
-      try { navigator.clipboard.writeText(t).then(done, function () { igCopyOld(t); done(); }); } catch (e) { igCopyOld(t); done(); }
+  if (off.length && !loading) {   // 🔔 앱에서 바로 요청 → 안 켠 사람이 다음에 앱을 열면 안내창
+    var ab = el("button", "psask", "🔔 안 켠 " + off.length + "명에게 알림 켜기 요청"); ab.type = "button";
+    var ah = el("div", "psaskh", r.ask ? "마지막 요청: " + r.ask.label + " · " + r.ask.by + " (" + r.ask.names.length + "명)" : "누르면 안 켠 사람이 다음에 앱을 열 때 안내창이 떠요.");
+    ab.onclick = function () {
+      ab.disabled = true; ab.textContent = "요청하는 중…";
+      call("pushAsk").then(function (x) {
+        if (!x || x.error) { ab.disabled = false; ab.textContent = "🔔 안 켠 " + off.length + "명에게 알림 켜기 요청"; toast((x && x.error) || "요청 실패", true); return; }
+        ab.textContent = "✅ " + x.ask.names.length + "명에게 요청했어요";
+        ah.textContent = "다음에 앱을 열면 안내창이 떠요. (7일 동안, 하루 한 번)";
+        toast("🔔 " + x.ask.names.length + "명에게 알림 켜기 요청");
+      }).catch(function (e) { ab.disabled = false; ab.textContent = "🔔 안 켠 " + off.length + "명에게 알림 켜기 요청"; toast("요청 실패: " + errText(e), true); });
     };
-    L.appendChild(cb);
+    L.appendChild(ab); L.appendChild(ah);
   }
 }
 function openPushStatus() {
@@ -3289,6 +3300,7 @@ function pushChips() {
 }
 
 function openPush() {
+  pushAskHead(PUSH.ask); PUSH.ask = null;
   PUSH.pick = myName() || sget("pushName") || "";
   PUSH.unlocked = false;
   var msg = $("pushmsg");
@@ -3318,6 +3330,29 @@ function openPush() {
 }
 
 function closePush() { $("pushov").className = "ov"; }
+/* ---------- 🔔 관리자가 보낸 "알림 켜기 요청" ----------
+ * 알림을 안 켠 사람에겐 푸시가 안 가니까, 앱을 열 때 안내창 맨 위에 "○○ 님이 요청했어요"를 띄움
+ * (같은 요청은 하루 한 번 · 알림을 켜면 더 안 뜸 · 요청 후 7일 지나면 끝)
+ */
+function pushAskHead(a) {
+  var b = $("pask");
+  if (!a) { b.style.display = "none"; return; }
+  var who = a.by === "개발자" ? "개발자가" : (a.by || "관리자") + " 님이";
+  b.textContent = "📢 " + who + " 알림을 켜 달라고 요청했어요";
+  b.style.display = "block";
+}
+function pushAskCheck() {
+  var a = store.ask;
+  if (!ONESIGNAL_APP_ID || !a || !a.names || pushOn() || !nameDone()) return;
+  if (a.names.indexOf(myName()) < 0) return;
+  var key = a.at + "|" + ymdLocal();
+  if (sget("askSeen") === key) return;
+  if ($("app").style.display === "none") { setTimeout(pushAskCheck, 2000); return; }
+  if ($("pushov").className.indexOf("on") >= 0) { pushAskHead(a); sset("askSeen", key); return; }   // 알림 창이 이미 떠 있으면 위에 요청만 붙임
+  if (document.querySelector(".ov.on")) { setTimeout(pushAskCheck, 3000); return; }
+  sset("askSeen", key);
+  PUSH.ask = a; mnBackHide(); openPush();
+}
 // 👥 "팀원 N명 중 M명이 켰어요" (3명 이상 켰을 때만 · 총괄팀장 빼고 셈)
 function pushSocial(r) {
   var b = $("psoc");
