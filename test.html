@@ -21,7 +21,7 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(12px + 
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{height:20px;width:auto;max-width:110px;object-fit:contain;display:block}
-@media (prefers-color-scheme:dark){.logo{background:#fff;padding:3px 7px;border-radius:6px;height:26px}}
+@media (prefers-color-scheme:dark){.logo.lgfb{background:#fff;padding:3px 7px;border-radius:6px;height:26px}}   /* 다크 로고(logo-dark.png)가 없을 때만 흰 바탕 */
 .sep{width:1px;height:18px;background:var(--line);flex:none}
 h1{font-size:17px;margin:0;white-space:nowrap;display:flex;flex-direction:column;line-height:1.2}
 #ver{font-size:10px;font-weight:500;color:var(--sub);margin-left:5px;letter-spacing:-.2px}
@@ -178,14 +178,56 @@ li:first-child{border-top:0}
 .hint{font-size:12px;color:var(--sub);padding:0 2px;line-height:1.5}
 #opchips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #opin{font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
-.pushrow{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px dashed var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--accent);cursor:pointer}
-.pushrow.on{border-style:solid;border-color:var(--line);color:var(--sub);font-weight:500;font-size:13px;padding:7px 14px}
-.pushrow.on b{color:var(--text)}
+#updov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px calc(32px + env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#17306b 0%,#0c1630 45%,#070c1a 100%);color:#fff;text-align:center;opacity:0;transition:opacity .35s}
+#updov.on{opacity:1}
+#updov .ul{height:28px;width:auto;max-width:160px;object-fit:contain;margin-bottom:34px;opacity:0;transform:translateY(-8px);transition:all .5s .1s}
+#updov .ul.lgfb{filter:brightness(0) invert(1);opacity:.9}
+#updov .ur{position:relative;width:112px;height:112px;opacity:0;transform:scale(.85);transition:all .5s .15s cubic-bezier(.2,.9,.3,1.3)}
+#updov.on .ul,#updov.on .ur{opacity:1;transform:none}
+#updov .ur svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+#updov .ur .bg{fill:rgba(255,255,255,.03);stroke:rgba(140,170,255,.16);stroke-width:7}
+#updov .ur .fg{fill:none;stroke:#8fb0ff;stroke-width:7;stroke-linecap:round;transform:rotate(-90deg);transform-origin:50% 50%;stroke-dasharray:264;stroke-dashoffset:264;filter:drop-shadow(0 0 6px rgba(120,160,255,.85))}
+#updov .ur .ar{fill:none;stroke:rgba(190,205,240,.45);stroke-width:7;stroke-linecap:round;stroke-linejoin:round;transition:opacity .3s,transform .3s;transform-origin:50% 50%;animation:updup 1.4s ease-in-out infinite}
+@keyframes updup{0%,100%{transform:translateY(3px)}50%{transform:translateY(-4px)}}
+#updov .ur .ck{fill:none;stroke:#fff;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:60;stroke-dashoffset:60;transition:stroke-dashoffset .45s .1s ease-out}
+#updov.done .ur .ar{opacity:0;transform:scale(.6);animation:none}
+#updov.done .ur .ck{stroke-dashoffset:0}
+#updov.done .ur .bg{fill:rgba(40,70,160,.35);stroke:rgba(140,170,255,.25)}
+#updov.done .ur{filter:drop-shadow(0 0 18px rgba(110,150,255,.55))}
+#updov .ut{font-size:21px;font-weight:800;margin-top:28px;letter-spacing:-.3px}
+#updov .uv{display:flex;align-items:center;justify-content:center;gap:12px;margin-top:14px;font-weight:800;font-size:15.5px}
+#updov .uv .o{color:rgba(220,228,245,.75);background:rgba(255,255,255,.08);border-radius:999px;padding:5px 12px}
+#updov .uv .a{color:#8fb0ff;animation:updarr 1s ease-in-out infinite}
+@keyframes updarr{0%,100%{transform:translateX(-2px)}50%{transform:translateX(3px)}}
+#updov .uv .n{color:#fff;background:#2f6bff;border-radius:999px;padding:5px 13px;box-shadow:0 0 0 3px rgba(47,107,255,.28),0 0 16px rgba(47,107,255,.55)}
+#updov .un{width:100%;max-width:340px;margin-top:26px;padding:6px 16px;border-radius:16px;background:rgba(255,255,255,.07);text-align:left;font-size:14.5px;line-height:1.45;word-break:keep-all}
+#updov .un div{padding:10px 0}
+#updov .un div+div{border-top:1px solid rgba(255,255,255,.1)}
+#updov .us{font-size:13.5px;color:rgba(210,220,240,.75);margin-top:22px;min-height:20px}
+#upddone{position:fixed;left:0;right:0;margin:0 auto;width:max-content;top:calc(14px + env(safe-area-inset-top));z-index:9998;display:flex;align-items:center;gap:10px;max-width:calc(100% - 32px);padding:11px 16px;border-radius:16px;background:var(--card);border:1px solid var(--line);box-shadow:0 10px 30px rgba(0,0,0,.18);transform:translateY(-160%);transition:transform .45s cubic-bezier(.2,.9,.3,1.2)}
+#upddone.on{transform:none}
+#upddone .k{font-size:20px}
+#upddone b{display:block;font-size:14.5px;color:var(--text)}
+#upddone small{display:block;font-size:12.5px;color:var(--sub);margin-top:1px;word-break:keep-all}
+#pbar{display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:9px 12px;border-radius:12px;background:#fff1dc;border:1px solid #f4b860;color:#8a4b00;font-size:14px;font-weight:700;line-height:1.35;word-break:keep-all;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#pbar small{display:block;font-size:12px;font-weight:600;opacity:.85}
+#pbar .go{flex:none;white-space:nowrap;background:#f08c00;color:#fff;border-radius:999px;padding:6px 13px;font-size:13px}
+@media (prefers-color-scheme:dark){#pbar{background:#3a2a12;border-color:#8a5a1a;color:#ffc979}#pask{background:#3a2a12!important;border-color:#8a5a1a!important;color:#ffc979!important}}
 #pushchips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ntc{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.55}
 .ntc .h{font-weight:800;color:var(--accent);font-size:13px;margin-bottom:2px}
 .ntc .h small{color:var(--sub);font-weight:500;margin-left:6px}
 .ntc .b{white-space:pre-wrap;font-weight:600}
+.pben{display:grid;gap:7px;margin:4px 0 2px;padding:12px 14px;background:var(--bg);border-radius:12px;font-size:14px;line-height:1.45;word-break:keep-all}
+.pben div{display:grid;grid-template-columns:22px 1fr;align-items:start}
+.pben b{color:var(--text)}
+.pnote{font-size:12.5px;color:var(--sub);white-space:pre-line;line-height:1.5;margin:6px 0 0}
+#pask{display:none;margin:0 0 10px;padding:10px 12px;border-radius:12px;background:#fff4e0;border:1px solid #f5c26b;color:#8a5300;font-size:14px;font-weight:700;line-height:1.45;word-break:keep-all}
+.psask{width:100%;margin-top:2px;padding:12px;border-radius:10px;border:0;background:var(--accent);color:#fff;font-weight:700;font-size:14px;font-family:inherit}
+.psask:disabled{opacity:.6}
+.psaskh{font-size:12.5px;color:var(--sub);margin-top:-4px;word-break:keep-all}
+.psoc{font-size:13px;font-weight:700;color:var(--ok);margin:6px 0 0}
+
 .ntbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-size:14px;font-weight:700;color:var(--accent);text-align:left;cursor:pointer;font-family:inherit;width:100%}
 #ntov textarea,#ntov input,#apov input,#nmcpin{font-size:16px;padding:12px 14px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box;font-family:inherit}
 #ntfrom .chip.on,#ntto .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
@@ -476,7 +518,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 #gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 .gbox{width:100%;max-width:360px;text-align:center;display:grid;gap:14px;justify-items:center}
 .glogo{height:28px;width:auto;max-width:150px;object-fit:contain}
-@media (prefers-color-scheme:dark){.glogo{background:#fff;padding:4px 9px;border-radius:6px}}
+@media (prefers-color-scheme:dark){.glogo.lgfb{background:#fff;padding:4px 9px;border-radius:6px}}
 .gtitle{font-size:22px;font-weight:800}
 .gicon{font-size:44px;line-height:1}
 #gmsg{margin:0;font-size:15px;line-height:1.6;color:var(--text)}
@@ -492,6 +534,28 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 #epmsg.bad{color:var(--warn);font-weight:600}
 #epov .ob .go{background:var(--accent);border-color:var(--accent)}
 </style>
+<script>
+/* 🌙 다크 모드면 밝은 글씨 로고(logo-dark.png) · 그 파일이 없으면 예전처럼 흰 바탕 + logo.png */
+var LOGO_DARK_BAD = false;
+function logoErr(i) {
+  if (/logo-dark\.png/.test(i.src)) { LOGO_DARK_BAD = true; i.classList.add("lgfb"); i.src = "logo.png"; return; }
+  i.style.display = "none";
+  if (i.id === "logo") { var sp = document.getElementById("sep"); if (sp) sp.style.display = "none"; }
+}
+function logoTheme() {
+  var dk = false;
+  try { dk = window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) {}
+  ["logo", "glogo"].forEach(function (id) {
+    var i = document.getElementById(id);
+    if (!i || i.style.display === "none") return;
+    var want = dk && !LOGO_DARK_BAD ? "logo-dark.png" : "logo.png";
+    if (i.getAttribute("src") !== want) { i.classList.toggle("lgfb", dk && LOGO_DARK_BAD); i.setAttribute("src", want); }
+    else i.classList.toggle("lgfb", dk && LOGO_DARK_BAD);
+  });
+}
+document.addEventListener("DOMContentLoaded", logoTheme);
+try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", logoTheme); } catch (e) {}
+</script>
 </head>
 <body>
 <div id="ig"></div>
@@ -499,7 +563,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <!-- 🔒 잠금 화면 -->
 <div id="gate">
   <div class="gbox">
-    <img class="glogo" id="glogo" src="logo.png" alt="" onerror="this.style.display='none'">
+    <img class="glogo" id="glogo" src="logo.png" alt="" onerror="logoErr(this)">
     <div class="gtitle">제조1-A</div>
     <div class="gicon" id="gicon">🔒</div>
     <p id="gmsg"></p>
@@ -516,7 +580,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <header>
   <div class="top">
     <div class="brand">
-      <img class="logo" id="logo" src="logo.png" alt="" onerror="this.style.display='none';document.getElementById('sep').style.display='none';">
+      <img class="logo" id="logo" src="logo.png" alt="" onerror="logoErr(this)">
       <div class="sep" id="sep"></div>
       <h1><span id="ttlbtn">제조1-A<small id="ver"></small></span> <span id="upd"></span><span id="testtag"></span></h1>
     </div>
@@ -535,6 +599,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
     <div class="tab" id="t3">근무시간<span></span></div>
     <div class="tab" id="t4">연차 현황<span></span></div>
   </div>
+  <div id="pbar" role="button"><span>🔕 알림이 꺼져 있어요<small>공지가 폰으로 안 와요</small></span><span class="go">알림 켜기</span></div>
   <div id="sbar" class="sbar" style="display:none">
     <input id="sq" type="search" inputmode="text" enterkeyhint="search" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="장비명·담당자·업체 (예: 373, 손성민)">
     <button id="sclose" type="button">닫기</button>
@@ -659,8 +724,17 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 
 <div class="ov" id="pushov">
   <div class="box">
-    <h3>🔔 52시간·근무시간 놓치지 않게 알림을 켜주세요</h3>
-    <p>매일 <b style="color:var(--accent)">아침 8시</b>에 이번 주 52시간까지 남은 시간·내 장비·업로드를, <b style="color:var(--accent)">퇴근 전(17:30)</b>엔 근무시간 미입력일 때 알려드려요.</p>
+    <div id="pask"></div>
+    <h3>🔔 알림 켜 두면 이런 게 와요</h3>
+    <div class="pben">
+      <div><span>📢</span><span><b>팀 공지</b> · 올라오면 바로 폰으로</span></div>
+      <div><span>🔧</span><span><b>아침 8시</b> · 오늘 내 장비 일정, 오늘 연차</span></div>
+      <div><span>🕒</span><span><b>이번 주 52시간</b>까지 남은 시간</span></div>
+      <div><span>✏️</span><span><b>17:30</b> · 근무시간을 안 넣은 날만</span></div>
+    </div>
+    <p class="pnote">공지 말고는 하루 최대 2번이에요.
+주말과 연차인 날은 안 와요.</p>
+    <p class="psoc" id="psoc" style="display:none"></p>
     <div class="who">내 이름</div>
     <div class="chips" id="pushchips"><span class="hint">이름 불러오는 중…</span></div>
     <div id="pushunlock" class="unl"></div>
@@ -1176,7 +1250,7 @@ function render() {
   $("upd").textContent = updTxt(d, "dash");
   var lb = leaveBanner(cur);
   if (lb) main.appendChild(lb);
-  if (cur === 0 && !pushOn()) { var pr = pushRow(); if (pr) main.appendChild(pr); }   // 🔔 알림 안 켠 사람만 (켠 뒤엔 제목 메뉴에서 변경)
+  pushBarUI();
   if (d.missing && d.missing.length)
     main.appendChild(el("div", "warn", "⚠️ 열을 찾지 못한 공정: " + d.missing.join(", ")));
 
@@ -1218,6 +1292,8 @@ function applyDash(r) {
   if (r.ship) store.ship = r.ship;
   if (r.leave) store.leave = r.leave;
   store.notice = r.notice || null;
+  store.ask = r.ask || null;
+  setTimeout(pushAskCheck, 1500);
   $("d0").textContent = r.d0.label || "";
   $("d1").textContent = r.d1.label || "";
   schedBadge();
@@ -2953,7 +3029,8 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-19-6";
+var APP_VER = "2026-10-19-13";
+var APP_NOTE = ["업데이트 화면이 새로 생겼어요", "다크모드 로고 · 알림 배너 정리"];   // ✨ 업데이트 화면의 "바뀐 점" (한 줄씩 · 버전 올릴 때 같이 고치기 · [] 로 비워도 됨)
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -2965,10 +3042,68 @@ function checkUpdate() {
     .then(function (t) {
       UPD.busy = false;
       var m = t.match(/var APP_VER = "([^"]+)"/);
-      if (m && m[1] !== APP_VER) location.replace(location.pathname + "?v=" + encodeURIComponent(m[1]));
+      if (m && m[1] !== APP_VER) {
+        var nt = t.match(/var APP_NOTE = (\[[^\]]*\]|"[^"]*")/), note = "";
+        try { note = nt ? JSON.parse(nt[1]) : ""; } catch (e) { note = ""; }
+        updShow(m[1], note);
+      }
     })
     .catch(function () { UPD.busy = false; });
 }
+/* ---------- ✨ 새 버전 업데이트 화면 ----------
+ * 새 버전을 찾으면 "v10.19-7 → v10.19-8 · 이번에 바뀐 점"을 잠깐 보여주고 자동으로 새로 열기
+ * 새로 열린 뒤엔 위에 "업데이트 완료" 표시
+ */
+function verLabel(v) { return "v" + String(v || "").slice(5).replace("-", "."); }
+function noteList(n) { return (Array.isArray(n) ? n : n ? [n] : []).filter(function (x) { return x; }); }
+function updShow(nv, note) {
+  if ($("updov")) return;
+  try { sset("updFrom", APP_VER); } catch (e) {}
+  var notes = noteList(note);
+  var ov = el("div", null); ov.id = "updov";
+  var lg = el("img", "ul"); lg.alt = ""; lg.src = "logo-dark.png";
+  lg.onerror = function () { if (/logo-dark/.test(lg.src)) { lg.classList.add("lgfb"); lg.src = "logo.png"; } else lg.style.display = "none"; };
+  ov.appendChild(lg);
+  var ring = el("div", "ur");
+  ring.innerHTML = '<svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42"/>' +
+    '<path class="ar" d="M50 66V35M37 47l13-13 13 13"/><path class="ck" d="M33 51l12 12 22-24"/></svg>';
+  ov.appendChild(ring);
+  ov.appendChild(el("div", "ut", "새 버전이 나왔어요"));
+  var vv = el("div", "uv");
+  vv.appendChild(el("span", "o", verLabel(APP_VER)));
+  vv.appendChild(el("span", "a", "→"));
+  vv.appendChild(el("span", "n", verLabel(nv)));
+  ov.appendChild(vv);
+  if (notes.length) { var nb = el("div", "un"); notes.forEach(function (t) { nb.appendChild(el("div", null, "✨ " + t)); }); ov.appendChild(nb); }
+  var us = el("div", "us", "최신 버전으로 자동 업데이트하는 중…"); ov.appendChild(us);
+  document.body.appendChild(ov);
+  var fill = ring.querySelector(".fg");
+  var run = notes.length ? 2300 : 1700;   // 링이 차는 시간 (바뀐 점이 있으면 읽을 시간 조금 더)
+  fill.style.transition = "stroke-dashoffset " + run + "ms cubic-bezier(.45,.05,.35,1)";
+  void fill.getBoundingClientRect();
+  setTimeout(function () { ov.className = "on"; fill.style.strokeDashoffset = "0"; }, 60);
+  setTimeout(function () { us.textContent = "거의 다 됐어요…"; }, 60 + run * 0.62);
+  setTimeout(function () { ov.className = "on done"; us.textContent = "업데이트 완료 ✓"; }, 120 + run);
+  setTimeout(function () { location.replace(location.pathname + "?v=" + encodeURIComponent(nv)); }, 120 + run + 900);
+}
+// 새로 열린 뒤 한 번: "✅ v10.19-8 업데이트 완료"
+function updDone() {
+  var q = ""; try { q = new URLSearchParams(location.search).get("v") || ""; } catch (e) {}
+  if (q) { try { history.replaceState(null, "", location.pathname); } catch (e2) {} }   // 주소에서 ?v= 지움
+  if (q !== APP_VER) return;   // 자동 업데이트로 새로 열렸을 때만 (예전 버전도 ?v=새버전 으로 열어 줌)
+  sdel("updFrom");
+  var d = el("div", null); d.id = "upddone";
+  d.appendChild(el("span", "k", "✅"));
+  var tx = el("span"); tx.appendChild(el("b", null, verLabel(APP_VER) + " 업데이트 완료"));
+  var nl = noteList(APP_NOTE);
+  if (nl.length) { var sm = el("small", null, nl.map(function (x) { return "✨ " + x; }).join("\n")); sm.style.whiteSpace = "pre-line"; tx.appendChild(sm); }
+  d.appendChild(tx);
+  document.body.appendChild(d);
+  setTimeout(function () { d.className = "on"; }, 50);
+  setTimeout(function () { d.className = ""; }, 3600);
+  setTimeout(function () { if (d.parentNode) d.parentNode.removeChild(d); }, 4200);
+}
+
 /* ---------- 🔁 다시 켰을 때 자동 갱신 ----------
  * 아이폰 홈 화면 앱은 백그라운드에서 다시 켜면 예전 화면을 그대로 보여줌
  * → 날짜가 바뀌었거나 10분 넘게 지났으면 데이터를 새로 불러옴 (서버 캐시를 쓰니 빠름)
@@ -3123,22 +3258,45 @@ function nmApply(pick) {
   setTimeout(pushAutoAsk, 800);
 }
 
-// 👥 알림 현황 (관리자)
+// 👥 알림 현황 (관리자) — 지난번 결과를 바로 보여주고, 서버에서 새로 받아 바꿈
+function psRender(r, loading) {
+  var L = $("pslist"); L.innerHTML = "";
+  var a = el("div", "on"); a.appendChild(el("h5", null, "✅ 알림 켬 " + r.on.length + "명"));
+  r.on.forEach(function (x) { var p = el("span", "p", x.n); if (x.dev > 1) p.appendChild(el("small", null, "기기 " + x.dev)); a.appendChild(p); });
+  if (!r.on.length) a.appendChild(el("span", "hint", "아직 없어요"));
+  var b = el("div", "off"); b.appendChild(el("h5", null, "⚠️ 안 켬 " + r.off.length + "명"));
+  r.off.forEach(function (n) { b.appendChild(el("span", "p", n)); });
+  if (!r.off.length) b.appendChild(el("span", "hint", "모두 켰어요 👍"));
+  L.appendChild(a); L.appendChild(b);
+  L.appendChild(el("div", "hint", loading ? "🔄 최신 현황 확인 중…" : "'기기 2'는 같은 이름으로 폰이 2대 등록된 경우예요."));
+  var off = r.off.filter(function (n) { return n !== CHIEF_NAME; });   // 총괄팀장은 문구에서 뺌
+  if (off.length && !loading) {   // 🔔 앱에서 바로 요청 → 안 켠 사람이 다음에 앱을 열면 안내창
+    var ab = el("button", "psask", "🔔 안 켠 " + off.length + "명에게 알림 켜기 요청"); ab.type = "button";
+    var ah = el("div", "psaskh", r.ask ? "마지막 요청: " + r.ask.label + " · " + r.ask.by + " (" + r.ask.names.length + "명)" : "누르면 안 켠 사람이 다음에 앱을 열 때 안내창이 떠요.");
+    ab.onclick = function () {
+      ab.disabled = true; ab.textContent = "요청하는 중…";
+      call("pushAsk").then(function (x) {
+        if (!x || x.error) { ab.disabled = false; ab.textContent = "🔔 안 켠 " + off.length + "명에게 알림 켜기 요청"; toast((x && x.error) || "요청 실패", true); return; }
+        ab.textContent = "✅ " + x.ask.names.length + "명에게 요청했어요";
+        ah.textContent = "다음에 앱을 열면 안내창이 떠요. (7일 동안, 하루 한 번)";
+        toast("🔔 " + x.ask.names.length + "명에게 알림 켜기 요청");
+      }).catch(function (e) { ab.disabled = false; ab.textContent = "🔔 안 켠 " + off.length + "명에게 알림 켜기 요청"; toast("요청 실패: " + errText(e), true); });
+    };
+    L.appendChild(ab); L.appendChild(ah);
+  }
+}
 function openPushStatus() {
-  $("pslist").innerHTML = "";
-  $("pslist").appendChild(el("span", "hint", "불러오는 중…"));
+  var old = cget("pushst");
+  if (old && old.on) psRender(old, true);
+  else { $("pslist").innerHTML = ""; $("pslist").appendChild(el("span", "hint", "불러오는 중…")); }
   $("psov").className = "ov on";
   call("getPushStatus").then(function (r) {
-    var L = $("pslist"); L.innerHTML = "";
-    var a = el("div", "on"); a.appendChild(el("h5", null, "✅ 알림 켬 " + r.on.length + "명"));
-    r.on.forEach(function (x) { var p = el("span", "p", x.n); if (x.dev > 1) p.appendChild(el("small", null, "기기 " + x.dev)); a.appendChild(p); });
-    if (!r.on.length) a.appendChild(el("span", "hint", "아직 없어요"));
-    var b = el("div", "off"); b.appendChild(el("h5", null, "⚠️ 안 켬 " + r.off.length + "명"));
-    r.off.forEach(function (n) { b.appendChild(el("span", "p", n)); });
-    if (!r.off.length) b.appendChild(el("span", "hint", "모두 켰어요 👍"));
-    L.appendChild(a); L.appendChild(b);
-    L.appendChild(el("div", "hint", "'기기 2'는 같은 이름으로 폰이 2대 등록된 경우예요."));
-  }).catch(function (e) { $("pslist").innerHTML = ""; $("pslist").appendChild(el("div", "warn", "불러오기 실패: " + errText(e))); });
+    cset("pushst", r);
+    if ($("psov").className.indexOf("on") >= 0) psRender(r, false);
+  }).catch(function (e) {
+    if (old && old.on) { var h = $("pslist").lastChild; if (h) h.textContent = "⚠️ 새로 불러오기 실패 (지난번 현황이에요)"; return; }
+    $("pslist").innerHTML = ""; $("pslist").appendChild(el("div", "warn", "불러오기 실패: " + errText(e)));
+  });
 }
 $("psno").onclick = function () { $("psov").className = "ov"; };
 $("psov").onclick = function (e) { if (e.target === this) $("psov").className = "ov"; };
@@ -3203,22 +3361,12 @@ function pushOn() {
 }
 
 // 금일 화면 위쪽 한 줄
-function pushRow() {
-  if (!ONESIGNAL_APP_ID) return null;
-  var r;
-  if (pushOn()) {
-    r = el("div", "pushrow on");
-    var t = el("span"); t.appendChild(document.createTextNode("🔔 알림 켜짐 · ")); t.appendChild(el("b", null, sget("pushName")));
-    r.appendChild(t);
-    r.appendChild(el("span", null, "변경 ›"));
-  } else {
-    r = el("div", "pushrow");
-    r.appendChild(el("span", null, "🔔 52시간·근무시간 놓치지 않게 알림 켜기"));
-    r.appendChild(el("span", null, "›"));
-  }
-  r.onclick = openPush;
-  return r;
+// 🔕 알림 안 켠 사람: 탭 바로 아래 주황 띠 (헤더에 고정 → 어느 탭·스크롤에서도 보임 · 켜면 사라짐)
+function pushBarUI() {
+  var b = $("pbar");
+  if (b) b.style.display = ONESIGNAL_APP_ID && !pushOn() ? "flex" : "none";
 }
+$("pbar").onclick = function () { mnBackHide(); openPush(); };
 
 function pushChips() {
   var box = $("pushchips");
@@ -3255,6 +3403,7 @@ function pushChips() {
 }
 
 function openPush() {
+  pushAskHead(PUSH.ask); PUSH.ask = null;
   PUSH.pick = myName() || sget("pushName") || "";
   PUSH.unlocked = false;
   var msg = $("pushmsg");
@@ -3266,7 +3415,13 @@ function openPush() {
   } else if (!("Notification" in window)) {
     msg.textContent = "이 브라우저는 알림을 지원하지 않아요. (아이폰은 iOS 16.4 이상, 갤럭시는 크롬으로 설치한 앱)";
     $("pushgo").disabled = true;
+  } else if (Notification.permission === "denied") {   // 예전에 '차단'을 눌렀으면 폰 설정에서 풀어야 함
+    msg.textContent = /iphone|ipad|ipod/i.test(navigator.userAgent)
+      ? "🔕 이 폰에서 제조1-A 알림이 꺼져 있어요.\n설정 → 알림 → 제조1-A → 알림 허용을 켠 뒤\n앱을 다시 열고 '알림 허용'을 눌러 주세요."
+      : "🔕 이 폰에서 제조1-A 알림이 차단돼 있어요.\n제조1-A 아이콘을 길게 누름 → ⓘ 앱 정보 → 알림 → 켜기\n켠 뒤 앱을 다시 열고 '알림 허용'을 눌러 주세요.";
   }
+  pushSocial(cget("pushst"));
+  call("getPushStatus").then(function (r) { cset("pushst", r); pushSocial(r); }).catch(function () {});
   var cn = cget("names");
   if (!PUSH.names && cn && cn.names) PUSH.names = cn.names;
   if (!PUSH.names && H.meta && H.meta.names) PUSH.names = H.meta.names;
@@ -3278,6 +3433,39 @@ function openPush() {
 }
 
 function closePush() { $("pushov").className = "ov"; }
+/* ---------- 🔔 관리자가 보낸 "알림 켜기 요청" ----------
+ * 알림을 안 켠 사람에겐 푸시가 안 가니까, 앱을 열 때 안내창 맨 위에 "○○ 님이 요청했어요"를 띄움
+ * (같은 요청은 하루 한 번 · 알림을 켜면 더 안 뜸 · 요청 후 7일 지나면 끝)
+ */
+function pushAskHead(a) {
+  var b = $("pask");
+  if (!a) { b.style.display = "none"; return; }
+  var who = a.by === "개발자" ? "개발자가" : (a.by || "관리자") + " 님이";
+  b.textContent = "📢 " + who + " 알림을 켜 달라고 요청했어요";
+  b.style.display = "block";
+}
+function pushAskCheck() {
+  var a = store.ask;
+  if (!ONESIGNAL_APP_ID || !a || !a.names || pushOn() || !nameDone()) return;
+  if (a.names.indexOf(myName()) < 0) return;
+  var key = a.at + "|" + ymdLocal();
+  if (sget("askSeen") === key) return;
+  if ($("app").style.display === "none") { setTimeout(pushAskCheck, 2000); return; }
+  if ($("pushov").className.indexOf("on") >= 0) { pushAskHead(a); sset("askSeen", key); return; }   // 알림 창이 이미 떠 있으면 위에 요청만 붙임
+  if (document.querySelector(".ov.on")) { setTimeout(pushAskCheck, 3000); return; }
+  sset("askSeen", key);
+  PUSH.ask = a; mnBackHide(); openPush();
+}
+// 👥 "팀원 N명 중 M명이 켰어요" (3명 이상 켰을 때만 · 총괄팀장 빼고 셈)
+function pushSocial(r) {
+  var b = $("psoc");
+  if (!r || !r.on) { b.style.display = "none"; return; }
+  var on = r.on.filter(function (x) { return x.n !== CHIEF_NAME; }).length;
+  var all = on + r.off.filter(function (n) { return n !== CHIEF_NAME; }).length;
+  if (on < 3 || !all) { b.style.display = "none"; return; }
+  b.textContent = "👥 팀원 " + all + "명 중 " + on + "명이 켰어요";
+  b.style.display = "block";
+}
 $("pushno").onclick = function () { sset("pushLater", ymdLocal()); closePush(); };   // 오늘은 다시 안 띄움
 $("pushov").onclick = function (e) { if (e.target === this) closePush(); };
 $("pushgo").onclick = function () {
@@ -3295,7 +3483,7 @@ $("pushgo").onclick = function () {
         if (n !== myName()) chiefClear();
         sset("myName", n); sset("nameOK", "1"); PUSH.unlocked = false;
         closePush();
-        toast("🔔 알림이 켜졌어요 · " + n);
+        toast("🔔 알림이 켜졌어요 · " + n); pushBarUI();
         call("pushRegister", [n]).catch(function () {});   // 누가 켰는지 시트에 기록
       } else {
         $("pushmsg").textContent = "알림이 허용되지 않았어요. 폰 설정 → 알림에서 '제조1-A'를 허용한 뒤 다시 눌러 주세요.";
@@ -3414,6 +3602,7 @@ function adminSetChief() {   // 👔 총괄팀장: 관리자 모드 PIN 창 없�
   adminUI();
 }
 function adminUI() {
+  try { pushBarUI(); } catch (e) {}
   var on = adminOn();
   $("ttlbtn").className = on ? "adm" : "";
   if ($("hname")) updNote();
@@ -3534,7 +3723,7 @@ function openMenu() {
     else openAdminGate("mode");
   }, adminOn() || isChief() ? null : "apov");
   if (noticeIsAdmin()) item("📢 공지 보내기", isChief() ? "총괄팀장" : "관리자", function () { openAdminGate("notice"); }, isChief() ? null : "apov");
-  if (noticeIsAdmin() && ONESIGNAL_APP_ID) item("👥 알림 현황", "누가 켰는지", openPushStatus);   // 알림 현황은 아래쪽에 "← 메뉴로" 버튼
+  if (noticeIsAdmin() && ONESIGNAL_APP_ID) item("👥 알림 현황", (function () { var r = cget("pushst"); if (!r || !r.on) return "누가 켰는지"; var on = r.on.filter(function (x) { return x.n !== CHIEF_NAME; }).length; return on + "/" + (on + r.off.filter(function (n) { return n !== CHIEF_NAME; }).length) + "명 켬"; })(), openPushStatus);   // 알림 현황은 아래쪽에 "← 메뉴로" 버튼
   item("🔄 앱 새로 불러오기", "v" + APP_VER.slice(5).replace("-", "."), function () { location.reload(); });
   item("🛠 Developer", "개발자", function () { openAdminGate("dev"); }, "apov");
   L.lastChild.className = "dev";
@@ -3912,6 +4101,7 @@ function boot() {
   if (instGate()) return;   // 📲 홈 화면 앱이 아니면 안내만 (PIN·알림 등 실행 안 함)
   buildChips();
   $("ver").textContent = "v" + APP_VER.slice(5).replace("-", ".");   // 예: v10.14-4
+  updDone();   // ✨ 방금 새 버전으로 바뀌었으면 "업데이트 완료"
   if (IS_TEST) {
     $("testtag").appendChild(el("span", "testtag", "🧪 테스트"));
     document.title = "제조1-A 테스트";
