@@ -178,10 +178,10 @@ li:first-child{border-top:0}
 .hint{font-size:12px;color:var(--sub);padding:0 2px;line-height:1.5}
 #opchips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #opin{font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
-.pushrow{display:flex;align-items:center;justify-content:space-between;gap:8px;background:var(--card);border:1px dashed var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;font-weight:600;color:var(--accent);cursor:pointer}
-.pushrow .go{white-space:nowrap;flex:none}
-.pushrow.on{border-style:solid;border-color:var(--line);color:var(--sub);font-weight:500;font-size:13px;padding:7px 14px}
-.pushrow.on b{color:var(--text)}
+#pbar{display:none;align-items:center;justify-content:space-between;gap:8px;margin-top:8px;padding:9px 12px;border-radius:12px;background:#fff1dc;border:1px solid #f4b860;color:#8a4b00;font-size:14px;font-weight:700;line-height:1.35;word-break:keep-all;cursor:pointer;-webkit-tap-highlight-color:transparent}
+#pbar small{display:block;font-size:12px;font-weight:600;opacity:.85}
+#pbar .go{flex:none;white-space:nowrap;background:#f08c00;color:#fff;border-radius:999px;padding:6px 13px;font-size:13px}
+@media (prefers-color-scheme:dark){#pbar{background:#3a2a12;border-color:#8a5a1a;color:#ffc979}#pask{background:#3a2a12!important;border-color:#8a5a1a!important;color:#ffc979!important}}
 #pushchips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 .ntc{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:12px;padding:10px 14px;font-size:14px;line-height:1.55}
 .ntc .h{font-weight:800;color:var(--accent);font-size:13px;margin-bottom:2px}
@@ -546,6 +546,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
     <div class="tab" id="t3">근무시간<span></span></div>
     <div class="tab" id="t4">연차 현황<span></span></div>
   </div>
+  <div id="pbar" role="button"><span>🔕 알림이 꺼져 있어요<small>공지가 폰으로 안 와요</small></span><span class="go">알림 켜기</span></div>
   <div id="sbar" class="sbar" style="display:none">
     <input id="sq" type="search" inputmode="text" enterkeyhint="search" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="장비명·담당자·업체 (예: 373, 손성민)">
     <button id="sclose" type="button">닫기</button>
@@ -1196,7 +1197,7 @@ function render() {
   $("upd").textContent = updTxt(d, "dash");
   var lb = leaveBanner(cur);
   if (lb) main.appendChild(lb);
-  if (cur === 0 && !pushOn()) { var pr = pushRow(); if (pr) main.appendChild(pr); }   // 🔔 알림 안 켠 사람만 (켠 뒤엔 제목 메뉴에서 변경)
+  pushBarUI();
   if (d.missing && d.missing.length)
     main.appendChild(el("div", "warn", "⚠️ 열을 찾지 못한 공정: " + d.missing.join(", ")));
 
@@ -2975,7 +2976,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-19-10";
+var APP_VER = "2026-10-19-11";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -3248,22 +3249,12 @@ function pushOn() {
 }
 
 // 금일 화면 위쪽 한 줄
-function pushRow() {
-  if (!ONESIGNAL_APP_ID) return null;
-  var r;
-  if (pushOn()) {
-    r = el("div", "pushrow on");
-    var t = el("span"); t.appendChild(document.createTextNode("🔔 알림 켜짐 · ")); t.appendChild(el("b", null, sget("pushName")));
-    r.appendChild(t);
-    r.appendChild(el("span", null, "변경 ›"));
-  } else {
-    r = el("div", "pushrow");
-    r.appendChild(el("span", null, "🔕 알림 꺼짐 · 공지가 폰으로 안 와요"));
-    r.appendChild(el("span", "go", "켜기 ›"));
-  }
-  r.onclick = openPush;
-  return r;
+// 🔕 알림 안 켠 사람: 탭 바로 아래 주황 띠 (헤더에 고정 → 어느 탭·스크롤에서도 보임 · 켜면 사라짐)
+function pushBarUI() {
+  var b = $("pbar");
+  if (b) b.style.display = ONESIGNAL_APP_ID && !pushOn() ? "flex" : "none";
 }
+$("pbar").onclick = function () { mnBackHide(); openPush(); };
 
 function pushChips() {
   var box = $("pushchips");
@@ -3380,7 +3371,7 @@ $("pushgo").onclick = function () {
         if (n !== myName()) chiefClear();
         sset("myName", n); sset("nameOK", "1"); PUSH.unlocked = false;
         closePush();
-        toast("🔔 알림이 켜졌어요 · " + n);
+        toast("🔔 알림이 켜졌어요 · " + n); pushBarUI();
         call("pushRegister", [n]).catch(function () {});   // 누가 켰는지 시트에 기록
       } else {
         $("pushmsg").textContent = "알림이 허용되지 않았어요. 폰 설정 → 알림에서 '제조1-A'를 허용한 뒤 다시 눌러 주세요.";
@@ -3499,6 +3490,7 @@ function adminSetChief() {   // 👔 총괄팀장: 관리자 모드 PIN 창 없�
   adminUI();
 }
 function adminUI() {
+  try { pushBarUI(); } catch (e) {}
   var on = adminOn();
   $("ttlbtn").className = on ? "adm" : "";
   if ($("hname")) updNote();
