@@ -21,7 +21,7 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(12px + 
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{height:20px;width:auto;max-width:110px;object-fit:contain;display:block}
-.brand picture,.gpic{display:flex;align-items:center}   /* 🌙 다크모드는 logo_dark.png (밝은 글씨) */
+.brand picture,.gpic{display:flex;align-items:center}   /* 🌙 다크모드는 logo-dark.png (밝은 글씨) */
 .sep{width:1px;height:18px;background:var(--line);flex:none}
 h1{font-size:17px;margin:0;white-space:nowrap;display:flex;flex-direction:column;line-height:1.2}
 #ver{font-size:10px;font-weight:500;color:var(--sub);margin-left:5px;letter-spacing:-.2px}
@@ -564,7 +564,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <!-- 🔒 잠금 화면 -->
 <div id="gate">
   <div class="gbox">
-    <picture class="gpic"><source srcset="logo_dark.png" media="(prefers-color-scheme: dark)"><img class="glogo" id="glogo" src="logo.png" alt="" onerror="this.style.display='none'"></picture>
+    <picture class="gpic"><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img class="glogo" id="glogo" src="logo.png" alt="" onerror="this.style.display='none'"></picture>
     <div class="gtitle">제조1-A</div>
     <div class="gicon" id="gicon">🔒</div>
     <p id="gmsg"></p>
@@ -581,7 +581,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <header>
   <div class="top">
     <div class="brand">
-      <picture><source srcset="logo_dark.png" media="(prefers-color-scheme: dark)"><img class="logo" id="logo" src="logo.png" alt="" onerror="this.style.display='none';document.getElementById('sep').style.display='none';"></picture>
+      <picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img class="logo" id="logo" src="logo.png" alt="" onerror="this.style.display='none';document.getElementById('sep').style.display='none';"></picture>
       <div class="sep" id="sep"></div>
       <h1><span id="ttlbtn">제조1-A<small id="ver"></small></span> <span id="upd"></span><span id="testtag"></span></h1>
     </div>
@@ -3031,8 +3031,19 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-20-1";
-var APP_NOTES = ["근무시간 탭 열면 현재 값 바로 보여줌", "근무시간 저장 빨라짐 (연차+사유도)", "알림 창 새 디자인 · 켜는 법 안내", "업데이트하면 바뀐 점 보여줌"];   // ✨ 업데이트 화면의 "이번에 바뀐 점" (한 줄에 · 짧게 · 버전 올릴 때 같이 고치기)
+var APP_VER = "2026-10-20-2";
+// ✨ 버전별 바뀐 점 (최신이 맨 위 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
+//    업데이트 화면은 "그 사람이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
+var APP_HIST = [
+  {"v": "2026-10-20-2", "n": ["업데이트하면 그동안 바뀐 점 모아 보여줌"]},
+  {"v": "2026-10-20-1", "n": ["근무시간 탭 열면 현재 값 바로 보여줌"]},
+  {"v": "2026-10-19-16", "n": ["근무시간 저장 빨라짐 (연차+사유도)", "알림 창 새 디자인 · 차단된 폰 켜는 법 안내", "관리자가 '알림 켜 달라고' 요청 가능"]},
+  {"v": "2026-10-19-13", "n": ["새 버전 나오면 업데이트 화면으로 알려줌"]},
+  {"v": "2026-10-19-12", "n": ["다크모드 로고 깔끔하게"]},
+  {"v": "2026-10-19-11", "n": ["알림 꺼져 있으면 모든 탭에 배너"]},
+  {"v": "2026-10-19-7", "n": ["알림 현황 빨라짐"]},
+  {"v": "2026-10-19-6", "n": ["총괄팀장 추가 (근무시간은 보기만)"]}
+];   // APP_HIST 끝
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -3045,9 +3056,9 @@ function checkUpdate() {
       UPD.busy = false;
       var m = t.match(/var APP_VER = "([^"]+)"/);
       if (m && m[1] !== APP_VER) {
-        var nt = t.match(/var APP_NOTES = (\[[^\]\n]*\])/), notes = [];
-        try { notes = nt ? JSON.parse(nt[1]) : []; } catch (e) { notes = []; }
-        updShow(m[1], notes);
+        var hm = t.match(/var APP_HIST = (\[[\s\S]*?\]);\s*\/\/ APP_HIST 끝/), hist = [];
+        try { hist = hm ? JSON.parse(hm[1]) : []; } catch (e) { hist = []; }
+        updShow(m[1], histNotes(hist, APP_VER));   // 새 버전에 적힌 것 중 지금 버전 이후 것
       }
     })
     .catch(function () { UPD.busy = false; });
@@ -3058,12 +3069,24 @@ function checkUpdate() {
  */
 function verLabel(v) { return "v" + String(v || "").slice(5).replace("-", "."); }
 function noteList(n) { return (Array.isArray(n) ? n : n ? [n] : []).filter(function (x) { return x; }); }
+// 버전 비교 "2026-10-19-8" < "2026-10-20-1" (날짜 → 번호 순)
+function verKey(v) { var m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})-(\d+)$/); return m ? +(m[1] + m[2] + m[3]) * 1000 + +m[4] : -1; }
+// from 버전 이후(from 제외)에 바뀐 점을 최신 순으로 모음 · 6줄 넘으면 최신 5줄 + "➕ 그 밖에 N가지 개선"
+function histNotes(hist, from) {
+  var k = verKey(from), out = [];
+  (hist || []).slice().sort(function (a, b) { return verKey(b.v) - verKey(a.v); }).forEach(function (h) {
+    if (verKey(h.v) > k) noteList(h.n).forEach(function (t) { out.push(t); });
+  });
+  if (out.length > 6) { var more = out.length - 5; out = out.slice(0, 5); out.push("__MORE__" + more); }
+  return out;
+}
+function noteRow(t) { return /^__MORE__/.test(t) ? "➕ 그 밖에 " + t.slice(8) + "가지 개선" : "✨ " + t; }
 function updShow(nv, note) {
   if ($("updov")) return;
   var notes = noteList(note);
   var ov = el("div", null); ov.id = "updov";
-  var lg = el("img", "ul"); lg.alt = ""; lg.src = "logo_dark.png";
-  lg.onerror = function () { if (/logo_dark/.test(lg.src)) { lg.classList.add("lgfb"); lg.src = "logo.png"; } else lg.style.display = "none"; };
+  var lg = el("img", "ul"); lg.alt = ""; lg.src = "logo-dark.png";
+  lg.onerror = function () { if (/logo-dark/.test(lg.src)) { lg.classList.add("lgfb"); lg.src = "logo.png"; } else lg.style.display = "none"; };
   ov.appendChild(lg);
   var ring = el("div", "ur");
   ring.innerHTML = '<svg viewBox="0 0 100 100"><circle class="bg" cx="50" cy="50" r="42"/><circle class="fg" cx="50" cy="50" r="42"/>' +
@@ -3075,7 +3098,7 @@ function updShow(nv, note) {
   vv.appendChild(el("span", "a", "→"));
   vv.appendChild(el("span", "n", verLabel(nv)));
   ov.appendChild(vv);
-  if (notes.length) { var nb = el("div", "un"); notes.forEach(function (t) { nb.appendChild(el("div", null, "✨ " + t)); }); ov.appendChild(nb); }
+  if (notes.length) { var nb = el("div", "un"); notes.forEach(function (t) { nb.appendChild(el("div", null, noteRow(t))); }); ov.appendChild(nb); }
   var us = el("div", "us", "최신 버전으로 자동 업데이트하는 중…"); ov.appendChild(us);
   document.body.appendChild(ov);
   var fill = ring.querySelector(".fg");
@@ -3098,8 +3121,8 @@ function updDone() {
   sset("lastVer", APP_VER);
   if (!prev || prev === APP_VER || !/^\d{4}-\d{2}-\d{2}-\d+$/.test(prev)) return;   // 처음 쓰는 폰 · 같은 버전이면 안 띄움
   var ov = el("div", null); ov.id = "upddone";
-  var lg = el("img", "ul"); lg.alt = ""; lg.src = "logo_dark.png";
-  lg.onerror = function () { if (/logo_dark/.test(lg.src)) { lg.classList.add("lgfb"); lg.src = "logo.png"; } else lg.style.display = "none"; };
+  var lg = el("img", "ul"); lg.alt = ""; lg.src = "logo-dark.png";
+  lg.onerror = function () { if (/logo-dark/.test(lg.src)) { lg.classList.add("lgfb"); lg.src = "logo.png"; } else lg.style.display = "none"; };
   ov.appendChild(lg);
   var ring = el("div", "ur");
   ring.innerHTML = '<svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="42"/><path d="M33 51l12 12 22-24"/></svg>';
@@ -3110,10 +3133,10 @@ function updDone() {
   vv.appendChild(el("span", "a", "→"));
   vv.appendChild(el("span", "n", verLabel(APP_VER)));
   ov.appendChild(vv);
-  var nl = noteList(APP_NOTES);
+  var nl = histNotes(APP_HIST, prev);   // 지난번 쓰던 버전 이후 바뀐 점 전부
   if (nl.length) {
     ov.appendChild(el("div", "unl", "이번에 바뀐 점"));
-    var nb = el("div", "un"); nl.forEach(function (t) { nb.appendChild(el("div", null, "✨ " + t)); }); ov.appendChild(nb);
+    var nb = el("div", "un"); nl.forEach(function (t) { nb.appendChild(el("div", null, noteRow(t))); }); ov.appendChild(nb);
   }
   ov.appendChild(el("div", "us", "최신 버전이 적용됐어요 ✓"));
   var ok = el("button", "uok", "확인"); ok.type = "button";
