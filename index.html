@@ -21,7 +21,7 @@ header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(12px + 
 .top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .brand{display:flex;align-items:center;gap:10px;min-width:0}
 .logo{height:20px;width:auto;max-width:110px;object-fit:contain;display:block}
-@media (prefers-color-scheme:dark){.logo{background:#fff;padding:3px 7px;border-radius:6px;height:26px}}
+@media (prefers-color-scheme:dark){.logo.lgfb{background:#fff;padding:3px 7px;border-radius:6px;height:26px}}   /* 다크 로고(logo-dark.png)가 없을 때만 흰 바탕 */
 .sep{width:1px;height:18px;background:var(--line);flex:none}
 h1{font-size:17px;margin:0;white-space:nowrap;display:flex;flex-direction:column;line-height:1.2}
 #ver{font-size:10px;font-weight:500;color:var(--sub);margin-left:5px;letter-spacing:-.2px}
@@ -487,7 +487,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 #gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 .gbox{width:100%;max-width:360px;text-align:center;display:grid;gap:14px;justify-items:center}
 .glogo{height:28px;width:auto;max-width:150px;object-fit:contain}
-@media (prefers-color-scheme:dark){.glogo{background:#fff;padding:4px 9px;border-radius:6px}}
+@media (prefers-color-scheme:dark){.glogo.lgfb{background:#fff;padding:4px 9px;border-radius:6px}}
 .gtitle{font-size:22px;font-weight:800}
 .gicon{font-size:44px;line-height:1}
 #gmsg{margin:0;font-size:15px;line-height:1.6;color:var(--text)}
@@ -503,6 +503,28 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 #epmsg.bad{color:var(--warn);font-weight:600}
 #epov .ob .go{background:var(--accent);border-color:var(--accent)}
 </style>
+<script>
+/* 🌙 다크 모드면 밝은 글씨 로고(logo-dark.png) · 그 파일이 없으면 예전처럼 흰 바탕 + logo.png */
+var LOGO_DARK_BAD = false;
+function logoErr(i) {
+  if (/logo-dark\.png/.test(i.src)) { LOGO_DARK_BAD = true; i.classList.add("lgfb"); i.src = "logo.png"; return; }
+  i.style.display = "none";
+  if (i.id === "logo") { var sp = document.getElementById("sep"); if (sp) sp.style.display = "none"; }
+}
+function logoTheme() {
+  var dk = false;
+  try { dk = window.matchMedia("(prefers-color-scheme: dark)").matches; } catch (e) {}
+  ["logo", "glogo"].forEach(function (id) {
+    var i = document.getElementById(id);
+    if (!i || i.style.display === "none") return;
+    var want = dk && !LOGO_DARK_BAD ? "logo-dark.png" : "logo.png";
+    if (i.getAttribute("src") !== want) { i.classList.toggle("lgfb", dk && LOGO_DARK_BAD); i.setAttribute("src", want); }
+    else i.classList.toggle("lgfb", dk && LOGO_DARK_BAD);
+  });
+}
+document.addEventListener("DOMContentLoaded", logoTheme);
+try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", logoTheme); } catch (e) {}
+</script>
 </head>
 <body>
 <div id="ig"></div>
@@ -510,7 +532,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <!-- 🔒 잠금 화면 -->
 <div id="gate">
   <div class="gbox">
-    <img class="glogo" id="glogo" src="logo.png" alt="" onerror="this.style.display='none'">
+    <img class="glogo" id="glogo" src="logo.png" alt="" onerror="logoErr(this)">
     <div class="gtitle">제조1-A</div>
     <div class="gicon" id="gicon">🔒</div>
     <p id="gmsg"></p>
@@ -527,7 +549,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <header>
   <div class="top">
     <div class="brand">
-      <img class="logo" id="logo" src="logo.png" alt="" onerror="this.style.display='none';document.getElementById('sep').style.display='none';">
+      <img class="logo" id="logo" src="logo.png" alt="" onerror="logoErr(this)">
       <div class="sep" id="sep"></div>
       <h1><span id="ttlbtn">제조1-A<small id="ver"></small></span> <span id="upd"></span><span id="testtag"></span></h1>
     </div>
@@ -2976,7 +2998,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-19-11";
+var APP_VER = "2026-10-19-12";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
