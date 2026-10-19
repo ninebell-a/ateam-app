@@ -187,7 +187,7 @@ li:first-child{border-top:0}
 .ntc .h small{color:var(--sub);font-weight:500;margin-left:6px}
 .ntc .b{white-space:pre-wrap;font-weight:600}
 .ntbtn{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 14px;font-size:14px;font-weight:700;color:var(--accent);text-align:left;cursor:pointer;font-family:inherit;width:100%}
-#ntov textarea,#ntov input,#apov input{font-size:16px;padding:12px 14px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box;font-family:inherit}
+#ntov textarea,#ntov input,#apov input,#nmcpin{font-size:16px;padding:12px 14px;margin-bottom:6px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box;font-family:inherit}
 #ntfrom .chip.on,#ntto .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #ttlbtn{cursor:pointer;-webkit-tap-highlight-color:transparent}
 #ttlbtn.adm{color:var(--warn)}
@@ -252,6 +252,11 @@ li:first-child{border-top:0}
 .ob .go{background:var(--ok);border-color:var(--ok);color:#fff}
 .ob button:disabled{opacity:.6}
 #apmsg,#ntmsg,#pushmsg,#nmdesc,#nmmsg{white-space:pre-line;word-break:keep-all;line-height:1.5}
+#nmchips .chip.chf{border-color:#7c5cff;color:#5b3fd6;font-weight:700}
+#nmchips .chip.chf.on{background:#7c5cff;border-color:#7c5cff;color:#fff}
+#nmcp{display:none;margin-top:10px}
+#nmcp label{display:block;font-size:13px;font-weight:600;color:#5b3fd6;margin-bottom:6px}
+#hchief{display:none;line-height:1.6;word-break:keep-all;background:var(--bg);border:1px dashed var(--line);border-radius:12px;padding:12px 14px;color:var(--warn);font-size:13px;font-weight:600}
 .ntpv{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:16px;background:var(--bg);border:1px solid var(--line);margin-bottom:10px;font-size:14px;line-height:1.4}
 .ntpv .ic{flex:none;width:34px;height:34px;border-radius:8px;background:#123;color:#fff;font-weight:800;font-size:13px;display:flex;align-items:center;justify-content:center}
 .ntpv .tx{min-width:0;flex:1;white-space:pre-line;word-break:keep-all}
@@ -561,7 +566,8 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 
     <div id="hcur" class="cur">이름과 날짜를 선택하세요.</div>
 
-    <div>
+    <div id="hchief">🔒 총괄팀장은 근무시간을 보기만 할 수 있어요.</div>
+    <div id="hvalBox">
       <label for="hval">입력값 (시간 숫자 또는 글자)</label>
       <input type="text" id="hval" inputmode="decimal" placeholder="예: 8 / 10.5 / 연차">
     </div>
@@ -581,7 +587,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
       <input type="checkbox" id="hdel"> <span id="hdelTxt"></span>
     </label>
 
-    <div class="btns">
+    <div class="btns" id="hbtns">
       <button class="save" id="hsave" type="button">저장</button>
       <button class="clr" id="hclr" type="button">칸 비우기</button>
     </div>
@@ -729,6 +735,10 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
     <h3 id="nmttl">👤 본인 이름을 선택해 주세요</h3>
     <p id="nmdesc">처음 한 번만 선택해요. 선택하면 이 폰에 <b style="color:var(--accent)">고정</b>되고, 바꾸려면 관리자에게 요청해야 해요.</p>
     <div class="chips" id="nmchips"><span class="hint">이름 불러오는 중…</span></div>
+    <div id="nmcp">
+      <label for="nmcpin">👔 총괄팀장 PIN</label>
+      <input type="password" id="nmcpin" inputmode="numeric" autocomplete="off" placeholder="총괄팀장 PIN">
+    </div>
     <p class="sub" id="nmmsg"></p>
     <button type="button" id="nmdev" class="nmdev">🛠 개발자</button>
     <div class="ob" id="nmob" style="grid-template-columns:1fr"><button id="nmno" type="button" style="display:none">취소</button><button id="nmgo" type="button" class="go" style="background:var(--accent);border-color:var(--accent)" disabled>이 이름으로 정하기</button></div>
@@ -853,7 +863,7 @@ function rawCall(pin, fn, args, editPin) {
   SPD.last = null;
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
   var body = JSON.stringify({ pin: pin, fn: fn, args: args || [], editPin: editPin || "", dev: devId(), rid: rid, prev: prev,
-    me: myName(), adm: fn === "saveHours" && adminOn() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
+    me: myName(), adm: fn === "saveHours" && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
   return fetchJson(body)
     .catch(function (e) {
       if (!READ_FNS[fn]) throw e;
@@ -886,7 +896,7 @@ function call(fn, args, editPin) {
 /* ---------- 🔐 편집 PIN ---------- */
 var EP = { res: null, rej: null, busy: false };
 
-function updLock() { $("hlock").style.display = sget("editPin") ? "none" : "block"; }
+function updLock() { $("hlock").style.display = sget("editPin") || isChief() ? "none" : "block"; }
 
 function askEdit(msg) {
   return new Promise(function (res, rej) {
@@ -2541,6 +2551,7 @@ function applyMeta(m, fromCache) {
   renderTop(m.top);
   renderWeek(m.week);
   checkMonth();
+  chiefHoursUI();
 }
 
 // 근무시간 탭: 지난번 화면을 먼저 바로 보여주고, 서버 한 번 호출로 셀·달력까지 갱신
@@ -2759,7 +2770,15 @@ function refreshCell() {
 // 연차·반차·공가를 고르면 사유 칸 표시 (schedule 시트에 "이름 연차 (사유)"로 기록)
 var LEAVE_RX = /^(오전반차|오후반차|반반차|연차|공가)\s*(?:[\(（]\s*(.*?)\s*[\)）])?$/;
 var HALF_HRS = { "오전반차": "4", "오후반차": "4", "반반차": "6" };   // 반차 기본 근무시간
-function updNote() {
+// 👔 총괄팀장: 근무시간은 보기만 (입력칸·칩·저장·칸 비우기 숨김, 관리자 모드여도 그대로)
+function chiefHoursUI() {
+  var c = isChief();
+  $("hchief").style.display = c ? "block" : "none";
+  ["hvalBox", "chips", "hbtns"].forEach(function (id) { $(id).style.display = c ? "none" : ""; });
+  if (c) ["hlvlock", "hnoteBox", "hdelBox", "hlock"].forEach(function (id) { $(id).style.display = "none"; });
+}
+function updNote() { updNote0(); chiefHoursUI(); }
+function updNote0() {
   var val = String($("hval").value || "").trim();
   var m = val.match(LEAVE_RX);
   // 칩 강조
@@ -2802,6 +2821,7 @@ function updNote() {
 
 function doSave(value, force, delForce) {
   if (H.busy) return;
+  if (isChief()) { showHErr("총괄팀장은 근무시간을 보기만 할 수 있어요."); return; }
   var name = $("hname").value, date = $("hdate").value;
   if (!name || !date) { showHErr("이름과 날짜를 선택해 주세요."); return; }
   if (!checkMonth()) return;
@@ -2893,6 +2913,7 @@ $("hsave").onclick = function () { doSave($("hval").value); };
 // 칸 비우기: 확인창을 띄우고 "지우기"를 누르면 바로 지움 (덮어쓰기 확인 단계 없음)
 $("hclr").onclick = function () {
   if (H.busy) return;
+  if (isChief()) { showHErr("총괄팀장은 근무시간을 보기만 할 수 있어요."); return; }
   var name = $("hname").value, date = $("hdate").value;
   if (!name || !date) { showHErr("이름과 날짜를 선택해 주세요."); return; }
   if (!checkMonth()) return;
@@ -2932,7 +2953,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-19-5";
+var APP_VER = "2026-10-19-6";
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -2976,6 +2997,9 @@ window.addEventListener("focus", onResume);
 
 /* ---------- 👤 내 이름 (처음 한 번 고르면 이 폰에 고정, 변경은 관리자 PIN) ---------- */
 function myName() { return sget("myName") || ""; }
+var CHIEF_NAME = "총괄팀장";   // 👔 총괄팀장 (시트 명단엔 없지만 앱 이름으로 인정 · 총괄팀장 PIN 확인 후 확정)
+function isChief() { return myName() === CHIEF_NAME && !!sget("chiefPin"); }
+function chiefClear() { if (sget("chiefPin")) { sdel("chiefPin"); sdel("admChief"); } }   // 다른 이름으로 바뀌면 총괄팀장 PIN 지움
 function nameDone() { return sget("nameOK") === "1" && !!myName(); }   // 이번 버전에서 직접 고른 적이 있는지
 var NM = { pick: "", confirm: false };
 
@@ -2983,12 +3007,27 @@ function nmChips(names) {
   var b = $("nmchips"); b.innerHTML = "";
   names = (names || []).slice();
   if (NM.change && DV.pin && names.indexOf(DEV_NAME) < 0) names.push(DEV_NAME);   // (A팀) 개발자 이름은 개발자 PIN 확인 뒤에만 보임
+  if (names.indexOf(CHIEF_NAME) < 0) names.push(CHIEF_NAME);   // 👔 총괄팀장은 맨 끝 (PIN 필요)
   names.forEach(function (n) {
-    var c = el("button", "chip" + (n === NM.pick ? " on" : "") + (n === DEV_NAME ? " devc" : ""), n === DEV_NAME ? "🛠 " + n + " (개발자)" : n); c.type = "button";
-    c.onclick = function () { NM.pick = n; NM.confirm = false; $("nmgo").disabled = false; $("nmgo").textContent = NM.change ? "이 이름으로 바꾸기" : "이 이름으로 정하기"; $("nmmsg").textContent = ""; nmChips(names); };
+    var c = el("button", "chip" + (n === NM.pick ? " on" : "") + (n === DEV_NAME ? " devc" : "") + (n === CHIEF_NAME ? " chf" : ""), n === DEV_NAME ? "🛠 " + n + " (개발자)" : n === CHIEF_NAME ? "👔 " + n : n); c.type = "button";
+    c.onclick = function () {
+      var was = NM.pick;
+      NM.pick = n; NM.confirm = false; $("nmgo").disabled = false; $("nmmsg").textContent = "";
+      $("nmgo").textContent = n === CHIEF_NAME ? "PIN 확인하고 정하기" : NM.change ? "이 이름으로 바꾸기" : "이 이름으로 정하기";
+      nmChips(names);
+      nmChiefBox(was !== n);
+    };
     b.appendChild(c);
   });
 }
+// 👔 총괄팀장을 고르면 PIN 입력칸
+function nmChiefBox(focus) {
+  var on = NM.pick === CHIEF_NAME;
+  $("nmcp").style.display = on ? "block" : "none";
+  if (!on) $("nmcpin").value = "";
+  else if (focus) setTimeout(function () { try { $("nmcpin").focus(); } catch (e) {} }, 100);
+}
+$("nmcpin").onkeydown = function (e) { if (e.key === "Enter") $("nmgo").click(); };
 
 // 첫 선택 / 관리자 변경 화면 전환
 function nmMode(change) {
@@ -3012,7 +3051,7 @@ function nmMode(change) {
 function openNameChange() {
   nmMode(true);
   NM.pick = ""; NM.confirm = false;
-  $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 바꾸기"; $("nmmsg").textContent = "";
+  $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 바꾸기"; $("nmmsg").textContent = ""; nmChiefBox();
   var cn = cget("names");
   if (cn && cn.names) nmChips(cn.names);
   call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; nmChips(r.names); } }).catch(function () {});
@@ -3029,7 +3068,7 @@ function nameAsk() {
   if (o && o.id !== "nmov") { if (o.id === "pushov") closePush(); else { setTimeout(nameAsk, 800); return; } }   // 알림 창보다 이름이 먼저
   nmMode(false);
   NM.pick = ""; NM.confirm = false;
-  $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 정하기"; $("nmmsg").textContent = "";
+  $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 정하기"; $("nmmsg").textContent = ""; nmChiefBox();
   var cn = cget("names");
   if (cn && cn.names) nmChips(cn.names);
   call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; nmChips(r.names); } }).catch(function () {});
@@ -3038,6 +3077,22 @@ function nameAsk() {
 
 $("nmgo").onclick = function () {
   if (!NM.pick) return;
+  if (NM.pick === CHIEF_NAME) {   // 👔 총괄팀장: PIN이 맞아야 확정 (틀리면 서버가 횟수 안내 · 5번이면 10분 잠금)
+    var msg = $("nmmsg"), pin = $("nmcpin").value.trim();
+    if (NM.change && NM.pick === myName() && isChief()) { msg.textContent = "지금 이름과 같아요. 다른 이름을 골라 주세요."; return; }
+    if (!pin) { msg.textContent = "총괄팀장 PIN을 입력해 주세요."; return; }
+    $("nmgo").disabled = true; $("nmgo").textContent = "확인 중…";
+    call("checkChief", [pin]).then(function (r) {
+      $("nmgo").disabled = false; $("nmgo").textContent = "PIN 확인하고 정하기";
+      if (!r || r.error) { msg.textContent = (r && r.error) || "확인 실패"; $("nmcpin").value = ""; return; }
+      sset("chiefPin", pin);
+      nmApply(CHIEF_NAME);
+    }).catch(function (e) {
+      $("nmgo").disabled = false; $("nmgo").textContent = "PIN 확인하고 정하기";
+      msg.textContent = "확인 실패: " + errText(e);
+    });
+    return;
+  }
   if (!NM.confirm) {   // 한 번 더 확인
     if (NM.change && NM.pick === myName()) { $("nmmsg").textContent = "지금 이름과 같아요. 다른 이름을 골라 주세요."; return; }
     NM.confirm = true;
@@ -3045,22 +3100,28 @@ $("nmgo").onclick = function () {
     $("nmmsg").textContent = "정한 뒤에는 직접 바꿀 수 없어요. 맞으면 한 번 더 눌러 주세요.";
     return;
   }
+  nmApply(NM.pick);
+};
+function nmApply(pick) {
   var wasChange = NM.change;
   var old = sget("pushName");
-  sset("myName", NM.pick); sset("nameOK", "1");
-  if (wasChange || !sget("hoursName") || sget("hoursName") === old) sset("hoursName", NM.pick);
-  if (old && old !== NM.pick) {   // 예전에 다른 이름으로 알림을 켰으면 새 이름으로 다시 연결
-    sset("pushName", NM.pick);
-    if (window.OneSignalDeferred) window.OneSignalDeferred.push(async function (OS) { try { await OS.login(NM.pick); } catch (e) {} });
-    call("pushRegister", [NM.pick]).catch(function () {});
+  if (pick !== CHIEF_NAME) chiefClear();
+  if (pick !== myName()) { sdel("admUntil"); sdel("admPin"); sdel("admChief"); }   // 이름이 바뀌면 관리자 모드도 끔
+  sset("myName", pick); sset("nameOK", "1");
+  if (pick !== CHIEF_NAME && (wasChange || !sget("hoursName") || sget("hoursName") === old)) sset("hoursName", pick);   // 총괄팀장은 근무시간 명단에 없으니 그대로
+  if (old && old !== pick) {   // 예전에 다른 이름으로 알림을 켰으면 새 이름으로 다시 연결
+    sset("pushName", pick);
+    if (window.OneSignalDeferred) window.OneSignalDeferred.push(async function (OS) { try { await OS.login(pick); } catch (e) {} });
+    call("pushRegister", [pick]).catch(function () {});
   }
-  $("nmov").className = "ov";
-  toast(wasChange ? "👤 이름이 '" + NM.pick + "'(으)로 바뀌었어요" : "👤 " + NM.pick + " 님으로 정해졌어요");
+  $("nmov").className = "ov"; $("nmcpin").value = ""; $("nmcp").style.display = "none";
+  toast(pick === CHIEF_NAME ? "👔 총괄팀장으로 정해졌어요" : wasChange ? "👤 이름이 '" + pick + "'(으)로 바뀌었어요" : "👤 " + pick + " 님으로 정해졌어요");
   devRegister(true);
   nmMode(false);
+  adminUI();
   if (cur === 0 && !SR.open) render();
   setTimeout(pushAutoAsk, 800);
-};
+}
 
 // 👥 알림 현황 (관리자)
 function openPushStatus() {
@@ -3231,6 +3292,7 @@ $("pushgo").onclick = function () {
       if (OS.Notifications.permission) {
         try { await OS.User.PushSubscription.optIn(); } catch (e2) {}
         sset("pushName", n);
+        if (n !== myName()) chiefClear();
         sset("myName", n); sset("nameOK", "1"); PUSH.unlocked = false;
         closePush();
         toast("🔔 알림이 켜졌어요 · " + n);
@@ -3255,7 +3317,7 @@ function noticeCard() {
   if (!n || n.date !== ymdLocal()) return null;
   if (!n.all) {   // 골라서 보낸 공지는 받는 사람(과 관리자)에게만 표시
     var me = sget("pushName") || sget("hoursName") || "";
-    if ((n.to || []).indexOf(me) < 0 && NOTICE_ADMINS.indexOf(me) < 0) return null;
+    if ((n.to || []).indexOf(me) < 0 && NOTICE_ADMINS.indexOf(me) < 0 && !isChief()) return null;
   }
   var c = el("div", "ntc");
   var h = el("div", "h", n.title || "📢 공지");
@@ -3267,12 +3329,12 @@ function noticeCard() {
 
 function noticeIsAdmin() {
   var me = myName() || sget("pushName") || "";
-  return NOTICE_ADMINS.indexOf(me) >= 0;
+  return NOTICE_ADMINS.indexOf(me) >= 0 || isChief();
 }
 
 function noticeBtn() {
   if (!noticeIsAdmin()) return null;
-  var b = el("button", "ntbtn", "📢 공지 보내기 (관리자)");
+  var b = el("button", "ntbtn", isChief() ? "📢 공지 보내기 (총괄팀장)" : "📢 공지 보내기 (관리자)");
   b.type = "button";
   b.onclick = openNotice;
   return b;
@@ -3280,7 +3342,8 @@ function noticeBtn() {
 
 function ntChips() {
   var f = $("ntfrom"); f.innerHTML = "";
-  var list = NOTICE_ADMINS.filter(function (n) { return n !== DEV_NAME; });   // 손성민 이름은 보낸 사람에 안 나옴
+  var list = [CHIEF_NAME].concat(NOTICE_ADMINS.filter(function (n) { return n !== DEV_NAME; }));   // 총괄팀장 맨 앞 · 손성민 이름은 보낸 사람에 안 나옴
+  if (isChief()) list = [CHIEF_NAME];   // 👔 총괄팀장 폰: 총괄팀장만
   if (myName() === DEV_NAME) list.push(DEV_SENDER);   // 🛠 개발자로 보내기 (개발자 폰에서만, 개발자 PIN 필요)
   list.forEach(function (n) {
     var c = el("button", "chip" + (n === NT.from ? " on" : ""), n === DEV_SENDER ? "🛠 " + n : n); c.type = "button";
@@ -3292,7 +3355,7 @@ function ntChips() {
 var DEV_SENDER = "개발자";   // 공지 보낸 사람에 손성민 대신 "개발자"로 표시
 function openNotice() {
   var me = myName() || sget("pushName") || "";
-  NT.from = me === DEV_NAME ? DEV_SENDER : NOTICE_ADMINS.indexOf(me) >= 0 ? me : "";
+  NT.from = isChief() ? CHIEF_NAME : me === DEV_NAME ? DEV_SENDER : NOTICE_ADMINS.indexOf(me) >= 0 ? me : "";
   $("ntbody").value = "";
   $("ntmsg").textContent = "알림을 켠 사람 전체의 폰에 바로 알림으로 가요.";
   $("ntmsg").style.color = "";
@@ -3325,7 +3388,7 @@ function ntPreview() {
   P.appendChild(tx);
 }
 $("ntbody").oninput = ntPreview;
-$("ntno").onclick = closeNotice;
+$("ntno").onclick = function () { NT.chiefPin = ""; closeNotice(); };
 $("ntov").onclick = function (e) { if (e.target === this) closeNotice(); };
 // 🔒 메뉴 → 공지 보내기: 관리자 PIN 먼저 (매번 확인)
 var DEV_NAME = "손성민";   // 🛠 개발자 (이름 변경 요청 받는 사람)
@@ -3335,7 +3398,8 @@ var DEV_NAME = "손성민";   // 🛠 개발자 (이름 변경 요청 받는 사
  */
 function adminOn() {
   var u = +(sget("admUntil") || 0);
-  if (!u || u < Date.now() || !sget("admPin")) { if (u) { sdel("admUntil"); sdel("admPin"); } return false; }
+  var ok = isChief() ? sget("admChief") === "1" : !!sget("admPin");   // 👔 총괄팀장은 PIN 없이 켬
+  if (!u || u < Date.now() || !ok) { if (u) { sdel("admUntil"); sdel("admPin"); sdel("admChief"); } return false; }
   return true;
 }
 function adminSet(pin) {
@@ -3343,7 +3407,12 @@ function adminSet(pin) {
   sset("admPin", pin); sset("admUntil", String(d.getTime()));
   adminUI();
 }
-function adminOff() { sdel("admPin"); sdel("admUntil"); adminUI(); }
+function adminOff() { sdel("admPin"); sdel("admUntil"); sdel("admChief"); adminUI(); }
+function adminSetChief() {   // 👔 총괄팀장: 관리자 모드 PIN 창 없이 바로 ON (근무시간은 계속 보기만)
+  var d = new Date(); d.setHours(23, 59, 59, 0);
+  sset("admChief", "1"); sset("admUntil", String(d.getTime()));
+  adminUI();
+}
 function adminUI() {
   var on = adminOn();
   $("ttlbtn").className = on ? "adm" : "";
@@ -3352,34 +3421,43 @@ function adminUI() {
 function isOther(name) { return !!(name && myName() && name !== myName()); }
 function leaveLocked() { return isOther($("hname").value) && !adminOn(); }
 function openAdminGate(next) {
-  NT.next = next === "dev" || next === "devname" || next === "devnotice" || next === "mode" ? next : "notice";
+  NT.next = next === "dev" || next === "devname" || next === "devnotice" || next === "mode" || next === "chiefnotice" ? next : "notice";
+  if (NT.next === "notice" && isChief()) { NT.pin = ""; openNotice(); mnBackShow("ntov"); return; }   // 👔 총괄팀장은 PIN 없이 바로
   if (NT.next === "notice" && adminOn()) { NT.pin = sget("admPin"); openNotice(); mnBackShow("ntov"); return; }   // 관리자 모드면 PIN 생략
-  var dev = NT.next === "dev" || NT.next === "devname" || NT.next === "devnotice";
-  $("apttl").textContent = dev ? "🛠 개발자 PIN" : "🔒 관리자 PIN";
-  $("apdesc").textContent = NT.next === "devnotice" ? "개발자로 공지를 보내려면 개발자 PIN이 필요해요." : NT.next === "devname" ? "이 폰을 개발자 이름으로 정해요." : dev ? "개발자 전용 메뉴예요." : NT.next === "mode" ? "관리자 모드는 오늘 자정까지 유지돼요.\n(다른 사람 연차류·칸 비우기 · 공지 보내기 PIN 생략)" : "공지 보내기는 관리자만 할 수 있어요.";
+  var dev = NT.next === "dev" || NT.next === "devname" || NT.next === "devnotice", chf = NT.next === "chiefnotice";
+  $("apttl").textContent = chf ? "👔 총괄팀장 PIN" : dev ? "🛠 개발자 PIN" : "🔒 관리자 PIN";
+  $("apdesc").textContent = chf ? "총괄팀장 이름으로 공지를 보내려면\n총괄팀장 PIN이 필요해요." : NT.next === "devnotice" ? "개발자로 공지를 보내려면 개발자 PIN이 필요해요." : NT.next === "devname" ? "이 폰을 개발자 이름으로 정해요." : dev ? "개발자 전용 메뉴예요." : NT.next === "mode" ? "관리자 모드는 오늘 자정까지 유지돼요.\n(다른 사람 연차류·칸 비우기 · 공지 보내기 PIN 생략)" : "공지 보내기는 관리자만 할 수 있어요.";
   $("apdesc").style.whiteSpace = "pre-line";
-  $("appin").placeholder = dev ? "개발자 PIN" : "관리자 PIN";
-  NT.pin = "";
+  $("appin").placeholder = chf ? "총괄팀장 PIN" : dev ? "개발자 PIN" : "관리자 PIN";
+  if (!chf) NT.pin = "";
   $("appin").value = ""; $("apmsg").textContent = "";
   $("apgo").disabled = false; $("apgo").textContent = "확인";
   $("apov").className = "ov on";
   setTimeout(function () { try { $("appin").focus(); } catch (e) {} }, 200);
 }
 function closeAdminGate() { $("apov").className = "ov"; }
-$("apno").onclick = function () { var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); else if (nx === "devnotice") { var kp = NT.keepPin || "", kb = NT.keep || ""; openNotice(); NT.pin = kp; $("ntbody").value = kb; ntPreview(); } };   // 개발자 확인 취소 → 이름 고르기로
+$("apno").onclick = function () { var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); else if (nx === "devnotice" || nx === "chiefnotice") { var kp = NT.keepPin || "", kb = NT.keep || ""; openNotice(); NT.pin = kp; $("ntbody").value = kb; ntPreview(); } };   // 개발자 확인 취소 → 이름 고르기로
 $("apov").onclick = function (e) { if (e.target === this) closeAdminGate(); };
 $("appin").onkeydown = function (e) { if (e.key === "Enter") $("apgo").click(); };
 $("apgo").onclick = function () {
   var pin = $("appin").value.trim(), msg = $("apmsg");
   msg.style.color = "var(--warn)";
-  var dev = NT.next === "dev" || NT.next === "devname" || NT.next === "devnotice";
-  if (!pin) { msg.textContent = (dev ? "개발자" : "관리자") + " PIN을 입력해 주세요."; return; }
+  var dev = NT.next === "dev" || NT.next === "devname" || NT.next === "devnotice", chf = NT.next === "chiefnotice";
+  if (!pin) { msg.textContent = (chf ? "총괄팀장" : dev ? "개발자" : "관리자") + " PIN을 입력해 주세요."; return; }
   $("apgo").disabled = true; $("apgo").textContent = "확인 중…";
-  call(dev ? "checkDev" : "checkAdmin", [pin]).then(function (r) {
+  call(chf ? "checkChief" : dev ? "checkDev" : "checkAdmin", [pin]).then(function (r) {
     $("apgo").disabled = false; $("apgo").textContent = "확인";
     if (r && r.error) { msg.textContent = r.error; $("appin").value = ""; return; }
     var back = $("apov").querySelector(".mnback"), fromMenu = back && back.style.display !== "none";
     if (dev) { DV.devPush = !!r.devPush; sset("devPush", DV.devPush ? "1" : "0"); }
+    if (chf) {   // 👔 총괄팀장 이름으로 공지: 총괄팀장 PIN 확인 뒤 쓰던 내용 그대로 다시 열기
+      NT.chiefPin = pin; closeAdminGate();
+      var kp2 = NT.keepPin || "", kb2 = NT.keep || "";
+      openNotice(); NT.pin = kp2; NT.from = CHIEF_NAME; ntChips();
+      $("ntbody").value = kb2; ntPreview();
+      $("ntmsg").style.color = ""; $("ntmsg").textContent = "👔 총괄팀장으로 보내요. 다시 '보내기'를 눌러 주세요.";
+      return;
+    }
     if (NT.next === "devnotice") {   // 🛠 개발자로 공지: PIN 확인 뒤 쓰던 내용 그대로 다시 열기
       DV.pin = pin; closeAdminGate();
       var keepPin = NT.keepPin || "", keepBody = NT.keep || "";
@@ -3390,7 +3468,7 @@ $("apgo").onclick = function () {
     }
     if (NT.next === "devname") {   // 🛠 이 폰을 개발자 이름으로
       DV.pin = pin; closeAdminGate();
-      sset("myName", DEV_NAME); sset("nameOK", "1");
+      chiefClear(); sset("myName", DEV_NAME); sset("nameOK", "1");
       toast("🛠 개발자(" + DEV_NAME + ")로 정해졌어요");
       devRegister(true);
       if (cur === 0 && !SR.open) render();
@@ -3414,13 +3492,16 @@ $("ntgo").onclick = function () {
   var body = $("ntbody").value.trim(), pin = NT.pin || "";
   if (!NT.from) { msg.textContent = "보낸 사람을 골라 주세요."; return; }
   if (!body) { msg.textContent = "내용을 입력해 주세요."; return; }
-  if (!pin) { closeNotice(); openAdminGate(); return; }
+  var chf = NT.from === CHIEF_NAME, cpin = chf ? (isChief() ? sget("chiefPin") : NT.chiefPin || "") : "";
+  if (chf && !cpin) { NT.keep = body; NT.keepPin = pin; closeNotice(); openAdminGate("chiefnotice"); return; }   // 👔 다른 관리자가 총괄팀장으로 보내려면 총괄팀장 PIN
+  if (!chf && !pin) { closeNotice(); openAdminGate(); return; }
   if (NT.from === DEV_SENDER && !DV.pin) { NT.keep = body; NT.keepPin = pin; closeNotice(); openAdminGate("devnotice"); return; }   // 🛠 개발자로 보내려면 개발자 PIN
   $("ntgo").disabled = true; $("ntgo").textContent = "보내는 중…";
-  call("sendNotice", [{ pin: pin, sender: NT.from, title: "", body: body, to: [], devPin: NT.from === DEV_SENDER ? DV.pin : "" }])   // 제목은 서버 기본값 "📢 공지", 받는 사람은 전체
+  call("sendNotice", [{ pin: chf ? "" : pin, sender: NT.from, title: "", body: body, to: [], devPin: NT.from === DEV_SENDER ? DV.pin : "", chiefPin: cpin }])   // 제목은 서버 기본값 "📢 공지", 받는 사람은 전체
     .then(function (r) {
       $("ntgo").disabled = false; $("ntgo").textContent = "보내기";
-      if (r && r.error) { msg.textContent = r.error; if (r.adminPin) { NT.pin = ""; if (adminOn()) adminOff(); } return; }
+      if (r && r.error) { msg.textContent = r.error; if (r.chiefPin) NT.chiefPin = ""; if (r.adminPin) { NT.pin = ""; if (adminOn()) adminOff(); } return; }
+      NT.chiefPin = "";
       if (r.notice) store.notice = r.notice;
       closeNotice();
       toast("📢 공지를 보냈어요 · " + r.count + "명");
@@ -3448,9 +3529,11 @@ function openMenu() {
   if (myName() === DEV_NAME && sget("devPush") != null) pushSub = sget("devPush") === "1" ? "개발자 알림 켜짐" : "개발자 알림 꺼짐";   // 🛠 개발자는 실제로 받는지 기준
   if (ONESIGNAL_APP_ID) item("🔔 알림 설정", pushSub, openPush, "pushov");
   if (noticeIsAdmin()) item("🔑 관리자 모드", adminOn() ? "켜짐 · 누르면 끄기" : "꺼짐", function () {
-    if (adminOn()) { adminOff(); toast("🔑 관리자 모드 꺼짐"); } else openAdminGate("mode");
-  }, adminOn() ? null : "apov");
-  if (noticeIsAdmin()) item("📢 공지 보내기", "관리자", function () { openAdminGate("notice"); }, "apov");
+    if (adminOn()) { adminOff(); toast("🔑 관리자 모드 꺼짐"); }
+    else if (isChief()) { adminSetChief(); toast("🔑 관리자 모드 켜짐 · 오늘 자정까지"); }
+    else openAdminGate("mode");
+  }, adminOn() || isChief() ? null : "apov");
+  if (noticeIsAdmin()) item("📢 공지 보내기", isChief() ? "총괄팀장" : "관리자", function () { openAdminGate("notice"); }, isChief() ? null : "apov");
   if (noticeIsAdmin() && ONESIGNAL_APP_ID) item("👥 알림 현황", "누가 켰는지", openPushStatus);   // 알림 현황은 아래쪽에 "← 메뉴로" 버튼
   item("🔄 앱 새로 불러오기", "v" + APP_VER.slice(5).replace("-", "."), function () { location.reload(); });
   item("🛠 Developer", "개발자", function () { openAdminGate("dev"); }, "apov");
@@ -3486,7 +3569,7 @@ function applyRemoteRename(rn) {
   RN.busy = to;
   var old = myName();
   if (to !== old) {
-    sset("myName", to); sset("nameOK", "1");
+    chiefClear(); sset("myName", to); sset("nameOK", "1");
     if (!sget("hoursName") || sget("hoursName") === old) sset("hoursName", to);
     if (sget("pushName")) {
       sset("pushName", to);
