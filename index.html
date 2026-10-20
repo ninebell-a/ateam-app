@@ -1752,7 +1752,7 @@ function opEditOwner(p, d) {
   var oc = $("opcur"); oc.innerHTML = ""; oc.textContent = "고칠 장비를 골라 주세요."; oc.style.display = "block";
   var eq = $("opeq"); eq.innerHTML = ""; eq.style.display = "flex";
   p.items.forEach(function (it) {
-    var c = el("button", "chip", it.n + (it.t ? " · " + it.t : "")); c.type = "button";
+    var c = el("button", "chip", it.n); c.type = "button";   // 장비명만 (타입까지 붙이면 헷갈림)
     c.onclick = function () { openOp({ row: it.row, n: it.n, t: it.t }, names, p.name); };
     eq.appendChild(c);
   });
@@ -3202,10 +3202,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-20-4";
+var APP_VER = "2026-10-20-5";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-20-5", ["작업자 수정: 장비 고를 때 장비명만 표시"]],
   ["2026-10-20-4", ["시트 업로드: 내 이름을 누르면 작업자 수정"]],
   ["2026-10-20-3", ["어제 근무시간 안 넣었으면 금일·근무시간 탭에 표시", "작업자(FT) 잘못 넣었으면 수정·비우기 가능", "아침 8시 알림을 팀 공통 요약으로"]],
   ["2026-10-20-2", ["업데이트하면 그동안 바뀐 점 모아 보여줌"]],
