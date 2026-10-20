@@ -13,8 +13,10 @@
 <link rel="icon" type="image/png" href="icon.png">
 <title>제조1-A</title>
 <style>
-:root{--bg:#f4f6f9;--card:#fff;--text:#1d2530;--sub:#7b8794;--line:#e3e8ee;--accent:#2f6fed;--warn:#e5484d;--ok:#1f9d55;--ta:#3b82f6;--tb:#ef4444}
-@media (prefers-color-scheme:dark){:root{--bg:#12161c;--card:#1b222b;--text:#e8edf3;--sub:#8b97a5;--line:#2a333f;--accent:#6b9bff;--warn:#ff6b6f;--ok:#4cd08a;--ta:#5b9bff;--tb:#ff6b6f}}
+:root{--urg:#d92d20;--bg:#f4f6f9;--card:#fff;--text:#1d2530;--sub:#7b8794;--line:#e3e8ee;--accent:#2f6fed;--warn:#e5484d;--ok:#1f9d55;--ta:#3b82f6;--tb:#ef4444}
+@media (prefers-color-scheme:dark){:root{--urg:#ff5f5f;--bg:#12161c;--card:#1b222b;--text:#e8edf3;--sub:#8b97a5;--line:#2a333f;--accent:#6b9bff;--warn:#ff6b6f;--ok:#4cd08a;--ta:#5b9bff;--tb:#ff6b6f}}
+.urg{color:var(--urg);font-weight:800}   /* 🚨 긴급 장비(PR.=1): 장비명만 빨간 굵은 글씨 */
+.eqd .h b .urg{color:var(--urg);font-size:inherit;text-align:inherit}   /* 검색 상세 제목: '.eqd .h span' 회색·작은 글씨 안 받게 */
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,"Noto Sans KR","Malgun Gothic",sans-serif;-webkit-text-size-adjust:100%;padding-bottom:env(safe-area-inset-bottom)}
 header{position:sticky;top:0;z-index:5;background:var(--bg);padding:calc(12px + env(safe-area-inset-top)) 16px 8px;border-bottom:1px solid var(--line)}
@@ -948,19 +950,60 @@ var SPD = { last: null };
 // 📶 조회 요청은 연결이 끊기면 1번 자동 재시도 (저장 요청은 중복 저장 막으려고 재시도 안 함)
 var READ_FNS = { ping: 1, getDashboardAll: 1, getDashboardData: 1, getUploadStatus: 1, getHoursMeta: 1, getHoursCell: 1, getLeaveData: 1, getStatsData: 1, getEquipIndex: 1, getPushStatus: 1, getTeamNames: 1 };
 var INFLIGHT = {};   // ⚡ 같은 조회가 이미 가는 중이면 새로 안 보내고 그 결과를 같이 씀 (서버에 줄 서는 요청 줄이기)
-var CALL_TIMEOUT = 30000;   // 30초 넘게 응답 없으면 끊음 (타임아웃은 다시 시도 안 함 — 서버가 바쁠 때 또 보내면 더 막힘)
-
-function fetchJson(body) {
-  var ctl = (typeof AbortController !== "undefined") ? new AbortController() : null;
-  var tm = ctl ? setTimeout(function () { ctl.abort(); }, CALL_TIMEOUT) : null;
-  return fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "text/plain;charset=utf-8" },
-    body: body,
-    signal: ctl ? ctl.signal : undefined
-  }).then(function (r) { if (tm) clearTimeout(tm); return r.json(); },
-          function (e) { if (tm) clearTimeout(tm); if (e && e.name === "AbortError") throw new Error("network timeout"); throw e; });
+var CALL_TIMEOUT = 30000;   // 조회: 30초 넘게 응답 없으면 끊음 (타임아웃은 다시 시도 안 함 — 서버가 바쁠 때 또 보내면 더 막힘)
+var LONG_TIMEOUT = 90000;   // 새로고침(getDashboardAll(true))·저장: 90초 (앱이 먼저 포기하면 실제로는 저장됐는데 '실패'로 보임)
+function callTimeout(fn, args) {
+  if (!READ_FNS[fn]) return LONG_TIMEOUT;
+  if (fn === "getDashboardAll" && args && args[0] === true) return LONG_TIMEOUT;
+  return CALL_TIMEOUT;
 }
+
+// 📱 앱을 내린 동안 폰(특히 아이폰)이 연결을 끊으면 보내 둔 조회가 응답 없이 멈춰 있음
+//    → 진행 중인 조회 요청을 목록으로 들고 있다가, 2초 넘게 내렸다 다시 열면 전부 끊고 바로 다시 보냄
+//    (저장 요청은 두 번 저장될 수 있어서 안 끊음)
+var LIVE_READS = [];
+var HIDDEN_AT = 0;
+function fetchJson(body, ms, isRead) {
+  var job = { resend: false, ctl: null };
+  function once() {
+    var ctl = (typeof AbortController !== "undefined") ? new AbortController() : null;
+    job.ctl = ctl;
+    var tm = ctl ? setTimeout(function () { ctl.abort(); }, ms || CALL_TIMEOUT) : null;
+    return fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain;charset=utf-8" },
+      body: body,
+      signal: ctl ? ctl.signal : undefined
+    }).then(function (r) { if (tm) clearTimeout(tm); return r.json(); },
+            function (e) {
+              if (tm) clearTimeout(tm);
+              if (job.resend) { job.resend = false; return once(); }   // 다시 열어서 끊은 것 → 바로 다시 보냄
+              if (e && e.name === "AbortError") throw new Error("network timeout");
+              throw e;
+            });
+  }
+  if (!isRead) return once();
+  LIVE_READS.push(job);
+  var out = once();
+  var drop = function () { var k = LIVE_READS.indexOf(job); if (k >= 0) LIVE_READS.splice(k, 1); };
+  out.then(drop, drop);
+  return out;
+}
+function resendLiveReads() {
+  LIVE_READS.slice().forEach(function (job) {
+    if (!job.ctl) return;
+    job.resend = true;
+    try { job.ctl.abort(); } catch (e) { job.resend = false; }
+  });
+}
+function onHideNet() { HIDDEN_AT = Date.now(); }
+function onShowNet() {
+  if (HIDDEN_AT && Date.now() - HIDDEN_AT > 2000 && LIVE_READS.length) resendLiveReads();
+  HIDDEN_AT = 0;
+}
+document.addEventListener("visibilitychange", function () { if (document.hidden) onHideNet(); else onShowNet(); });
+window.addEventListener("pagehide", onHideNet);
+window.addEventListener("pageshow", function (e) { if (e.persisted && !HIDDEN_AT) HIDDEN_AT = 1; onShowNet(); });   // 뒤로가기 캐시에서 돌아옴 = 오래 내려가 있었음
 
 function rawCall(pin, fn, args, editPin) {
   if (READ_FNS[fn]) {
@@ -980,11 +1023,12 @@ function rawCall1(pin, fn, args, editPin) {
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
   var body = JSON.stringify({ pin: pin, fn: fn, args: args || [], editPin: editPin || "", dev: devId(), rid: rid, prev: prev,
     me: myName(), adm: (fn === "saveHours" || fn === "setOperator") && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
-  return fetchJson(body)
+  var ms0 = callTimeout(fn, args), rd = !!READ_FNS[fn];
+  return fetchJson(body, ms0, rd)
     .catch(function (e) {
       // 조회만 한 번 다시 시도 · 네트워크 타임아웃(서버가 바쁨)은 다시 안 보냄 → 줄 선 요청을 더 늘리지 않게
       if (!READ_FNS[fn] || /timeout/i.test(String(e && e.message))) throw e;
-      return new Promise(function (res) { setTimeout(res, 1500); }).then(function () { return fetchJson(body); });
+      return new Promise(function (res) { setTimeout(res, 1500); }).then(function () { return fetchJson(body, ms0, rd); });
     })
     .then(function (j) {
       var ms = Date.now() - t0;
@@ -1247,6 +1291,10 @@ $("lockbtn").onclick = function () { lockApp("잠겼어요. PIN을 입력해 주
 
 /* ---------- 금일/명일 ---------- */
 // 자리 표시: (본사)/(동탄)은 검정, 자리 번호는 빨강
+// 🚨 긴급 장비(PR.=1)는 장비명만 빨간 굵은 글씨 (타입·자리·담당자 색은 그대로)
+function eqName(n, u) { return u ? el("span", "urg", n) : document.createTextNode(n); }
+// 긴급 장비를 맨 위로 (나머지 순서는 그대로)
+function urgFirst(items) { return items.map(function (x, i) { return [x, i]; }).sort(function (a, b) { return ((b[0].u ? 1 : 0) - (a[0].u ? 1 : 0)) || (a[1] - b[1]); }).map(function (x) { return x[0]; }); }
 function locEl(txt) {
   var s = el("span", "loc", "📍 ");
   txt = String(txt);
@@ -1308,9 +1356,9 @@ function render() {
     card.appendChild(hd);
     if (n) {
       var ul = el("ul");
-      s.items.forEach(function (it) {
+      urgFirst(s.items).forEach(function (it) {
         var li = el("li");
-        li.appendChild(document.createTextNode(it.n));
+        li.appendChild(eqName(it.n, it.u));
         if (it.owner) li.appendChild(el("span", "own", it.owner));
         if (it.tag) li.appendChild(el("span", "tag " + (it.tagKind || ""), "(" + it.tag + ")"));
         if (it.t) li.appendChild(el("span", "t", it.t));
@@ -1419,11 +1467,11 @@ function schedDayCard(d, today) {
   hd.appendChild(right);
   card.appendChild(hd);
   var ul = el("ul");
-  d.items.forEach(function (it) {
+  urgFirst(d.items).forEach(function (it) {
     var li = el("li");
     var tk = teamKey(it).toLowerCase();
     li.appendChild(el("span", "tmtag " + tk, it.team === "A" ? "A팀" : it.team === "B" ? "B팀" : "▲미지정"));
-    li.appendChild(document.createTextNode(it.n));
+    li.appendChild(eqName(it.n, it.u));
     if (it.t) li.appendChild(el("span", "t", it.t));
     if (it.loc) li.appendChild(locEl(it.loc));
     else if (it.noLoc) li.appendChild(el("span", "nl", "📍 자리 미배정"));
@@ -2339,7 +2387,8 @@ function renderSearch() {
     var it = el("div", "it");
     var tk = r[3] === "A" ? "a" : r[3] === "B" ? "b" : "u";
     it.appendChild(el("span", "tmtag " + tk, r[3] ? r[3] + "팀" : "▲미지정"));
-    var nm = el("span", "nm", r[0]);
+    var nm = el("span", "nm");
+    nm.appendChild(eqName(r[0], r[7]));   // [7] 🚨 긴급
     if (r[2]) nm.appendChild(el("span", "ow", r[2]));
     it.appendChild(nm);
     var nx = eqNext(r, idx.stages, today);
@@ -2360,7 +2409,8 @@ function renderEquipDetail(box, r, stages, today, canBack) {
   }
   var c = el("div", "eqd");
   var h = el("div", "h");
-  var b = el("b", null, r[0]);
+  var b = el("b");
+  b.appendChild(eqName(r[0], r[7]));
   if (r[2]) b.appendChild(el("span", "ow", r[2]));   // 장비명 오른쪽에 담당자
   h.appendChild(b);
   h.appendChild(el("span", null, r[1]));
@@ -3216,10 +3266,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-20-6";
+var APP_VER = "2026-10-21-1";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-21-1", ["🚨 긴급 장비는 장비명이 빨간색 (금일·명일·검색·일정)", "앱을 다시 열 때 '갱신 중'에서 오래 멈추던 문제 수정", "새로고침이 중간에 실패하던 문제 수정", "저장이 오래 걸릴 때 '실패'로 뜨던 문제 수정"]],
   ["2026-10-20-6", ["서버가 바쁠 때도 앱이 덜 멈추게 개선"]],
   ["2026-10-20-5", ["작업자 수정: 장비 고를 때 장비명만 표시"]],
   ["2026-10-20-4", ["시트 업로드: 내 이름을 누르면 작업자 수정"]],
@@ -3269,7 +3320,7 @@ function histNotes(hist, from) {
   if (out.length > 6) { var more = out.length - 5; out = out.slice(0, 5); out.push("__MORE__" + more); }
   return out;
 }
-function noteRow(t) { return /^__MORE__/.test(t) ? "➕ 그 밖에 " + t.slice(8) + "가지 개선" : "✨ " + t; }
+function noteRow(t) { return /^__MORE__/.test(t) ? "➕ 그 밖에 " + t.slice(8) + "가지 개선" : (/^[\u2600-\u27BF\uD83C-\uDBFF]/.test(t) ? t : "✨ " + t); }   // 노트가 이모지로 시작하면 ✨ 안 붙임
 function updShow(nv, note) {
   if ($("updov")) return;
   var notes = noteList(note);
