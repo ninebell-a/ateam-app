@@ -946,8 +946,9 @@ function devId() {
 var SLOW_MS = 6000;   // 6초 이상이면 느림으로 기록
 var SPD = { last: null };
 // 📶 조회 요청은 연결이 끊기면 1번 자동 재시도 (저장 요청은 중복 저장 막으려고 재시도 안 함)
-var READ_FNS = { ping: 1, getDashboardAll: 1, getDashboardData: 1, getUploadStatus: 1, getHoursMeta: 1, getHoursCell: 1, getLeaveData: 1, getStatsData: 1, getEquipIndex: 1 };
-var CALL_TIMEOUT = 30000;   // 30초 넘게 응답 없으면 끊고 (조회면) 다시 시도
+var READ_FNS = { ping: 1, getDashboardAll: 1, getDashboardData: 1, getUploadStatus: 1, getHoursMeta: 1, getHoursCell: 1, getLeaveData: 1, getStatsData: 1, getEquipIndex: 1, getPushStatus: 1, getTeamNames: 1 };
+var INFLIGHT = {};   // ⚡ 같은 조회가 이미 가는 중이면 새로 안 보내고 그 결과를 같이 씀 (서버에 줄 서는 요청 줄이기)
+var CALL_TIMEOUT = 30000;   // 30초 넘게 응답 없으면 끊음 (타임아웃은 다시 시도 안 함 — 서버가 바쁠 때 또 보내면 더 막힘)
 
 function fetchJson(body) {
   var ctl = (typeof AbortController !== "undefined") ? new AbortController() : null;
@@ -962,6 +963,18 @@ function fetchJson(body) {
 }
 
 function rawCall(pin, fn, args, editPin) {
+  if (READ_FNS[fn]) {
+    var ik = fn + "|" + JSON.stringify(args || []) + "|" + pin + "|" + myName();
+    if (INFLIGHT[ik]) return INFLIGHT[ik];
+    var ip = rawCall1(pin, fn, args, editPin);
+    INFLIGHT[ik] = ip;
+    var done = function () { if (INFLIGHT[ik] === ip) delete INFLIGHT[ik]; };
+    ip.then(done, done);
+    return ip;
+  }
+  return rawCall1(pin, fn, args, editPin);
+}
+function rawCall1(pin, fn, args, editPin) {
   var rid = Math.random().toString(36).slice(2, 10), t0 = Date.now(), prev = SPD.last;
   SPD.last = null;
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
@@ -969,7 +982,8 @@ function rawCall(pin, fn, args, editPin) {
     me: myName(), adm: (fn === "saveHours" || fn === "setOperator") && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
   return fetchJson(body)
     .catch(function (e) {
-      if (!READ_FNS[fn]) throw e;
+      // 조회만 한 번 다시 시도 · 네트워크 타임아웃(서버가 바쁨)은 다시 안 보냄 → 줄 선 요청을 더 늘리지 않게
+      if (!READ_FNS[fn] || /timeout/i.test(String(e && e.message))) throw e;
       return new Promise(function (res) { setTimeout(res, 1500); }).then(function () { return fetchJson(body); });
     })
     .then(function (j) {
@@ -3202,10 +3216,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-20-5";
+var APP_VER = "2026-10-20-6";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-20-6", ["서버가 바쁠 때도 앱이 덜 멈추게 개선"]],
   ["2026-10-20-5", ["작업자 수정: 장비 고를 때 장비명만 표시"]],
   ["2026-10-20-4", ["시트 업로드: 내 이름을 누르면 작업자 수정"]],
   ["2026-10-20-3", ["어제 근무시간 안 넣었으면 금일·근무시간 탭에 표시", "작업자(FT) 잘못 넣었으면 수정·비우기 가능", "아침 8시 알림을 팀 공통 요약으로"]],
