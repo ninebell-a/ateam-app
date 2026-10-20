@@ -382,6 +382,31 @@ li.tap:active{background:rgba(47,111,237,.08)}
 .top1{background:rgba(255,193,7,.18);border-radius:10px;padding:11px 12px;font-size:14px;font-weight:700;line-height:1.5;word-break:keep-all}
 .mis{display:inline-block;margin:8px 6px 0 0;padding:7px 14px;border-radius:999px;border:1.5px solid var(--warn);background:transparent;color:var(--warn);font-size:14px;font-weight:700;font-family:inherit}
 .mis:active{background:rgba(229,72,77,.15)}
+/* ⏰ 어제(지난 근무일) 근무시간 미입력 */
+.pmb{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#fdecec;border:1px solid #f3b4b6;border-left:5px solid var(--warn);border-radius:12px;padding:10px 12px 10px 14px;color:#b4232a;word-break:keep-all}
+.pmb b{display:block;font-size:15px}
+.pmb small{display:block;font-size:12.5px;font-weight:600;opacity:.9;margin-top:1px}
+.pmb button{flex:none;border:0;border-radius:999px;background:var(--warn);color:#fff;font-weight:800;font-size:13.5px;padding:8px 14px;font-family:inherit}
+@media (prefers-color-scheme:dark){.pmb{background:#3a1618;border-color:#7a2a2e;color:#ff9a9e}}
+#hprev{margin-top:8px}
+#hprev small{display:block;margin-top:6px;color:var(--sub);font-weight:600}
+.hchk{display:block;font-size:12px;color:var(--sub);margin-top:4px;font-weight:500}
+/* ✏️ 최근 입력한 작업자 */
+.card.oprec{border:1.5px solid var(--accent)}
+.card.oprec .cnt{color:var(--accent)}
+.ttl.opedit{cursor:pointer;text-decoration:underline dashed;text-decoration-color:var(--sub);text-underline-offset:4px}
+.ttl.opedit .pen{color:var(--accent);margin-left:4px;text-decoration:none;display:inline-block}
+#opeq{display:none;margin:2px 0 0}
+#opeq .chip{font-weight:700}
+.card.oprec li{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.card.oprec .ol b{font-size:15px}
+.card.oprec .ol small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+.card.oprec .oe{flex:none;border:1px solid var(--accent);background:var(--card);color:var(--accent);border-radius:999px;padding:6px 14px;font-weight:700;font-size:13px;font-family:inherit}
+.oprech{white-space:pre-line;margin-top:-4px}
+#opcur{margin:2px 0 4px;font-size:14px;color:var(--sub)}
+#opcur b{color:var(--text)}
+#opclr{display:none;width:100%;margin-top:4px;padding:11px;border-radius:12px;border:1.5px solid var(--warn);background:transparent;color:var(--warn);font-weight:800;font-size:14px;font-family:inherit}
+#ophint{white-space:pre-line}
 .form{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;display:grid;gap:12px}
 .form label{font-size:13px;color:var(--sub);display:block;margin-bottom:4px}
 .form select,.form input[type=date],.form input[type=text]{width:100%;font-size:16px;padding:11px 10px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
@@ -614,6 +639,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 
 <section id="hours">
   <div id="hmiss" style="display:none"></div>
+  <div id="hprev" style="display:none"></div>
   <details id="hweek" class="wk" style="display:none"></details>
   <div class="form">
     <div id="htop" class="top1" style="display:none"></div>
@@ -683,12 +709,16 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 
 <div class="ov" id="opov">
   <div class="box">
-    <h3>👷 작업자 입력(FT)</h3>
+    <h3 id="opttl">👷 작업자 입력(FT)</h3>
     <div class="who" id="opwho"></div>
+    <p id="opcur" style="display:none"></p>
+    <div class="chips" id="opeq"></div>
     <div class="chips" id="opchips"></div>
     <input type="text" id="opin" inputmode="text" autocomplete="off" maxlength="20" placeholder="직접 입력 (목록에 없는 이름)">
-    <p class="sub">저장하면 26_장비_LOG 작업자(F열)에 들어가요. 이미 적힌 이름은 앱에서 바꾸지 않아요. 잘못 넣었으면 시트에서 고쳐 주세요.</p>
-    <div class="ob">
+    <button id="opclr" type="button">🗑 작업자 비우기 (이 장비 작업 안 함)</button>
+    <p class="sub" id="ophint">저장하면 26_장비_LOG 작업자(F열)에 들어가요.
+잘못 넣었으면 '최근 입력한 작업자'에서 고칠 수 있어요.</p>
+    <div class="ob" id="opob">
       <button id="opno" type="button">취소</button>
       <button id="opgo" type="button" class="go">저장</button>
     </div>
@@ -936,7 +966,7 @@ function rawCall(pin, fn, args, editPin) {
   SPD.last = null;
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
   var body = JSON.stringify({ pin: pin, fn: fn, args: args || [], editPin: editPin || "", dev: devId(), rid: rid, prev: prev,
-    me: myName(), adm: fn === "saveHours" && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
+    me: myName(), adm: (fn === "saveHours" || fn === "setOperator") && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
   return fetchJson(body)
     .catch(function (e) {
       if (!READ_FNS[fn]) throw e;
@@ -1250,6 +1280,7 @@ function render() {
   $("upd").textContent = updTxt(d, "dash");
   var lb = leaveBanner(cur);
   if (lb) main.appendChild(lb);
+  if (cur === 0) { var pb = prevBanner(); if (pb) main.appendChild(pb); }   // ⏰ 내가 어제 근무시간을 안 넣었으면
   pushBarUI();
   if (d.missing && d.missing.length)
     main.appendChild(el("div", "warn", "⚠️ 열을 찾지 못한 공정: " + d.missing.join(", ")));
@@ -1292,6 +1323,7 @@ function applyDash(r) {
   if (r.ship) store.ship = r.ship;
   if (r.leave) store.leave = r.leave;
   store.notice = r.notice || null;
+  store.prevMiss = r.prevMiss || null;   // ⏰ 어제(지난 근무일) 근무시간 미입력
   $("d0").textContent = r.d0.label || "";
   $("d1").textContent = r.d1.label || "";
   schedBadge();
@@ -1628,10 +1660,16 @@ function renderUpload(d) {
 
   if (d.total) box.appendChild(el("div", "hint", "서버 업로드를 마친 시트를 누르면 '완료 처리' 확인창이 떠요. 작업자가 비어 있는 장비는 작업자 이름까지 적어야 목록에서 없어져요."));
 
+  var meName = myName(), admUp = adminOn() && !isChief();
   d.people.forEach(function (p) {
     var card = el("div", "card up");
     var hd = el("div", "hd");
-    hd.appendChild(el("span", "ttl", p.name));
+    if (p.name !== "(작업자 미입력)" && meName && (p.name === meName || admUp)) {   // ✏️ 내 이름(또는 관리자 모드)이면 이름을 눌러 작업자 수정
+      var tt = el("span", "ttl opedit", p.name);
+      tt.appendChild(el("span", "pen", "✎"));
+      tt.onclick = function () { opEditOwner(p, d); };
+      hd.appendChild(tt);
+    } else hd.appendChild(el("span", "ttl", p.name));
     hd.appendChild(el("span", "cnt", p.items.length + "대"));
     card.appendChild(hd);
     var ul = el("ul");
@@ -1660,60 +1698,134 @@ function renderUpload(d) {
     card.appendChild(ul);
     box.appendChild(card);
   });
+
+  // ✏️ 최근 입력한 작업자 (잘못 넣었으면 수정·비우기 · 입력한 사람 / 그 이름 본인 / 관리자만)
+  var rc = d.recent || [];
+  if (rc.length) {
+    var me = myName(), adm = adminOn() && !isChief();
+    var card2 = el("div", "card up oprec");
+    var hd2 = el("div", "hd");
+    hd2.appendChild(el("span", "ttl", "✏️ 최근 입력한 작업자"));
+    hd2.appendChild(el("span", "cnt", rc.length + "대"));
+    card2.appendChild(hd2);
+    var ul2 = el("ul");
+    rc.forEach(function (x) {
+      var li = el("li");
+      var l = el("span", "ol");
+      l.appendChild(el("b", null, x.n + " → " + x.op));
+      l.appendChild(el("small", null, x.label + " · " + (x.by || "-") + " 입력"));
+      li.appendChild(l);
+      if (me && (x.by === me || x.op === me || adm)) {
+        var e = el("button", "oe", "수정"); e.type = "button";
+        e.onclick = function () { openOp({ row: x.row, n: x.n, t: x.t }, opNameList(d), x.op); };
+        li.appendChild(e);
+      }
+      ul2.appendChild(li);
+    });
+    card2.appendChild(ul2);
+    box.appendChild(card2);
+    box.appendChild(el("div", "hint oprech", "잘못 넣었으면 [수정]으로 바꾸거나 비울 수 있어요.\n(입력한 사람 · 그 이름 본인 · 관리자만)"));
+  }
 }
 
 /* ---------- 👷 작업자 입력 (26_장비_LOG F열) ---------- */
-var OP = { it: null, pick: "" };
+var OP = { it: null, pick: "", prev: "" };
 
-function opPick(n) {
+function opPick(n, typing) {
   OP.pick = n;
-  $("opin").value = "";
+  if (!typing) $("opin").value = "";   // 칩을 눌렀을 때만 입력칸 비움 (직접 입력 중엔 그대로)
   Array.prototype.forEach.call($("opchips").children, function (c) { c.className = "chip" + (c.textContent === n ? " on" : ""); });
 }
 
-function openOp(it, names) {
-  OP.it = it; OP.pick = "";
-  $("opwho").textContent = it.n + (it.t ? " (" + it.t + ")" : "");
-  var ch = $("opchips");
-  ch.innerHTML = "";
-  (names || []).forEach(function (n) {
-    var c = el("button", "chip", n);
-    c.type = "button";
-    c.onclick = function () { opPick(n); };
-    ch.appendChild(c);
+// 작업자 이름 칩: 서버가 opNames를 안 줬으면(작업자 미입력 장비가 없을 때) 앱에 저장된 팀 이름 (총괄팀장 제외)
+function opNameList(d) {
+  var n = (d && d.opNames && d.opNames.length) ? d.opNames : null;
+  if (!n) { var cn = cget("names"), ch = cget("hours"); n = (cn && cn.names) || PUSH.names || (H.meta && H.meta.names) || (ch && ch.names) || []; }
+  return n.filter(function (x) { return x !== CHIEF_NAME; });
+}
+// 카드 제목(작업자 이름)을 누르면: 장비 1대 → 바로 수정 창 / 여러 대 → 먼저 장비 고르기
+function opEditOwner(p, d) {
+  var names = opNameList(d);
+  if (p.items.length === 1) { var it = p.items[0]; openOp({ row: it.row, n: it.n, t: it.t }, names, p.name); return; }
+  openOp(p.items[0], names, p.name);   // 창 모양을 먼저 수정 창으로 맞춘 뒤 장비 고르기 화면으로
+  $("opwho").textContent = p.name + " 이름으로 적힌 장비";
+  var oc = $("opcur"); oc.innerHTML = ""; oc.textContent = "고칠 장비를 골라 주세요."; oc.style.display = "block";
+  var eq = $("opeq"); eq.innerHTML = ""; eq.style.display = "flex";
+  p.items.forEach(function (it) {
+    var c = el("button", "chip", it.n + (it.t ? " · " + it.t : "")); c.type = "button";
+    c.onclick = function () { openOp({ row: it.row, n: it.n, t: it.t }, names, p.name); };
+    eq.appendChild(c);
   });
+  ["opchips", "opin", "opclr", "opgo"].forEach(function (id) { $(id).style.display = "none"; });
+  $("opob").style.gridTemplateColumns = "1fr";   // [취소]만 가로 전체
+}
+
+function openOp(it, names, prev) {
+  $("opeq").style.display = "none"; $("opeq").innerHTML = "";
+  ["opchips", "opin", "opgo"].forEach(function (id) { $(id).style.display = ""; });
+  $("opob").style.gridTemplateColumns = "";
+  OP.it = it; OP.pick = ""; OP.prev = prev || "";
+  var edit = !!OP.prev;   // ✏️ 수정 모드 (최근 입력한 작업자 → [수정])
+  $("opttl").textContent = edit ? "✏️ 작업자 수정(FT)" : "👷 작업자 입력(FT)";
+  $("opwho").textContent = it.n + (it.t ? " (" + it.t + ")" : "");
+  var oc = $("opcur"); oc.innerHTML = ""; oc.style.display = edit ? "block" : "none";
+  if (edit) { oc.appendChild(document.createTextNode("지금 적힌 작업자: ")); oc.appendChild(el("b", null, OP.prev)); }
+  $("opclr").style.display = edit ? "block" : "none"; $("opclr").disabled = false;
+  $("ophint").style.display = edit ? "none" : "";
+  var ch = $("opchips");
+  function chips(list) {
+    ch.innerHTML = "";
+    (list || []).forEach(function (n) {
+      var c = el("button", "chip", n);
+      c.type = "button";
+      c.onclick = function () { opPick(n); };
+      ch.appendChild(c);
+    });
+  }
+  chips(names);
+  if (!names || !names.length) {   // 폰에도 이름 목록이 없으면 서버에서 받아서 채움
+    call("getTeamNames").then(function (r) {
+      if (r && r.names && r.names.length) { cset("names", r); PUSH.names = r.names; if (OP.it === it) chips(r.names.filter(function (x) { return x !== CHIEF_NAME; })); }
+    }).catch(function () {});
+  }
   $("opin").value = "";
   $("opgo").disabled = false; $("opno").disabled = false;
-  $("opgo").textContent = "저장";
+  $("opgo").textContent = edit ? "이 이름으로 바꾸기" : "저장";
   $("opov").className = "ov on";
 }
 
 function closeOp() { $("opov").className = "ov"; }
 $("opno").onclick = closeOp;
 $("opov").onclick = function (e) { if (e.target === this) closeOp(); };
-$("opin").oninput = function () { if (this.value.trim()) opPick(""); };
-$("opgo").onclick = function () {
-  var it = OP.it;
-  var op = ($("opin").value.trim() || OP.pick).trim();
-  if (!it) return;
-  if (!op) { toast("⚠️ 작업자를 고르거나 이름을 입력해 주세요.", true); return; }
-  $("opgo").disabled = true; $("opno").disabled = true;
-  $("opgo").textContent = "저장 중…";
-  callEdit("setOperator", [it.row, it.n, op])
+$("opin").oninput = function () { if (this.value.trim()) opPick("", true); };   // 직접 입력하면 칩 선택만 해제
+function opSave(op) {
+  var it = OP.it, edit = !!OP.prev, clear = op === "__CLEAR__";
+  $("opgo").disabled = true; $("opno").disabled = true; $("opclr").disabled = true;
+  if (clear) $("opclr").textContent = "비우는 중…"; else $("opgo").textContent = "저장 중…";
+  callEdit("setOperator", edit ? [it.row, it.n, op, OP.prev] : [it.row, it.n, op])
     .then(function (r) {
-      if (r && r.error) U.msg = { err: true, t: r.error };
-      else U.msg = { err: false, t: it.n + " 작업자 → " + op + " ✔" };
+      if (r && r.error) { if (r.admBad) adminOff(); U.msg = { err: true, t: r.error }; }
+      else U.msg = { err: false, t: it.n + " 작업자 → " + (clear ? "(비움) · 작업자 미입력 목록으로" : op) + " ✔" };
       toast((U.msg.err ? "⚠️ " : "✔ ") + U.msg.t, U.msg.err);
+      $("opclr").textContent = "🗑 작업자 비우기 (이 장비 작업 안 함)";
       closeOp();
       loadUpload();
     })
     .catch(function (e) {
       U.msg = { err: true, t: "저장 실패: " + errText(e) };
       toast("⚠️ " + U.msg.t, true);
+      $("opclr").textContent = "🗑 작업자 비우기 (이 장비 작업 안 함)";
       closeOp();
       loadUpload();
     });
+}
+$("opgo").onclick = function () {
+  var op = ($("opin").value.trim() || OP.pick).trim();
+  if (!OP.it) return;
+  if (!op) { toast("⚠️ 작업자를 고르거나 이름을 입력해 주세요.", true); return; }
+  opSave(op);
 };
+$("opclr").onclick = function () { if (OP.it && OP.prev) opSave("__CLEAR__"); };
 
 function loadUpload() {
   U.loaded = true;
@@ -2457,6 +2569,62 @@ function scrollMon() {
   try { window.scrollTo({ top: y, behavior: "smooth" }); } catch (e) { window.scrollTo(0, y); }
   return true;
 }
+/* ---------- ⏰ 어제(지난 근무일) 근무시간 미입력 ---------- */
+// 오늘 기준 지난 근무일 (어제 · 월요일이면 지난 금요일) — 폰에 남은 예전 날 기록은 안 보여주려고 비교
+function lastWorkday() {
+  var d = new Date(); d.setHours(12, 0, 0, 0);
+  do { d.setDate(d.getDate() - 1); } while (d.getDay() === 0 || d.getDay() === 6);
+  return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2);
+}
+function prevOk(p) { return !!(p && p.ymd === lastWorkday() && p.names); }
+function prevBanner() {
+  var p = store.prevMiss, me = myName();
+  if (!prevOk(p) || !me || p.names.indexOf(me) < 0) return null;
+  var b = el("div", "pmb");
+  var t = el("span"); t.appendChild(el("b", null, "⏰ 근무시간 미입력")); t.appendChild(el("small", null, p.label + " 아직 안 넣었어요"));
+  b.appendChild(t);
+  var go = el("button", null, "입력하기"); go.type = "button";
+  go.onclick = function () { goPrev(me, p.ymd); };
+  b.appendChild(go);
+  return b;
+}
+// 근무시간 탭 + 그 사람 + 그 날짜 → 입력칸으로
+function goPrev(n, ymd) {
+  if (cur !== 3) $("t3").click();
+  var tries = 0;
+  (function go() {
+    if ((!H.meta || !$("hname").options.length) && tries++ < 40) { setTimeout(go, 150); return; }
+    $("hdate").value = ymd;
+    $("hname").value = n;
+    resetConfirm(); checkMonth(); refreshCell(); updNote();
+    setTimeout(function () { try { $("hval").scrollIntoView({ behavior: "smooth", block: "center" }); $("hval").focus({ preventScroll: true }); } catch (e) {} }, 120);
+  })();
+}
+// 근무시간 탭: 금일 미입력 아래 "⏰ 어제(10/19 월) 근무시간 미입력 N명"
+function renderPrev(p) {
+  var b = $("hprev");
+  b.innerHTML = "";
+  if (!prevOk(p) || !p.names.length) { b.style.display = "none"; return; }
+  b.className = "warn"; b.style.display = "block";
+  b.appendChild(document.createTextNode("⏰ " + p.label + " 근무시간 미입력 " + p.names.length + "명"));
+  b.appendChild(document.createElement("br"));
+  p.names.forEach(function (n) {
+    var x = el("button", "mis", n); x.type = "button";
+    x.onclick = function () { $("hdate").value = p.ymd; $("hname").value = ""; goMon(n); };
+    b.appendChild(x);
+  });
+  if (p.off && p.off.length) b.appendChild(el("small", null, "📅 휴가(schedule): " + p.off.join(", ")));
+}
+// 저장 성공하면 그 자리에서 목록·배너에서 빼기 (비웠으면 다시 넣기)
+function prevSaved(name, ymd, cleared) {
+  [store.prevMiss, H.meta && H.meta.prev].forEach(function (p) {
+    if (!p || p.ymd !== ymd || !p.names) return;
+    var i = p.names.indexOf(name);
+    if (cleared) { if (i < 0) p.names.push(name); } else if (i >= 0) p.names.splice(i, 1);
+  });
+  renderPrev((H.meta && H.meta.prev) || store.prevMiss);
+}
+
 function goMon(n) {
   if ($("hname").value !== n) {
     $("hname").value = n;
@@ -2622,6 +2790,7 @@ function applyMeta(m, fromCache) {
   $("hmonth").appendChild(document.createTextNode("시트 기준 월: "));
   $("hmonth").appendChild(el("b", null, m.month + "월"));
   renderMissing(m.missing);
+  renderPrev(m.prev || store.prevMiss);
   renderTop(m.top);
   renderWeek(m.week);
   checkMonth();
@@ -2635,7 +2804,7 @@ function loadHoursMeta(silent) {
     if (cm && cm.names) {
       applyMeta(cm, true);
       var q0 = gridCell($("hname").value, $("hdate").value);   // ⚡ 지난번에 받아 둔 전원 입력값으로 현재 값·달력을 바로 → 서버 응답은 뒤에서 덮어씀
-      if (q0) applyCell(q0); else $("hcur").textContent = "현재 값 확인 중…";
+      if (q0) applyCell(q0, true); else $("hcur").textContent = "현재 값 확인 중…";
     }
     else { $("hmonth").textContent = "시트 기준 월 확인 중…"; $("hcur").textContent = "현재 값 확인 중…"; }
   }
@@ -2783,7 +2952,7 @@ function renderMonth(name, r) {
 }
 
 // 현재 입력값 박스 + 달력 그리기
-function applyCell(r) {
+function applyCell(r, pending) {
   var box = $("hcur");
   box.innerHTML = "";
   box.appendChild(document.createTextNode("현재 입력값: "));
@@ -2793,6 +2962,7 @@ function applyCell(r) {
   H.curSched = r.sched || "";
   H.curVal = r.cur === "" && r.formula ? "(수식)" : String(r.cur == null ? "" : r.cur);
   if (H.curSched) box.appendChild(el("span", "sch", "📅 schedule: " + H.curSched));
+  if (pending) box.appendChild(el("span", "hchk", "🔄 최신 확인 중…"));   // 폰에 저장된 값으로 먼저 그림 → 서버 응답 오면 사라짐
   renderMonth(r.name || $("hname").value, r);
   updNote();
   if (H.scrollMon) { H.scrollMon = false; setTimeout(scrollMon, 30); }
@@ -2831,7 +3001,7 @@ function refreshCell() {
   var t = ++H.token;
   // ⚡ 미리 받아둔 전원 입력값으로 달력·현재값을 바로 그림 → 서버 응답(schedule·수식 여부)은 뒤에서 덮어씀
   var q = gridCell(name, date);
-  if (q) { applyCell(q); H.curSched = ""; }
+  if (q) { applyCell(q, true); H.curSched = ""; }
   else { box.textContent = "현재 값 확인 중…"; monLoading(name); }
   call("getHoursCell", [name, date])
     .then(function (r) {
@@ -2971,6 +3141,7 @@ function doSave(value, force, delForce) {
         try { var gr = H.meta.grid.rows[name]; gr.v[+date.slice(8, 10) - 1] = r.cur; } catch (eg) {}   // 미리 받아둔 값도 갱신
         if (H.meta) cset("hours", H.meta);
         renderMissing(r.missing);
+        prevSaved(name, date, r.cur === "");
         H.token++;   // 진행 중인 조회 결과는 버리고 저장 응답으로 바로 갱신
         if (r.cell && $("hname").value === name && $("hdate").value === date) applyCell(r.cell);
         else refreshCell();
@@ -3031,19 +3202,21 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-20-2";
-// ✨ 버전별 바뀐 점 (최신이 맨 위 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
-//    업데이트 화면은 "그 사람이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
-var APP_HIST = [
-  {"v": "2026-10-20-2", "n": ["업데이트하면 그동안 바뀐 점 모아 보여줌"]},
-  {"v": "2026-10-20-1", "n": ["근무시간 탭 열면 현재 값 바로 보여줌"]},
-  {"v": "2026-10-19-16", "n": ["근무시간 저장 빨라짐 (연차+사유도)", "알림 창 새 디자인 · 차단된 폰 켜는 법 안내", "관리자가 '알림 켜 달라고' 요청 가능"]},
-  {"v": "2026-10-19-13", "n": ["새 버전 나오면 업데이트 화면으로 알려줌"]},
-  {"v": "2026-10-19-12", "n": ["다크모드 로고 깔끔하게"]},
-  {"v": "2026-10-19-11", "n": ["알림 꺼져 있으면 모든 탭에 배너"]},
-  {"v": "2026-10-19-7", "n": ["알림 현황 빨라짐"]},
-  {"v": "2026-10-19-6", "n": ["총괄팀장 추가 (근무시간은 보기만)"]}
-];   // APP_HIST 끝
+var APP_VER = "2026-10-20-4";
+// ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
+//    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
+var APP_HISTORY = [
+  ["2026-10-20-4", ["시트 업로드: 내 이름을 누르면 작업자 수정"]],
+  ["2026-10-20-3", ["어제 근무시간 안 넣었으면 금일·근무시간 탭에 표시", "작업자(FT) 잘못 넣었으면 수정·비우기 가능", "아침 8시 알림을 팀 공통 요약으로"]],
+  ["2026-10-20-2", ["업데이트하면 그동안 바뀐 점 모아 보여줌"]],
+  ["2026-10-20-1", ["근무시간 탭 열면 현재 값 바로 보여줌"]],
+  ["2026-10-19-16", ["근무시간 저장 빨라짐 (연차+사유도)", "알림 창 새 디자인 · 차단된 폰 켜는 법 안내", "관리자가 '알림 켜 달라고' 요청 가능"]],
+  ["2026-10-19-13", ["새 버전 나오면 업데이트 화면으로 알려줌"]],
+  ["2026-10-19-12", ["다크모드 로고 깔끔하게"]],
+  ["2026-10-19-11", ["알림 꺼져 있으면 모든 탭에 배너"]],
+  ["2026-10-19-7", ["알림 현황 빨라짐"]],
+  ["2026-10-19-6", ["총괄팀장 추가 (근무시간은 보기만)"]]
+];   // APP_HISTORY_END
 var UPD = { busy: false, last: 0 };
 
 function checkUpdate() {
@@ -3056,7 +3229,7 @@ function checkUpdate() {
       UPD.busy = false;
       var m = t.match(/var APP_VER = "([^"]+)"/);
       if (m && m[1] !== APP_VER) {
-        var hm = t.match(/var APP_HIST = (\[[\s\S]*?\]);\s*\/\/ APP_HIST 끝/), hist = [];
+        var hm = t.match(/var APP_HISTORY = (\[[\s\S]*?\]);\s*\/\/ APP_HISTORY_END/), hist = [];
         try { hist = hm ? JSON.parse(hm[1]) : []; } catch (e) { hist = []; }
         updShow(m[1], histNotes(hist, APP_VER));   // 새 버전에 적힌 것 중 지금 버전 이후 것
       }
@@ -3069,14 +3242,14 @@ function checkUpdate() {
  */
 function verLabel(v) { return "v" + String(v || "").slice(5).replace("-", "."); }
 function noteList(n) { return (Array.isArray(n) ? n : n ? [n] : []).filter(function (x) { return x; }); }
-// 버전 비교 "2026-10-19-8" < "2026-10-20-1" (날짜 → 번호 순)
+// 버전 비교 "2026-10-19-8" < "2026-10-19-11" < "2026-10-20-1" (날짜 + 번호 3자리)
 function verKey(v) { var m = String(v || "").match(/^(\d{4})-(\d{2})-(\d{2})-(\d+)$/); return m ? +(m[1] + m[2] + m[3]) * 1000 + +m[4] : -1; }
 // from 버전 이후(from 제외)에 바뀐 점을 최신 순으로 모음 · 6줄 넘으면 최신 5줄 + "➕ 그 밖에 N가지 개선"
 function histNotes(hist, from) {
   var k = verKey(from), out = [];
-  (hist || []).slice().sort(function (a, b) { return verKey(b.v) - verKey(a.v); }).forEach(function (h) {
-    if (verKey(h.v) > k) noteList(h.n).forEach(function (t) { out.push(t); });
-  });
+  (hist || []).map(function (h) { return Array.isArray(h) ? { v: h[0], n: h[1] } : h; })   // ["버전", [바뀐 점…]]
+    .sort(function (a, b) { return verKey(b.v) - verKey(a.v); })
+    .forEach(function (h) { if (verKey(h.v) > k) noteList(h.n).forEach(function (t) { if (out.indexOf(t) < 0) out.push(t); }); });   // 중복 빼고
   if (out.length > 6) { var more = out.length - 5; out = out.slice(0, 5); out.push("__MORE__" + more); }
   return out;
 }
@@ -3133,7 +3306,7 @@ function updDone() {
   vv.appendChild(el("span", "a", "→"));
   vv.appendChild(el("span", "n", verLabel(APP_VER)));
   ov.appendChild(vv);
-  var nl = histNotes(APP_HIST, prev);   // 지난번 쓰던 버전 이후 바뀐 점 전부
+  var nl = histNotes(APP_HISTORY, prev);   // 지난번 쓰던 버전 이후 바뀐 점 전부
   if (nl.length) {
     ov.appendChild(el("div", "unl", "이번에 바뀐 점"));
     var nb = el("div", "un"); nl.forEach(function (t) { nb.appendChild(el("div", null, noteRow(t))); }); ov.appendChild(nb);
