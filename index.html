@@ -215,6 +215,8 @@ li:first-child{border-top:0}
 #blockov .bi{font-size:40px;line-height:1;margin-bottom:16px}
 #blockov h2{font-size:20px;line-height:1.4;margin-bottom:10px;color:var(--text)}
 #blockov p{font-size:15px;line-height:1.7;color:var(--sub)}
+#blockov .bh{margin-top:20px;padding-top:18px;border-top:1px solid var(--line);font-size:15px;line-height:1.7;color:var(--text);font-weight:600}
+#blockov .bh b{color:var(--text)}
 #upddone{position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px calc(32px + env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#17306b 0%,#0c1630 45%,#070c1a 100%);color:#fff;text-align:center;opacity:0;transition:opacity .35s;overflow-y:auto}
 #upddone.on{opacity:1}
 #upddone .ul{height:28px;width:auto;max-width:160px;object-fit:contain;margin-bottom:30px}
@@ -603,7 +605,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 <body>
 <div id="blockov"><div class="bx">
   <picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img class="bl" src="logo.png" alt="" onerror="this.style.display='none'"></picture>
-  <div class="bc"><div class="bi">⏸</div><h2>지금은 앱을 쓸 수 없어요</h2><p>제조1-A 앱을 잠시 멈춰 두었어요.<br>다시 쓰게 되면 자동으로 열려요.</p></div>
+  <div class="bc"><div class="bi">⏸</div><h2>지금은 앱을 쓸 수 없어요</h2><p>제조1-A 앱을 잠시 멈춰 두었어요.<br>다시 쓰게 되면 자동으로 열려요.</p><div class="bh"><b>김은수 팀장님 인수인계 완료 전까지</b><br>앱 사용이 중지됩니다.</div></div>
 </div></div>
 <div id="ig"></div>
 
@@ -3367,10 +3369,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-21-3";
+var APP_VER = "2026-10-21-5";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-21-5", ["멈춤 화면 안내 문구 추가"]],
   ["2026-10-21-3", ["시트 업로드 완료·작업자 입력하면 목록에서 바로 빠져요", "금일 화면이 몇 시간 전 화면에 멈추던 문제 수정", "저장이 느리던 문제 개선", "앱 설치 안내 더 쉽게"]],
   ["2026-10-21-2", ["앱 운영 상태 확인 기능 추가"]],
   ["2026-10-21-1", ["🚨 긴급 장비는 장비명이 빨간색 (금일·명일·검색·일정)", "앱을 다시 열 때 '갱신 중'에서 오래 멈추던 문제 수정", "새로고침이 중간에 실패하던 문제 수정", "저장이 오래 걸릴 때 '실패'로 뜨던 문제 수정"]],
