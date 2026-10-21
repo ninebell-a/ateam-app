@@ -206,6 +206,15 @@ li:first-child{border-top:0}
 #updov .un div{padding:10px 0}
 #updov .un div+div{border-top:1px solid rgba(255,255,255,.1)}
 #updov .us{font-size:13.5px;color:rgba(210,220,240,.75);margin-top:22px;min-height:20px}
+/* ⏸ 앱 멈춤 화면 (GitHub server.txt 가 1이면) */
+#blockov{position:fixed;inset:0;z-index:9997;display:none;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));background:var(--bg);text-align:center;word-break:keep-all}
+#blockov.on{display:flex}
+#blockov .bx{width:100%;max-width:400px}
+#blockov .bl{height:22px;margin-bottom:26px}
+#blockov .bc{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:34px 24px 30px}
+#blockov .bi{font-size:40px;line-height:1;margin-bottom:16px}
+#blockov h2{font-size:20px;line-height:1.4;margin-bottom:10px;color:var(--text)}
+#blockov p{font-size:15px;line-height:1.7;color:var(--sub)}
 #upddone{position:fixed;inset:0;z-index:9998;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px calc(32px + env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#17306b 0%,#0c1630 45%,#070c1a 100%);color:#fff;text-align:center;opacity:0;transition:opacity .35s;overflow-y:auto}
 #upddone.on{opacity:1}
 #upddone .ul{height:28px;width:auto;max-width:160px;object-fit:contain;margin-bottom:30px}
@@ -586,6 +595,10 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 </style>
 </head>
 <body>
+<div id="blockov"><div class="bx">
+  <picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img class="bl" src="logo.png" alt="" onerror="this.style.display='none'"></picture>
+  <div class="bc"><div class="bi">⏸</div><h2>지금은 앱을 쓸 수 없어요</h2><p>제조1-A 앱을 잠시 멈춰 두었어요.<br>다시 쓰게 되면 자동으로 열려요.</p></div>
+</div></div>
 <div id="ig"></div>
 
 <!-- 🔒 잠금 화면 -->
@@ -916,6 +929,34 @@ function sset(k, v) {
   mem[k] = String(v);
   try { localStorage.setItem(k, String(v)); } catch (e) {}
 }
+
+/* ---------- ⏸ 앱 켜기/멈추기 스위치 ----------
+ * GitHub의 server.txt 내용: 0 = 앱 작동 · 1 = 멈춤 화면
+ * 열 때·다시 켤 때·1분마다 확인 · 1→0 으로 바뀌면 자동으로 다시 열림
+ * 확인이 안 되면(인터넷 끊김 등) 지난번 상태 그대로
+ */
+var BLOCKED = sget("blocked") === "1";
+function blockShow(on) {
+  BLOCKED = on;
+  var b = document.getElementById("blockov");
+  if (b) b.className = on ? "on" : "";
+}
+function blockCheck() {
+  fetch("server.txt?_=" + Date.now(), { cache: "no-store" })
+    .then(function (r) { return r.ok ? r.text() : null; })
+    .then(function (t) {
+      if (t == null) return;
+      var on = /^\s*1/.test(t);
+      var was = BLOCKED;
+      sset("blocked", on ? "1" : "");
+      if (on) blockShow(true);
+      else if (was) location.reload();   // 멈춤 → 작동: 처음부터 새로 열기
+    })
+    .catch(function () {});
+}
+blockShow(BLOCKED);   // 지난번에 멈춤이었으면 바로 가림 (깜빡임 없이)
+blockCheck();
+setInterval(function () { if (!document.hidden) blockCheck(); }, 60000);
 function sdel(k) {
   k = SP + k;
   delete mem[k];
@@ -1018,6 +1059,7 @@ function rawCall(pin, fn, args, editPin) {
   return rawCall1(pin, fn, args, editPin);
 }
 function rawCall1(pin, fn, args, editPin) {
+  if (BLOCKED) return Promise.reject(new Error("앱을 잠시 멈춰 두었어요."));   // ⏸ 멈춤 중엔 서버에 안 보냄
   var rid = Math.random().toString(36).slice(2, 10), t0 = Date.now(), prev = SPD.last;
   SPD.last = null;
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
@@ -3266,10 +3308,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-21-1";
+var APP_VER = "2026-10-21-2";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-21-2", ["앱 운영 상태 확인 기능 추가"]],
   ["2026-10-21-1", ["🚨 긴급 장비는 장비명이 빨간색 (금일·명일·검색·일정)", "앱을 다시 열 때 '갱신 중'에서 오래 멈추던 문제 수정", "새로고침이 중간에 실패하던 문제 수정", "저장이 오래 걸릴 때 '실패'로 뜨던 문제 수정"]],
   ["2026-10-20-6", ["서버가 바쁠 때도 앱이 덜 멈추게 개선"]],
   ["2026-10-20-5", ["작업자 수정: 장비 고를 때 장비명만 표시"]],
@@ -3407,7 +3450,7 @@ function refreshIfStale() {
   if (dayChanged) toast("📅 날짜가 바뀌어서 오늘 기준으로 새로 불러왔어요");
 }
 
-function onResume() { checkUpdate(); refreshIfStale(); try { adminUI(); } catch (e) {} }
+function onResume() { blockCheck(); checkUpdate(); refreshIfStale(); try { adminUI(); } catch (e) {} }
 document.addEventListener("visibilitychange", function () { if (!document.hidden) onResume(); });
 window.addEventListener("pageshow", function (e) { if (e.persisted) onResume(); });
 window.addEventListener("focus", onResume);
