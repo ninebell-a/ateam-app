@@ -569,6 +569,12 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 #ig .igbtn.sub{background:var(--card);color:var(--text);border:1px solid var(--line);font-weight:700}
 #ig .igbtn:disabled{opacity:.6}
 #ig .ignote{font-size:12.5px;color:var(--sub);line-height:1.6;word-break:keep-all;white-space:pre-line}
+#ig .igbtn.chrome{background:#1a73e8}
+#ig .igpadb{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
+#ig .igarrow{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;animation:igbob 1.1s ease-in-out infinite;z-index:5}
+#ig .igarrow span{background:var(--accent);color:#fff;font-size:14px;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap}
+#ig .igarrow b{font-size:30px;line-height:1;color:var(--accent)}
+@keyframes igbob{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
 #ig .igok{background:rgba(31,157,85,.14);color:var(--ok);border-radius:12px;padding:12px 13px;font-size:15px;font-weight:700;line-height:1.5;word-break:keep-all}
 #ig .igsec{font-size:13px;font-weight:700;color:var(--sub);margin-top:2px;word-break:keep-all}
 #ig .igqr{justify-self:center;background:#fff;border-radius:14px;padding:12px;border:1px solid var(--line)}
@@ -1705,6 +1711,56 @@ function setBadge(n) {
   if (n > 0) t.appendChild(el("span", "bd", String(n)));
 }
 
+/* ⚡ 완료 처리·작업자 처음 입력이 서버에서 성공하면 화면 목록에서 바로 뺌 (다시 불러오기는 뒤에서 확인만)
+ *   방금 뺀 건 1분 동안 기억 → 늦게 도착한 옛날 목록에도 다시 적용 (연달아 누를 때 다시 나타나지 않게)
+ */
+var UPFIX = {};   // "행|장비명" → { at, cols: [완료한 열], op: 처음 입력한 작업자 }
+function upFixAdd(it, col, op) {
+  var k = it.row + "|" + it.n, f = UPFIX[k] || { cols: [] };
+  f.at = Date.now();
+  if (col) f.cols.push(col);
+  if (op) f.op = op;
+  UPFIX[k] = f;
+}
+function upFixApply(d) {
+  if (!d || d.error || !d.people) return d;
+  var now = Date.now(), any = false;
+  Object.keys(UPFIX).forEach(function (k) { if (now - UPFIX[k].at > 60000) delete UPFIX[k]; else any = true; });
+  if (!any) return d;
+  d = JSON.parse(JSON.stringify(d));
+  var moved = [];
+  d.people.forEach(function (p) {
+    p.items = p.items.filter(function (it) {
+      var f = UPFIX[it.row + "|" + it.n];
+      if (!f) return true;
+      it.sheets = it.sheets.filter(function (s) { return f.cols.indexOf(s.col) < 0; });
+      if (f.op && it.noOp) { it.noOp = false; it.done1 = false; if (it.sheets.length) moved.push([f.op, it]); return false; }
+      return it.sheets.length > 0 || it.noOp;   // 남은 시트가 없고 작업자도 있으면 장비째 뺌
+    });
+  });
+  moved.forEach(function (m) {   // 작업자를 넣었는데 아직 시트가 남았으면 그 사람 칸으로
+    var p = d.people.filter(function (x) { return x.name === m[0]; })[0];
+    if (!p) { p = { name: m[0], items: [] }; d.people.push(p); }
+    p.items.push(m[1]);
+  });
+  d.people = d.people.filter(function (p) { return p.items.length; });
+  d.people.sort(function (a, b) {   // 서버와 같은 순서: 작업자 미입력 → 대수 많은 순 → 이름
+    var au = a.name === "(작업자 미입력)", bu = b.name === "(작업자 미입력)";
+    if (au !== bu) return au ? -1 : 1;
+    if (b.items.length !== a.items.length) return b.items.length - a.items.length;
+    return a.name < b.name ? -1 : a.name > b.name ? 1 : 0;
+  });
+  d.total = d.people.reduce(function (a, p) { return a + p.items.length; }, 0);
+  return d;
+}
+function upFixNow() {   // 지금 화면에 바로 적용
+  if (!U.data || U.data.error) return;
+  U.data = upFixApply(U.data);
+  setBadge(U.data.total);
+  try { cset("up", U.data); } catch (e) {}
+  if (cur === 2) renderUpload(U.data);
+}
+
 function openConfirm(it, s) {
   CF.it = it; CF.s = s;
   $("cfwho").textContent = it.n + (it.t ? " (" + it.t + ")" : "");
@@ -1733,6 +1789,7 @@ $("cfgo").onclick = function () {
       else U.msg = { err: false, t: it.n + " " + s.label + " → 완료 ✔" };
       toast((U.msg.err ? "⚠️ " : "✔ ") + U.msg.t, U.msg.err);
       closeConfirm();
+      if (!U.msg.err) { upFixAdd(it, s.col); upFixNow(); }   // ⚡ 성공하면 목록에서 바로 뺌 (실패하면 그대로)
       loadUpload();
     })
     .catch(function (e) {
@@ -1913,6 +1970,7 @@ function opSave(op) {
       toast((U.msg.err ? "⚠️ " : "✔ ") + U.msg.t, U.msg.err);
       $("opclr").textContent = "🗑 작업자 비우기 (이 장비 작업 안 함)";
       closeOp();
+      if (!U.msg.err && !edit && !clear) { upFixAdd(it, 0, op); upFixNow(); }   // ⚡ 처음 입력 성공 → 바로 반영
       loadUpload();
     })
     .catch(function (e) {
@@ -1937,6 +1995,7 @@ function loadUpload() {
   return call("getUploadStatus")
     .then(function (d) {
       R.up = false;
+      d = upFixApply(d);   // 방금 뺀 건(1분)은 늦게 온 옛날 목록에도 다시 적용
       U.data = d;
       if (d && !d.error) { setBadge(d.total); cset("up", d); }
       if (cur === 2) renderUpload(d);
@@ -3308,10 +3367,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-21-2";
+var APP_VER = "2026-10-21-3";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-21-3", ["시트 업로드 완료·작업자 입력하면 목록에서 바로 빠져요", "금일 화면이 몇 시간 전 화면에 멈추던 문제 수정", "저장이 느리던 문제 개선", "앱 설치 안내 더 쉽게"]],
   ["2026-10-21-2", ["앱 운영 상태 확인 기능 추가"]],
   ["2026-10-21-1", ["🚨 긴급 장비는 장비명이 빨간색 (금일·명일·검색·일정)", "앱을 다시 열 때 '갱신 중'에서 오래 멈추던 문제 수정", "새로고침이 중간에 실패하던 문제 수정", "저장이 오래 걸릴 때 '실패'로 뜨던 문제 수정"]],
   ["2026-10-20-6", ["서버가 바쁠 때도 앱이 덜 멈추게 개선"]],
@@ -4370,7 +4430,7 @@ function igRender() {
   }
 
   add('<img src="icon-192.png" alt="" onerror="this.style.visibility=\'hidden\'"><div><b>제조1-A</b><small>제조A팀 업무 앱</small></div>', "igtop");
-  var MSG = "알림(52시간·근무시간·공지)은 홈 화면에 추가한 앱에서만 받을 수 있어요.\n한 번만 추가하면 다음부터는 아이콘으로 바로 열려요.";
+  var MSG = "A팀 앱은 앱으로만 쓸 수 있어요.\n설치해야 들어갈 수 있고, 1분이면 끝나요.\n한 번 설치하면 다음부터는 아이콘으로 바로 열려요.";
   var ICON = '<img class="igico" src="icon-192.png" alt="">';
   var OPEN = "홈 화면의 " + ICON + " <b>제조1-A</b> 아이콘으로 열기";
 
@@ -4395,17 +4455,20 @@ function igRender() {
     return;
   }
   if (E.ios && !E.iosOther) {   // 🍎 아이폰 사파리
-    add("📲 홈 화면에 추가해 주세요", null, "h2");
+    add("📲 홈 화면에 추가해야 쓸 수 있어요", null, "h2");
     add(MSG, "igmsg");
     steps(["화면 아래 " + igKey(IG_SHARE) + " <b>공유</b> 버튼 누르기<small>안 보이면 아래 " + igKey("⋯") + " 먼저 누르기</small>",
            "아래로 내려서 <b>홈 화면에 추가</b>",
            "오른쪽 위 <b>추가</b>",
            OPEN]);
-    add("iOS 16.4 이상에서 알림을 받을 수 있어요.\n추가했는데도 이 화면이 계속 뜨면 손성민에게 알려 주세요.", "ignote");
+    add("추가했는데도 이 화면이 계속 뜨면 손성민에게 알려 주세요.", "ignote");
+    W.classList.add("igpadb");   // 아래 화살표에 가리지 않게
+    var ar = el("div", "igarrow"); ar.innerHTML = '<span>여기 공유 버튼 ⬆ 누르기</span><b>⬇</b>';
+    W.appendChild(ar);   // ⬇ 화면 맨 아래(사파리 공유 버튼 자리)를 가리키며 위아래로 움직임
     return;
   }
   if (E.ios) {   // 🍎 아이폰 크롬 등
-    add("📲 홈 화면에 추가해 주세요", null, "h2");
+    add("📲 홈 화면에 추가해야 쓸 수 있어요", null, "h2");
     add(MSG, "igmsg");
     steps(["주소창 옆 " + igKey(IG_SHARE) + " <b>공유</b> 버튼 누르기", "<b>홈 화면에 추가</b>", OPEN]);
     add("공유 메뉴에 '홈 화면에 추가'가 없으면 Safari에서 열어 주세요.", "ignote");
@@ -4413,14 +4476,20 @@ function igRender() {
     return;
   }
   // 🤖 갤럭시
-  add("📲 앱을 설치해 주세요", null, "h2");
+  add("📲 앱을 설치해야 쓸 수 있어요", null, "h2");
   add(MSG, "igmsg");
+  if (E.samsung && !IG.installed) {   // 삼성 인터넷: 크롬에서 설치하는 게 제일 확실 → 맨 위에 크롬으로 열기 버튼
+    var cb = el("button", "igbtn chrome", "🌐 Chrome으로 열어서 설치하기"); cb.type = "button";
+    cb.onclick = function () { location.href = "intent://" + location.host + location.pathname.replace(/index\.html$/, "") + "#Intent;scheme=https;package=com.android.chrome;end"; };
+    W.appendChild(cb);
+    add("Chrome이 없으면 아래 순서로 삼성 인터넷에서 추가해 주세요 ↓", "igsec");
+  }
   var hasBtn = installBtn();
   if (IG.installed) return;
-  if (hasBtn) add("버튼이 안 되면 직접 추가해 주세요 ↓", "igsec");
-  else add(E.samsung ? "아래 순서로 추가해 주세요 ↓" : "버튼이 안 보이면 직접 추가해 주세요 ↓", "igsec");
+  if (hasBtn) add("버튼이 안 되면 직접 설치해 주세요 ↓", "igsec");
+  else if (!E.samsung) add("버튼이 안 보이면 직접 설치해 주세요 ↓", "igsec");
   if (E.samsung) steps(["화면 아래 " + igKey("≡") + " <b>메뉴</b> 누르기", "<b>현재 페이지 추가</b> → <b>홈 화면</b>", OPEN]);
-  else steps(["오른쪽 위 " + igKey("⋮") + " 누르기", "<b>앱 설치</b> 또는 <b>홈 화면에 추가</b>", OPEN]);
+  else steps(["오른쪽 위 " + igKey("⋮") + " 누르기", "<b>앱 설치</b> 누르기<small>'홈 화면에 추가'만 보이면 누르고 창에서 <b>설치</b> 선택 (바로가기 ❌)</small>", OPEN]);
 }
 
 function igCopyOld(u) {
