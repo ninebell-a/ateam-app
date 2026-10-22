@@ -183,6 +183,10 @@ li:first-child{border-top:0}
 /* ⚡ 시작 화면 (반도체 칩 · 회로선이 그려지고 빛 신호가 흐름 = 로딩) */
 #splash{position:fixed;inset:0;z-index:9996;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom));transition:opacity .35s,visibility .35s}
 #splash.off{opacity:0;visibility:hidden;pointer-events:none}
+#splash.off .sg,#splash.off .tr,#splash.off .dt{animation-play-state:paused}   /* 숨긴 뒤엔 빛 신호 멈춤 (배터리·CPU) */
+#splash.gone{display:none}
+#splash.hold>*{visibility:hidden}
+#splash.hold *{animation-play-state:paused}
 #splash svg.spchip{width:min(62vw,250px);height:auto;overflow:visible}
 #splash .tr{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;opacity:.55;animation:spDraw .45s ease-out forwards}
 #splash .sg{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:9 91;stroke-dashoffset:100;opacity:0;filter:drop-shadow(0 0 3px var(--accent));animation:spFlow 1.5s linear infinite}
@@ -1275,7 +1279,7 @@ function lockApp(msg) {
   setGate("enter", msg || "PIN을 입력해 주세요.");
 }
 
-function unlock(pin, pre) {
+function unlock(pin, pre, noLoad) {
   stopTimer();
   sset("appPin", pin);
   sdel("pinFails"); sdel("lockUntil");
@@ -1303,8 +1307,8 @@ function unlock(pin, pre) {
       if (cur === 6) renderSched();
       toast("⚠️ " + ((pj && pj.error) || "서버에 연결할 수 없어요. 네트워크를 확인해 주세요."), true);
     });
-  } else loadDash();
-  loadUpload();
+  } else if (!noLoad) loadDash();   // noLoad: 업데이트 화면 [확인] 뒤 시작 화면에서 갱신
+  if (!noLoad) loadUpload();
 }
 
 function verify(pin, typed) {
@@ -3379,10 +3383,12 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-22-1";
+var APP_VER = "2026-10-22-3";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-22-3", ["업데이트 화면 → 시작 화면 순서로 · 받는 즉시 바로 화면"]],
+  ["2026-10-22-2", ["시작 화면이 닫힌 뒤 배터리 덜 쓰게 개선"]],
   ["2026-10-22-1", ["앱 켤 때 시작 화면 · 그동안 최신 내용 받아와요", "처음 쓰는 폰은 PIN → 이름 고르기 → 앱 순서로", "작업자 직접 입력·완료 알림 오류 수정", "작업자 저장이 더 빨라졌어요"]],
   ["2026-10-21-5", ["멈춤 화면 안내 문구 추가"]],
   ["2026-10-21-3", ["시트 업로드 완료·작업자 입력하면 목록에서 바로 빠져요", "금일 화면이 몇 시간 전 화면에 멈추던 문제 수정", "저장이 느리던 문제 개선", "앱 설치 안내 더 쉽게"]],
@@ -3476,7 +3482,7 @@ function updDone() {
   var prev = sget("lastVer") || "";
   if (!prev) { var dr = sget("devReg") || "", k = dr.lastIndexOf("|"); if (k > 0) prev = dr.slice(k + 1); }
   sset("lastVer", APP_VER);
-  if (!prev || prev === APP_VER || !/^\d{4}-\d{2}-\d{2}-\d+$/.test(prev)) return;   // 처음 쓰는 폰 · 같은 버전이면 안 띄움
+  if (!prev || prev === APP_VER || !/^\d{4}-\d{2}-\d{2}-\d+$/.test(prev)) return false;   // 처음 쓰는 폰 · 같은 버전이면 안 띄움
   var ov = el("div", null); ov.id = "upddone";
   var lg = el("img", "ul"); lg.alt = ""; lg.src = "logo-dark.png";
   lg.onerror = function () { if (/logo-dark/.test(lg.src)) { lg.classList.add("lgfb"); lg.src = "logo.png"; } else lg.style.display = "none"; };
@@ -3497,10 +3503,11 @@ function updDone() {
   }
   ov.appendChild(el("div", "us", "최신 버전이 적용됐어요 ✓"));
   var ok = el("button", "uok", "확인"); ok.type = "button";
-  ok.onclick = function () { splashReplay(); ov.className = ""; setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 400); };
+  ok.onclick = function () { splashAfterUpdate(); ov.className = ""; setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 400); };
   ov.appendChild(ok);
   document.body.appendChild(ov);
   setTimeout(function () { ov.className = "on"; }, 60);
+  return true;
 }
 
 /* ---------- 🔁 다시 켰을 때 자동 갱신 ----------
@@ -4528,24 +4535,39 @@ function igQR(box, hint) {
 }
 
 /* ---------- ⚡ 시작 화면 ----------
- * 떠 있는 동안 금일 데이터를 받아 옴 (요청은 원래대로 boot에서 바로 보냄 · 화면 그리기는 뒤에서 그대로)
- * 받으면 닫음: 최소 1초 · 최대 4초 (4초 넘으면 저장된 화면 + "갱신 중")
- * PIN 화면이 필요하면 1초 뒤 · 설치 안내 화면이면 바로 · 닫을 땐 지우지 않고 숨김
+ * 시작 화면이 떠 있는 동안 금일 데이터를 새로 받아 옴 → 받는 즉시 닫고 바로 화면 (최대 4초 · 넘으면 저장된 화면 + "갱신 중")
+ * PIN 화면·설치 안내 화면이면 바로 닫음 · 닫을 땐 지우지 않고 숨김
+ * 업데이트가 있으면: 업데이트 화면 먼저 (시작 화면은 뒤에서 멈춰 둠) → [확인] → 시작 화면 처음부터 + 그때 갱신
  */
-var SPL = { t0: Date.now(), done: false, max: null };
-function splashClose(minMs) {
+var SPL = { t0: Date.now(), done: false, max: null, hold: false };
+function splashClose() {
   if (SPL.done) return;
-  var wait = Math.max(0, (minMs == null ? 1000 : minMs) - (Date.now() - SPL.t0));
   SPL.done = true;
   if (SPL.max) { clearTimeout(SPL.max); SPL.max = null; }
-  setTimeout(function () { var s = $("splash"); if (s) s.className = "off"; }, wait);
+  splashHide();
 }
-// 업데이트 완료 [확인] → 처음부터 한 번 다시 재생 (복제해서 바꿔 끼우면 애니메이션이 처음부터) · 1.7초 뒤 닫힘
-function splashReplay() {
+function splashHide() {   // 지우지 않고 숨김 → 사라지는 효과(0.35초) 뒤엔 그리지도 않음
+  var s = $("splash"); if (!s) return;
+  s.className = "off";
+  setTimeout(function () { if (s.className === "off") s.className = "off gone"; }, 400);
+}
+// 시작 화면을 처음부터 (복제해서 바꿔 끼우면 애니메이션이 처음부터) + work(갱신)가 끝나면 바로 닫음 · 최대 4초
+function splashRun(work) {
   var s = $("splash"); if (!s) return;
   var c = s.cloneNode(true); c.className = "";
   s.parentNode.replaceChild(c, s);
-  setTimeout(function () { c.className = "off"; }, 1700);
+  SPL.done = false;
+  if (SPL.max) clearTimeout(SPL.max);
+  SPL.max = setTimeout(splashClose, 4000);
+  Promise.resolve(work).then(splashClose, splashClose);
+}
+// 업데이트 화면 [확인] → 시작 화면에서 금일 데이터 갱신 → 받으면 바로 화면
+function splashAfterUpdate() {
+  if (!SPL.hold) { splashRun(null); return; }   // (보통은 여기 안 옴)
+  SPL.hold = false;
+  var work = null;
+  if ($("app").style.display !== "none" && getPin()) { work = loadDash(false); setTimeout(loadUpload, 0); }
+  splashRun(work);
 }
 // 💾 영구 저장 요청 (폰이 저장 공간을 정리할 때 PIN·이름·기기 번호가 덜 지워지게) · 이미 허용이면 다시 안 물음 · 기다리지 않음
 function askPersist() {
@@ -4558,10 +4580,13 @@ function askPersist() {
 
 function boot() {
   if (IS_TEST) $("spsub").appendChild(document.createTextNode(" · TEST"));
-  if (instGate()) { splashClose(0); return; }   // 설치 안내 화면이면 바로 닫음   // 📲 홈 화면 앱이 아니면 안내만 (PIN·알림 등 실행 안 함)
+  if (instGate()) { splashClose(); return; }   // 설치 안내 화면이면 바로 닫음   // 📲 홈 화면 앱이 아니면 안내만 (PIN·알림 등 실행 안 함)
   buildChips();
   $("ver").textContent = "v" + APP_VER.slice(5).replace("-", ".");   // 예: v10.14-4
-  updDone();   // ✨ 방금 새 버전으로 바뀌었으면 "업데이트 완료"
+  if (updDone()) {   // ✨ 방금 새 버전으로 바뀌었으면 "업데이트 완료" 먼저 → [확인] 뒤에 시작 화면 + 갱신
+    SPL.hold = true;
+    $("splash").className = "hold";   // 뒤에서 멈춰 둠 (배경만)
+  }
   if (IS_TEST) {
     $("testtag").appendChild(el("span", "testtag", "🧪 테스트"));
     document.title = "제조1-A 테스트";
@@ -4571,17 +4596,18 @@ function boot() {
   try { pushInit(); } catch (ep) {}
   try { adminUI(); } catch (ea) {}   // 🔑 관리자 모드면 제목 빨강
   setTimeout(function () { if (nameDone()) devRegister(); }, 6000);   // 📱 기기 목록 등록 (버전 바뀔 때 한 번, 화면 로딩 끝난 뒤)
-  if (lockLeft() > 0) { showLocked(); splashClose(1000); return; }
+  if (lockLeft() > 0) { showLocked(); if (!SPL.hold) splashClose(); return; }
   var p = getPin();
-  if (!p) { setGate("enter", "PIN을 입력해 주세요."); splashClose(1000); return; }   // PIN 화면이 필요하면 1초 뒤
+  if (!p) { setGate("enter", "PIN을 입력해 주세요."); if (!SPL.hold) splashClose(); return; }   // PIN 화면이 필요하면 바로
+  if (SPL.hold) { unlock(p, null, true); return; }   // 업데이트 화면 뒤: 저장된 화면만 깔아 두고, 갱신은 [확인] 뒤 시작 화면에서
   // ⚡ 저장된 PIN이 있으면 PIN 확인을 기다리지 않고 지난 화면부터 바로 보여줌.
   //    금일/명일 요청이 PIN 확인을 겸하고, PIN이 바뀌었으면 그때 잠금 화면으로.
   var pre = rawCall(p, "getDashboardAll", [false]).then(function (j) {
     if (!j.ok && j.code === "PIN") lockApp("저장된 PIN이 맞지 않아요. 다시 입력해 주세요.");
     return j;
   }).catch(function () { return null; });
-  pre.then(function () { splashClose(1000); });                    // 받으면 닫음 (최소 1초)
-  SPL.max = setTimeout(function () { splashClose(0); }, 4000);     // 최대 4초 → 저장된 화면 + "갱신 중"
+  pre.then(function () { setTimeout(splashClose, 0); });   // 받으면 바로 닫음 (화면에 넣은 다음)
+  SPL.max = setTimeout(splashClose, 4000);                  // 최대 4초 → 저장된 화면 + "갱신 중"
   unlock(p, pre);
 }
 boot();
