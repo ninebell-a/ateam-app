@@ -180,6 +180,30 @@ li:first-child{border-top:0}
 .hint{font-size:12px;color:var(--sub);padding:0 2px;line-height:1.5}
 #opchips .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #opin{font-size:16px;padding:11px 12px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--text);width:100%;box-sizing:border-box}
+/* ⚡ 시작 화면 (반도체 칩 · 회로선이 그려지고 빛 신호가 흐름 = 로딩) */
+#splash{position:fixed;inset:0;z-index:9996;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px 16px calc(24px + env(safe-area-inset-bottom));transition:opacity .35s,visibility .35s}
+#splash.off{opacity:0;visibility:hidden;pointer-events:none}
+#splash svg.spchip{width:min(62vw,250px);height:auto;overflow:visible}
+#splash .tr{fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:100;stroke-dashoffset:100;opacity:.55;animation:spDraw .45s ease-out forwards}
+#splash .sg{fill:none;stroke:var(--accent);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:9 91;stroke-dashoffset:100;opacity:0;filter:drop-shadow(0 0 3px var(--accent));animation:spFlow 1.5s linear infinite}
+#splash .dt{fill:var(--accent);transform-box:fill-box;transform-origin:center;transform:scale(0);animation:spPop .3s cubic-bezier(.3,1.8,.5,1) forwards}
+#splash .pin{fill:var(--sub);opacity:.55}
+#splash .body{fill:var(--card);stroke:var(--accent);stroke-width:2.4}
+#splash .die{fill:none;stroke:var(--line);stroke-width:1.4}
+#splash .lbl{fill:var(--text);font:900 21px -apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo","Pretendard","Noto Sans KR",sans-serif;letter-spacing:.5px}
+#splash .notch{fill:var(--accent);opacity:.8}
+#splash .t1{margin-top:26px;font-size:clamp(22px,7.4vw,30px);font-weight:900;letter-spacing:.24em;padding-left:.24em;color:var(--text);white-space:nowrap}
+#splash .t2{margin-top:8px;font-size:clamp(9.5px,2.9vw,11.5px);font-weight:700;letter-spacing:.16em;padding-left:.16em;color:var(--sub);white-space:nowrap}
+#splash .t2 b{color:var(--accent);font-weight:800}
+#splash .slogo{position:absolute;left:0;right:0;bottom:calc(26px + env(safe-area-inset-bottom));display:flex;justify-content:center}
+#splash .slogo img{height:15px;opacity:.5}
+@keyframes spDraw{to{stroke-dashoffset:0}}
+@keyframes spPop{to{transform:scale(1)}}
+@keyframes spFlow{0%{stroke-dashoffset:100;opacity:1}100%{stroke-dashoffset:0;opacity:1}}
+@media (prefers-reduced-motion:reduce){#splash .tr{animation:none;stroke-dashoffset:0}#splash .dt{animation:none;transform:scale(1)}#splash .sg{animation:none;display:none}#splash{transition:none}}
+/* 👤 처음 쓰는 폰: 이름 고르기는 앱 화면을 가리는 전체 화면 */
+#nmov.full{background:var(--bg);align-items:center}
+#nmov.full .box{border-radius:18px;max-width:440px;margin:0 16px;border:1px solid var(--line);box-shadow:0 10px 40px rgba(0,0,0,.08)}
 #updov{position:fixed;inset:0;z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px calc(32px + env(safe-area-inset-bottom));background:radial-gradient(120% 70% at 50% 0%,#17306b 0%,#0c1630 45%,#070c1a 100%);color:#fff;text-align:center;opacity:0;transition:opacity .35s}
 #updov.on{opacity:1}
 #updov .ul{height:28px;width:auto;max-width:160px;object-fit:contain;margin-bottom:34px;opacity:0;transform:translateY(-8px);transition:all .5s .1s}
@@ -603,6 +627,12 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 </style>
 </head>
 <body>
+<div id="splash" aria-hidden="true">
+  <svg class="spchip" viewBox="20 20 200 200" aria-hidden="true"><path class="tr" pathLength="100" d="M105 78V58L88 41" style="animation-delay:0.08s"/><path class="tr" pathLength="100" d="M135 78V50L150 35H178" style="animation-delay:0.14s"/><path class="tr" pathLength="100" d="M162 105H190L205 90" style="animation-delay:0.20s"/><path class="tr" pathLength="100" d="M162 135H182L200 153V175" style="animation-delay:0.26s"/><path class="tr" pathLength="100" d="M135 162V185L152 202" style="animation-delay:0.32s"/><path class="tr" pathLength="100" d="M105 162V180L88 197H62" style="animation-delay:0.38s"/><path class="tr" pathLength="100" d="M78 135H52L37 150" style="animation-delay:0.44s"/><path class="tr" pathLength="100" d="M78 105H58L40 87V62" style="animation-delay:0.50s"/><path class="sg" pathLength="100" d="M105 78V58L88 41" style="animation-delay:0.95s"/><path class="sg" pathLength="100" d="M135 78V50L150 35H178" style="animation-delay:1.07s"/><path class="sg" pathLength="100" d="M162 105H190L205 90" style="animation-delay:1.19s"/><path class="sg" pathLength="100" d="M162 135H182L200 153V175" style="animation-delay:1.31s"/><path class="sg" pathLength="100" d="M135 162V185L152 202" style="animation-delay:1.43s"/><path class="sg" pathLength="100" d="M105 162V180L88 197H62" style="animation-delay:1.55s"/><path class="sg" pathLength="100" d="M78 135H52L37 150" style="animation-delay:1.67s"/><path class="sg" pathLength="100" d="M78 105H58L40 87V62" style="animation-delay:1.79s"/><rect class="pin" x="93" y="78" width="4" height="8" rx="1"/><rect class="pin" x="93" y="154" width="4" height="8" rx="1"/><rect class="pin" x="78" y="93" width="8" height="4" rx="1"/><rect class="pin" x="154" y="93" width="8" height="4" rx="1"/><rect class="pin" x="103" y="78" width="4" height="8" rx="1"/><rect class="pin" x="103" y="154" width="4" height="8" rx="1"/><rect class="pin" x="78" y="103" width="8" height="4" rx="1"/><rect class="pin" x="154" y="103" width="8" height="4" rx="1"/><rect class="pin" x="113" y="78" width="4" height="8" rx="1"/><rect class="pin" x="113" y="154" width="4" height="8" rx="1"/><rect class="pin" x="78" y="113" width="8" height="4" rx="1"/><rect class="pin" x="154" y="113" width="8" height="4" rx="1"/><rect class="pin" x="123" y="78" width="4" height="8" rx="1"/><rect class="pin" x="123" y="154" width="4" height="8" rx="1"/><rect class="pin" x="78" y="123" width="8" height="4" rx="1"/><rect class="pin" x="154" y="123" width="8" height="4" rx="1"/><rect class="pin" x="133" y="78" width="4" height="8" rx="1"/><rect class="pin" x="133" y="154" width="4" height="8" rx="1"/><rect class="pin" x="78" y="133" width="8" height="4" rx="1"/><rect class="pin" x="154" y="133" width="8" height="4" rx="1"/><rect class="pin" x="143" y="78" width="4" height="8" rx="1"/><rect class="pin" x="143" y="154" width="4" height="8" rx="1"/><rect class="pin" x="78" y="143" width="8" height="4" rx="1"/><rect class="pin" x="154" y="143" width="8" height="4" rx="1"/><rect class="body" x="85" y="85" width="70" height="70" rx="10"/><rect class="die" x="94" y="94" width="52" height="52" rx="5"/><circle class="notch" cx="96" cy="96" r="2.6"/><text class="lbl" x="120" y="128" text-anchor="middle">1-A</text><circle class="dt" cx="88" cy="41" r="4.2" style="animation-delay:0.50s"/><circle class="dt" cx="178" cy="35" r="4.2" style="animation-delay:0.56s"/><circle class="dt" cx="205" cy="90" r="4.2" style="animation-delay:0.62s"/><circle class="dt" cx="200" cy="175" r="4.2" style="animation-delay:0.68s"/><circle class="dt" cx="152" cy="202" r="4.2" style="animation-delay:0.74s"/><circle class="dt" cx="62" cy="197" r="4.2" style="animation-delay:0.80s"/><circle class="dt" cx="37" cy="150" r="4.2" style="animation-delay:0.86s"/><circle class="dt" cx="40" cy="62" r="4.2" style="animation-delay:0.92s"/></svg>
+  <div class="t1">MANUFACTURING</div>
+  <div class="t2" id="spsub">SEMICONDUCTOR EQUIPMENT · <b>TEAM 1-A</b></div>
+  <div class="slogo"><picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img src="logo.png" alt="" onerror="this.style.display='none'"></picture></div>
+</div>
 <div id="blockov"><div class="bx">
   <picture><source srcset="logo-dark.png" media="(prefers-color-scheme: dark)"><img class="bl" src="logo.png" alt="" onerror="this.style.display='none'"></picture>
   <div class="bc"><div class="bi">⏸</div><h2>지금은 앱을 쓸 수 없어요</h2><p>제조1-A 앱을 잠시 멈춰 두었어요.<br>다시 쓰게 되면 자동으로 열려요.</p><div class="bh"><b>김은수 팀장님 인수인계 완료 전까지</b><br>앱 사용이 중지됩니다.</div></div>
@@ -740,7 +770,7 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
     <input type="text" id="opin" inputmode="text" autocomplete="off" maxlength="20" placeholder="직접 입력 (목록에 없는 이름)">
     <button id="opclr" type="button">🗑 작업자 비우기 (이 장비 작업 안 함)</button>
     <p class="sub" id="ophint">저장하면 26_장비_LOG 작업자(F열)에 들어가요.
-잘못 넣었으면 '최근 입력한 작업자'에서 고칠 수 있어요.</p>
+잘못 넣었으면 내 이름 카드의 ✎에서 고칠 수 있어요.</p>
     <div class="ob" id="opob">
       <button id="opno" type="button">취소</button>
       <button id="opgo" type="button" class="go">저장</button>
@@ -1260,6 +1290,7 @@ function unlock(pin, pre) {
   if (cu && !cu.error) { U.data = cu; setBadge(cu.total); }
   LV.data = cget("leave"); ST.data = cget("stats");
   setTab(0);
+  if (!nameDone()) nameAsk(true);   // 👤 처음 쓰는 폰: 앱 화면을 그리는 같은 순간에 이름 고르기를 전체 화면으로 (깜빡임 없음)
   // ⚡ 이미 보낸 금일/명일 요청(pre)이 있으면 그 결과를 씀 (같은 요청을 두 번 보내지 않음)
   if (pre) {
     R.dash = true;
@@ -1787,16 +1818,18 @@ $("cfgo").onclick = function () {
   $("cfgo").textContent = "처리 중…";
   callEdit("markUploadDone", [it.row, s.col, it.n])
     .then(function (r) {
-      if (r && r.error) U.msg = { err: true, t: r.error };
-      else U.msg = { err: false, t: it.n + " " + s.label + " → 완료 ✔" };
-      toast((U.msg.err ? "⚠️ " : "✔ ") + U.msg.t, U.msg.err);
+      // 알림 문구는 지역 변수에 (화면을 다시 그리면 U.msg가 비워짐)
+      var m = (r && r.error) ? { err: true, t: r.error } : { err: false, t: it.n + " " + s.label + " → 완료 ✔" };
+      U.msg = m;
       closeConfirm();
-      if (!U.msg.err) { upFixAdd(it, s.col); upFixNow(); }   // ⚡ 성공하면 목록에서 바로 뺌 (실패하면 그대로)
+      if (!m.err) { upFixAdd(it, s.col); upFixNow(); }   // ⚡ 성공하면 목록에서 바로 뺌 (실패하면 그대로)
+      toast((m.err ? "⚠️ " : "✔ ") + m.t, m.err);
       loadUpload();
     })
     .catch(function (e) {
-      U.msg = { err: true, t: "처리 실패: " + errText(e) };
-      toast("⚠️ " + U.msg.t, true);
+      var m = { err: true, t: "처리 실패: " + errText(e) };
+      U.msg = m;
+      toast("⚠️ " + m.t, true);
       closeConfirm();
       loadUpload();
     });
@@ -1861,34 +1894,7 @@ function renderUpload(d) {
     card.appendChild(ul);
     box.appendChild(card);
   });
-
-  // ✏️ 최근 입력한 작업자 (잘못 넣었으면 수정·비우기 · 입력한 사람 / 그 이름 본인 / 관리자만)
-  var rc = d.recent || [];
-  if (rc.length) {
-    var me = myName(), adm = adminOn() && !isChief();
-    var card2 = el("div", "card up oprec");
-    var hd2 = el("div", "hd");
-    hd2.appendChild(el("span", "ttl", "✏️ 최근 입력한 작업자"));
-    hd2.appendChild(el("span", "cnt", rc.length + "대"));
-    card2.appendChild(hd2);
-    var ul2 = el("ul");
-    rc.forEach(function (x) {
-      var li = el("li");
-      var l = el("span", "ol");
-      l.appendChild(el("b", null, x.n + " → " + x.op));
-      l.appendChild(el("small", null, x.label + " · " + (x.by || "-") + " 입력"));
-      li.appendChild(l);
-      if (me && (x.by === me || x.op === me || adm)) {
-        var e = el("button", "oe", "수정"); e.type = "button";
-        e.onclick = function () { openOp({ row: x.row, n: x.n, t: x.t }, opNameList(d), x.op); };
-        li.appendChild(e);
-      }
-      ul2.appendChild(li);
-    });
-    card2.appendChild(ul2);
-    box.appendChild(card2);
-    box.appendChild(el("div", "hint oprech", "잘못 넣었으면 [수정]으로 바꾸거나 비울 수 있어요.\n(입력한 사람 · 그 이름 본인 · 관리자만)"));
-  }
+  // (✏️ 최근 입력한 작업자 칸은 뺌 — 작업자 수정은 내 이름 카드 ✎에서)
 }
 
 /* ---------- 👷 작업자 입력 (26_장비_LOG F열) ---------- */
@@ -1967,17 +1973,21 @@ function opSave(op) {
   if (clear) $("opclr").textContent = "비우는 중…"; else $("opgo").textContent = "저장 중…";
   callEdit("setOperator", edit ? [it.row, it.n, op, OP.prev] : [it.row, it.n, op])
     .then(function (r) {
-      if (r && r.error) { if (r.admBad) adminOff(); U.msg = { err: true, t: r.error }; }
-      else U.msg = { err: false, t: it.n + " 작업자 → " + (clear ? "(비움) · 작업자 미입력 목록으로" : op) + " ✔" };
-      toast((U.msg.err ? "⚠️ " : "✔ ") + U.msg.t, U.msg.err);
+      // 알림 문구는 지역 변수에 (화면을 다시 그리면 U.msg가 비워짐)
+      var m;
+      if (r && r.error) { if (r.admBad) adminOff(); m = { err: true, t: r.error }; }
+      else m = { err: false, t: it.n + " 작업자 → " + (clear ? "(비움) · 작업자 미입력 목록으로" : op) + " ✔" };
+      U.msg = m;
       $("opclr").textContent = "🗑 작업자 비우기 (이 장비 작업 안 함)";
       closeOp();
-      if (!U.msg.err && !edit && !clear) { upFixAdd(it, 0, op); upFixNow(); }   // ⚡ 처음 입력 성공 → 바로 반영
+      if (!m.err && !edit && !clear) { upFixAdd(it, 0, op); upFixNow(); }   // ⚡ 처음 입력 성공 → 바로 반영
+      toast((m.err ? "⚠️ " : "✔ ") + m.t, m.err);
       loadUpload();
     })
     .catch(function (e) {
-      U.msg = { err: true, t: "저장 실패: " + errText(e) };
-      toast("⚠️ " + U.msg.t, true);
+      var m = { err: true, t: "저장 실패: " + errText(e) };
+      U.msg = m;
+      toast("⚠️ " + m.t, true);
       $("opclr").textContent = "🗑 작업자 비우기 (이 장비 작업 안 함)";
       closeOp();
       loadUpload();
@@ -3369,10 +3379,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-21-5";
+var APP_VER = "2026-10-22-1";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-22-1", ["앱 켤 때 시작 화면 · 그동안 최신 내용 받아와요", "처음 쓰는 폰은 PIN → 이름 고르기 → 앱 순서로", "작업자 직접 입력·완료 알림 오류 수정", "작업자 저장이 더 빨라졌어요"]],
   ["2026-10-21-5", ["멈춤 화면 안내 문구 추가"]],
   ["2026-10-21-3", ["시트 업로드 완료·작업자 입력하면 목록에서 바로 빠져요", "금일 화면이 몇 시간 전 화면에 멈추던 문제 수정", "저장이 느리던 문제 개선", "앱 설치 안내 더 쉽게"]],
   ["2026-10-21-2", ["앱 운영 상태 확인 기능 추가"]],
@@ -3486,7 +3497,7 @@ function updDone() {
   }
   ov.appendChild(el("div", "us", "최신 버전이 적용됐어요 ✓"));
   var ok = el("button", "uok", "확인"); ok.type = "button";
-  ok.onclick = function () { ov.className = ""; setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 400); };
+  ok.onclick = function () { splashReplay(); ov.className = ""; setTimeout(function () { if (ov.parentNode) ov.parentNode.removeChild(ov); }, 400); };
   ov.appendChild(ok);
   document.body.appendChild(ov);
   setTimeout(function () { ov.className = "on"; }, 60);
@@ -3584,18 +3595,18 @@ $("nmno").onclick = function () { $("nmov").className = "ov"; nmMode(false); };
 // 🛠 개발자: 개발자 PIN 확인 → 이 폰 이름을 개발자로 (다른 사람 화면엔 개발자 이름이 안 나옴)
 $("nmdev").onclick = function () { $("nmov").className = "ov"; openAdminGate("devname"); };
 
-function nameAsk() {
+function nameAsk(first) {
   if (nameDone()) return;   // 이미 직접 고른 사람만 통과 (예전에 알림 켠 사람도 한 번은 다시 고름)
   if ($("app").style.display === "none") { setTimeout(nameAsk, 500); return; }   // PIN 화면이면 기다림
   var o = document.querySelector(".ov.on");
-  if (o && o.id !== "nmov") { if (o.id === "pushov") closePush(); else { setTimeout(nameAsk, 800); return; } }   // 알림 창보다 이름이 먼저
+  if (o && o.id !== "nmov") { if (o.id === "pushov") closePush(); else if (!first) { setTimeout(nameAsk, 800); return; } }   // 알림 창보다 이름이 먼저
   nmMode(false);
   NM.pick = ""; NM.confirm = false;
   $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 정하기"; $("nmmsg").textContent = ""; nmChiefBox();
   var cn = cget("names");
   if (cn && cn.names) nmChips(cn.names);
   call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; nmChips(r.names); } }).catch(function () {});
-  $("nmov").className = "ov on";
+  $("nmov").className = "ov on full";   // 전체 화면 (관리자 이름 바꾸기 창은 원래 모양)
 }
 
 $("nmgo").onclick = function () {
@@ -3631,6 +3642,7 @@ function nmApply(pick) {
   if (pick !== CHIEF_NAME) chiefClear();
   if (pick !== myName()) { sdel("admUntil"); sdel("admPin"); sdel("admChief"); }   // 이름이 바뀌면 관리자 모드도 끔
   sset("myName", pick); sset("nameOK", "1");
+  askPersist();   // 💾 이름을 확정하는 순간에도 영구 저장 요청 (기다리지 않음)
   if (pick !== CHIEF_NAME && (wasChange || !sget("hoursName") || sget("hoursName") === old)) sset("hoursName", pick);   // 총괄팀장은 근무시간 명단에 없으니 그대로
   if (old && old !== pick) {   // 예전에 다른 이름으로 알림을 켰으면 새 이름으로 다시 연결
     sset("pushName", pick);
@@ -4264,8 +4276,15 @@ function openDevPanel() {
    ["개발자 알림 받기", DV.devPush ? "켜짐 (공지·아침 알림 옴)" : "꺼짐 (알림 안 옴)"],
    ["기기 번호", "기기-" + devId()],
    ["버전", "v" + APP_VER.slice(5).replace("-", ".") + (IS_TEST ? " (테스트)" : "")],
-   ["실행", standalone ? "홈 화면 앱" : "브라우저"]
+   ["실행", standalone ? "홈 화면 앱" : "브라우저"],
+   ["저장 공간", "확인 중…"]
   ].forEach(function (x) { I.appendChild(el("span", null, x[0])); I.appendChild(el("b", null, x[1])); });
+  (function (cell) {   // 💾 영구 저장 여부 (PIN·이름·기기 번호가 폰 정리 때 덜 지워짐)
+    try {
+      if (!navigator.storage || !navigator.storage.persisted) { cell.textContent = "지원 안 함"; return; }
+      navigator.storage.persisted().then(function (ok) { cell.textContent = ok ? "영구 저장 ✅" : "일반"; }).catch(function () { cell.textContent = "지원 안 함"; });
+    } catch (e) { cell.textContent = "지원 안 함"; }
+  })(I.lastChild);
 
   var L = $("dvlist"); L.innerHTML = ""; $("dvmsg").textContent = ""; $("dvmsg").style.color = "";
   function item(t, sub, fn) {
@@ -4508,8 +4527,38 @@ function igQR(box, hint) {
   document.head.appendChild(sc);
 }
 
+/* ---------- ⚡ 시작 화면 ----------
+ * 떠 있는 동안 금일 데이터를 받아 옴 (요청은 원래대로 boot에서 바로 보냄 · 화면 그리기는 뒤에서 그대로)
+ * 받으면 닫음: 최소 1초 · 최대 4초 (4초 넘으면 저장된 화면 + "갱신 중")
+ * PIN 화면이 필요하면 1초 뒤 · 설치 안내 화면이면 바로 · 닫을 땐 지우지 않고 숨김
+ */
+var SPL = { t0: Date.now(), done: false, max: null };
+function splashClose(minMs) {
+  if (SPL.done) return;
+  var wait = Math.max(0, (minMs == null ? 1000 : minMs) - (Date.now() - SPL.t0));
+  SPL.done = true;
+  if (SPL.max) { clearTimeout(SPL.max); SPL.max = null; }
+  setTimeout(function () { var s = $("splash"); if (s) s.className = "off"; }, wait);
+}
+// 업데이트 완료 [확인] → 처음부터 한 번 다시 재생 (복제해서 바꿔 끼우면 애니메이션이 처음부터) · 1.7초 뒤 닫힘
+function splashReplay() {
+  var s = $("splash"); if (!s) return;
+  var c = s.cloneNode(true); c.className = "";
+  s.parentNode.replaceChild(c, s);
+  setTimeout(function () { c.className = "off"; }, 1700);
+}
+// 💾 영구 저장 요청 (폰이 저장 공간을 정리할 때 PIN·이름·기기 번호가 덜 지워지게) · 이미 허용이면 다시 안 물음 · 기다리지 않음
+function askPersist() {
+  try {
+    var st = navigator.storage;
+    if (!st || !st.persist || !st.persisted) return;
+    st.persisted().then(function (ok) { if (!ok) st.persist().catch(function () {}); }).catch(function () {});
+  } catch (e) {}
+}
+
 function boot() {
-  if (instGate()) return;   // 📲 홈 화면 앱이 아니면 안내만 (PIN·알림 등 실행 안 함)
+  if (IS_TEST) $("spsub").appendChild(document.createTextNode(" · TEST"));
+  if (instGate()) { splashClose(0); return; }   // 설치 안내 화면이면 바로 닫음   // 📲 홈 화면 앱이 아니면 안내만 (PIN·알림 등 실행 안 함)
   buildChips();
   $("ver").textContent = "v" + APP_VER.slice(5).replace("-", ".");   // 예: v10.14-4
   updDone();   // ✨ 방금 새 버전으로 바뀌었으면 "업데이트 완료"
@@ -4518,19 +4567,21 @@ function boot() {
     document.title = "제조1-A 테스트";
   }
   checkUpdate();
+  askPersist();
   try { pushInit(); } catch (ep) {}
   try { adminUI(); } catch (ea) {}   // 🔑 관리자 모드면 제목 빨강
-  setTimeout(nameAsk, 300);   // 👤 이름 고르기가 제일 먼저
   setTimeout(function () { if (nameDone()) devRegister(); }, 6000);   // 📱 기기 목록 등록 (버전 바뀔 때 한 번, 화면 로딩 끝난 뒤)
-  if (lockLeft() > 0) { showLocked(); return; }
+  if (lockLeft() > 0) { showLocked(); splashClose(1000); return; }
   var p = getPin();
-  if (!p) { setGate("enter", "PIN을 입력해 주세요."); return; }
+  if (!p) { setGate("enter", "PIN을 입력해 주세요."); splashClose(1000); return; }   // PIN 화면이 필요하면 1초 뒤
   // ⚡ 저장된 PIN이 있으면 PIN 확인을 기다리지 않고 지난 화면부터 바로 보여줌.
   //    금일/명일 요청이 PIN 확인을 겸하고, PIN이 바뀌었으면 그때 잠금 화면으로.
   var pre = rawCall(p, "getDashboardAll", [false]).then(function (j) {
     if (!j.ok && j.code === "PIN") lockApp("저장된 PIN이 맞지 않아요. 다시 입력해 주세요.");
     return j;
   }).catch(function () { return null; });
+  pre.then(function () { splashClose(1000); });                    // 받으면 닫음 (최소 1초)
+  SPL.max = setTimeout(function () { splashClose(0); }, 4000);     // 최대 4초 → 저장된 화면 + "갱신 중"
   unlock(p, pre);
 }
 boot();
