@@ -2,11 +2,14 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#2f6fed">
 <script>
+// 📱 앱처럼: 두 손가락 확대·축소 막기 (아이폰은 viewport 설정만으론 안 막혀서)
+document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
+document.addEventListener("touchmove", function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 // 📲 홈 화면 앱 이름·시작 주소: test.html이면 테스트용(manifest-test.json)으로 따로 깔리게
 (function () {
   var t = /test\.html$/i.test(location.pathname);
@@ -187,18 +190,18 @@ li:first-child{border-top:0}
 @media (prefers-color-scheme:dark){.mb{color:#fbbf24}}
 /* 📝 장비 메모 */
 #memo .mtf{display:flex;flex-wrap:wrap;gap:6px}
-#memo .mtnew{padding:12px;border-radius:12px;border:1.5px dashed var(--accent);background:transparent;color:var(--accent);font:800 15px inherit;font-family:inherit}
+#memo .mtnew{padding:12px;border-radius:12px;border:1.5px dashed var(--accent);background:transparent;color:var(--accent);font-weight:800;font-size:15px;font-family:inherit}
 #memo .mtform{display:grid;gap:8px;padding:14px}
 #memo .mtform .mtl{font-weight:800;font-size:15px}
-#memo .mtform input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font:15px inherit;font-family:inherit;background:var(--card);color:var(--text)}
-#memo .mtform textarea{width:100%;min-height:70px;box-sizing:border-box;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:15px/1.5 inherit;font-family:inherit;background:var(--card);color:var(--text)}
+#memo .mtform input{width:100%;box-sizing:border-box;border:1px solid var(--line);border-radius:12px;padding:11px 12px;font-size:16px;font-family:inherit;background:var(--card);color:var(--text)}
+#memo .mtform textarea{width:100%;min-height:70px;box-sizing:border-box;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.5;font-family:inherit;background:var(--card);color:var(--text)}
 #memo .mtsug{display:none;margin-top:-4px;border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
-#memo .mts{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:11px 12px;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font:15px inherit;font-family:inherit}
+#memo .mts{display:flex;align-items:baseline;gap:8px;width:100%;text-align:left;padding:11px 12px;border:0;border-top:1px solid var(--line);background:none;color:var(--text);font-size:15px;font-family:inherit}
 #memo .mts:first-child{border-top:0}
 #memo .mts:active{background:var(--line)}
 #memo .mts b{font-weight:700}
 #memo .mts small{color:var(--sub);font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-#memo .mtform .madd{padding:12px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:800 15px inherit;font-family:inherit}
+#memo .mtform .madd{padding:12px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-weight:800;font-size:15px;font-family:inherit}
 #memo .mtc{padding:12px 14px;display:grid;gap:8px}
 #memo .mth .eq{font-size:16px;font-weight:800}
 #memo .hint{white-space:pre-line}
@@ -213,15 +216,15 @@ li:first-child{border-top:0}
 .mm .c1{background:rgba(47,111,237,.12);color:var(--accent)}
 .mm .c2{background:rgba(31,157,85,.14);color:var(--ok)}
 .mm .mb2{display:flex;flex-wrap:wrap;gap:6px}
-.mm .mb2 button{padding:7px 11px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font:700 13px inherit;font-family:inherit}
+.mm .mb2 button{padding:7px 11px;border-radius:999px;border:1.5px solid var(--line);background:var(--card);color:var(--text);font-weight:700;font-size:13px;font-family:inherit}
 .mm .mb2 .bi{border-color:var(--accent);color:var(--accent)}
 .mm .mb2 .bd{border-color:var(--ok);color:var(--ok)}
 .mm .mb2 .bx{color:var(--sub)}
 .mm .mb2 .bx.sure{border-color:var(--warn);color:var(--warn)}
 .mm.done{opacity:.6}
-.memo textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font:15px/1.5 inherit;font-family:inherit;background:var(--card);color:var(--text);box-sizing:border-box}
-.memo .madd{padding:12px;border-radius:12px;border:0;background:var(--accent);color:#fff;font:800 15px inherit;font-family:inherit}
-.memo .mdone{background:none;border:0;color:var(--sub);font:600 12.5px inherit;font-family:inherit;text-align:left;padding:2px 0}
+.memo textarea{width:100%;min-height:64px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:10px 12px;font-size:16px;line-height:1.5;font-family:inherit;background:var(--card);color:var(--text);box-sizing:border-box}
+.memo .madd{padding:12px;border-radius:12px;border:0;background:var(--accent);color:#fff;font-weight:800;font-size:15px;font-family:inherit}
+.memo .mdone{background:none;border:0;color:var(--sub);font-weight:600;font-size:12.5px;font-family:inherit;text-align:left;padding:2px 0}
 .site{display:inline-block;margin-left:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;font-family:inherit;vertical-align:1px;background:transparent;border:1.5px solid var(--sub);color:var(--sub)}
 .site.emp{border:1.5px dashed var(--warn);color:var(--warn)}
 .site.dt{border-color:var(--accent);color:var(--accent);background:rgba(47,111,237,.08)}
@@ -692,6 +695,10 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 #epin{width:100%;font-size:22px;letter-spacing:6px;text-align:center;padding:13px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text)}
 #epmsg.bad{color:var(--warn);font-weight:600}
 #epov .ob .go{background:var(--accent);border-color:var(--accent)}
+/* 📱 아이폰: 16px보다 작은 입력칸을 누르면 화면이 확대된 채로 남음 → 입력칸은 모두 16px · 두 번 톡 확대도 끔 */
+input:not([type=checkbox]):not([type=radio]),textarea,select{font-size:16px!important}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html{overflow-x:hidden}
 </style>
 </head>
 <body>
@@ -2032,7 +2039,7 @@ function renderMemoTab() {
   var all = (store.memo || []).slice().sort(function (a, b) { return b.at - a.at; });
   var c0 = all.filter(function (m) { return m.st === "부적합"; }).length, c1 = all.filter(function (m) { return m.st === "입고확인"; }).length, c2 = all.filter(function (m) { return m.st === "완료"; }).length;
   var sum = el("div", "sum" + (c0 + c1 ? "" : " zero"));
-  sum.appendChild(el("span", null, c0 + c1 ? "진행 중 부적합" : "진행 중인 부적합이 없어요 👍"));
+  sum.appendChild(el("span", null, c0 + c1 ? "진행 중 부적합" : "진행 중인 부적합이 없어요"));
   if (c0 + c1) sum.appendChild(el("b", null, (c0 + c1) + "건"));
   box.appendChild(sum);
   var fs = el("div", "mtf");
@@ -3742,10 +3749,12 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-14";
+var APP_VER = "2026-10-23-16";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-16", ["부적합 탭 문구 정리"]],
+  ["2026-10-23-15", ["화면이 확대·축소된 채로 남던 문제 해결 (앱처럼 고정)"]],
   ["2026-10-23-14", ["부적합 등록: 장비명을 치는 대로 후보가 떠요 (눌러서 바로 선택)"]],
   ["2026-10-23-13", ["🌅 아침 알림이 8시 30분에 와요 (평일)"]],
   ["2026-10-23-12", ["부적합 등록: 연결이 잠깐 끊겨도 실패로 안 뜨고 한 번만 저장돼요", "장비명을 소문자로 적어도 같은 장비로 묶여요"]],
