@@ -1560,7 +1560,7 @@ function applyDash(r) {
   if (r.sched) store.sched = r.sched;
   if (r.ship) store.ship = r.ship;
   if (r.leave) store.leave = r.leave;
-  if (r.memo) { store.memo = r.memo; cset("memo", r.memo); memoTabBadge(); if (cur === 7 && !SR.open) renderMemoTab(); }   // 📝 장비 메모 (금일 응답에 같이 옴 · 요청 안 늘어남)
+  if (r.memo) { store.memo = memoOverlay(r.memo); cset("memo", r.memo); memoTabBadge(); if (cur === 7 && !SR.open) renderMemoTab(); }   // 📝 장비 메모 (금일 응답에 같이 옴 · 요청 안 늘어남)
   store.notice = r.notice || null;
   store.prevMiss = r.prevMiss || null;   // ⏰ 어제(지난 근무일) 근무시간 미입력
   $("d0").textContent = r.d0.label || "";
@@ -1902,7 +1902,22 @@ function upFixNow() {   // 지금 화면에 바로 적용
  * 목록은 금일 응답에 같이 옴(store.memo) → 이름 옆 📝 n · 장비를 누르면 상세 화면 아래 메모
  * 쓰기·상태 바꾸기는 편집 PIN · 저장되면 서버가 새 목록을 돌려줌 → 바로 다시 그림
  */
-var MM = { busy: false, sure: "", showDone: {} };
+var MM = { busy: false, sure: "", showDone: {}, pend: {} };
+// ⚡ 상태 바꾸기는 누르자마자 화면에 반영 (서버 저장은 뒤에서) · 저장 중인 것은 서버 목록이 와도 덮어쓰지 않음 (2분까지)
+function memoOverlay(list) {
+  var now = Date.now(), out = [];
+  (list || []).forEach(function (m) {
+    var p = MM.pend[m.id];
+    if (p && now - p.at > 120000) { delete MM.pend[m.id]; p = null; }
+    if (!p) { out.push(m); return; }
+    if (p.st === "삭제") return;
+    var c = {}; for (var k in m) c[k] = m[k];
+    c.st = p.st; c.inn = p.inn; c.done = p.done; out.push(c);
+  });
+  return out;
+}
+function unknownMsg(m) { return m && m.unknown ? "⚠️ " + m.message : "⚠️ 저장 실패: " + m + " (원래대로 돌렸어요)"; }
+function memoStampNow() { var d = new Date(); return (myName() || "-") + " " + (d.getMonth() + 1) + "/" + d.getDate() + " " + ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2); }
 function memoKey(n) { return String(n || "").toUpperCase().replace(/\s+/g, " ").trim(); }   // cc04-149 = CC04-149 (대소문자·띄어쓰기 무시)
 function memoOf(name) { var k = memoKey(name); return (store.memo || []).filter(function (m) { return memoKey(m.n) === k; }); }
 function memoCanon(n) {   // 적은 장비명이 목록에 있는 장비면 그 이름 그대로 (대소문자 맞춤)
@@ -1921,8 +1936,24 @@ function memoSave(fn, args) {
       if (r && r.error && /진행 중/.test(r.error) && busy < 3) { busy++; return wait(4000).then(go); }   // 앞 요청이 아직 저장 중
       return r;
     }, function (e) {
-      if (e && !e.edit && net < 2 && /network|load failed|failed to fetch|timeout/i.test(String(e.message))) { net++; return wait(2000).then(go); }
-      throw e;
+      var isNet = e && !e.edit && /network|load failed|failed to fetch|timeout/i.test(String(e.message));
+      if (isNet && net < 2) { net++; return wait(2000).then(go); }
+      if (!isNet) throw e;
+      return check(e);
+    });
+  }
+  // 🔎 3번 다 답을 못 받음 → 서버에 실제로 들어갔는지 목록을 새로 받아 확인 (들어갔으면 성공으로 처리)
+  function check(e0) {
+    return call("getMemos", [true]).then(function (d) {
+      var list = (d && d.list) || [], id = args[0], ok;
+      if (fn === "addMemo") { id = args[2]; ok = list.some(function (x) { return x.id === id; }); }
+      else if (args[1] === "삭제") ok = !list.some(function (x) { return x.id === id; });
+      else ok = list.some(function (x) { return x.id === id && x.st === args[1]; });
+      if (ok) return { ok: true, list: list };
+      throw e0;   // 확인해 보니 정말 안 들어감
+    }, function () {
+      var u = new Error("연결이 안 돼서 저장됐는지 확인 못 했어요. 잠시 뒤 [새로고침]을 눌러 확인해 주세요.");
+      u.unknown = true; throw u;
     });
   }
   return go();
@@ -1942,7 +1973,7 @@ function memoRefresh() {
   if (cur === 2 && U.data) renderUpload(U.data);
 }
 function memoApply(r) {
-  if (r && r.list) { store.memo = r.list; cset("memo", r.list); }
+  if (r && r.list) { store.memo = memoOverlay(r.list); cset("memo", r.list); }
   memoRefresh();
 }
 function memoSection(name) {
@@ -1973,7 +2004,7 @@ function memoSection(name) {
       if (r && r.error) { add.disabled = false; add.textContent = "＋ 부적합 등록"; toast("⚠️ " + r.error, true); return; }
       memoApply(r);
       toast("⚠️ " + name + " 부적합 등록 ✔");
-    }).catch(function (e) { MM.busy = false; add.disabled = false; add.textContent = "＋ 부적합 등록"; toast("⚠️ 저장 실패: " + errText(e), true); });
+    }).catch(function (e) { MM.busy = false; add.disabled = false; add.textContent = "＋ 부적합 등록"; toast(e && e.unknown ? "⚠️ " + e.message : "⚠️ 저장 실패: " + errText(e), true); });
   };
   box.appendChild(add);
   return box;
@@ -1994,14 +2025,26 @@ function memoCard(m) {
     var b = el("button", cls, label); b.type = "button";
     b.onclick = function () {
       if (st === "삭제" && MM.sure !== m.id) { MM.sure = m.id; b.textContent = "정말 삭제?"; b.className = cls + " sure"; setTimeout(function () { if (MM.sure === m.id) { MM.sure = ""; b.textContent = label; b.className = cls; } }, 3000); return; }
-      if (MM.busy) return;
-      MM.busy = true; MM.sure = ""; b.disabled = true; b.textContent = "저장 중…";
+      if (MM.pend[m.id]) return;   // 이 기록은 아직 저장 중
+      MM.sure = "";
+      // ⚡ 바로 화면에 반영 → 서버 저장은 뒤에서 (실패하면 원래대로 되돌림)
+      var inn = m.inn, done = m.done;
+      if (st === "입고확인") { inn = memoStampNow(); done = ""; } else if (st === "완료") { done = memoStampNow(); } else if (st === "부적합") { inn = ""; done = ""; }
+      MM.pend[m.id] = { st: st, inn: inn, done: done, at: Date.now() };
+      store.memo = memoOverlay(store.memo); memoRefresh();
+      toast(okMsg);
+      var back = function (msg) {   // 실패 → 원래대로
+        delete MM.pend[m.id];
+        var found = false;
+        store.memo = (store.memo || []).map(function (x) { if (x.id === m.id) { found = true; return m; } return x; });
+        if (!found) store.memo.push(m);
+        memoRefresh(); toast(unknownMsg(msg), true);
+      };
       memoSave("setMemoStatus", [m.id, st]).then(function (r) {
-        MM.busy = false;
-        if (r && r.error) { toast("⚠️ " + r.error, true); memoApply(r); return; }
+        if (r && r.error) { back(r.error); if (r.list) memoApply(r); return; }
+        delete MM.pend[m.id];
         memoApply(r);
-        toast(okMsg);
-      }).catch(function (e) { MM.busy = false; b.disabled = false; b.textContent = label; toast("⚠️ 저장 실패: " + errText(e), true); });
+      }).catch(function (e) { back(e && e.unknown ? e : errText(e)); });
     };
     bs.appendChild(b);
   }
@@ -2094,7 +2137,7 @@ function renderMemoTab() {
           MT.add = false; MT.f = "open"; MT.nm = ""; MT.tx = "";
           memoApply(r);
           toast("⚠️ " + n + " 부적합 등록 ✔");
-        }).catch(function (e) { MM.busy = false; sv.disabled = false; sv.textContent = "＋ 부적합 등록"; toast("⚠️ 저장 실패: " + errText(e), true); });
+        }).catch(function (e) { MM.busy = false; sv.disabled = false; sv.textContent = "＋ 부적합 등록"; toast(e && e.unknown ? "⚠️ " + e.message : "⚠️ 저장 실패: " + errText(e), true); });
       };
       f.appendChild(el("div", "mtl", "⚠️ 부적합 등록"));
       f.appendChild(nm); f.appendChild(dl); f.appendChild(ta); f.appendChild(sv);
@@ -3749,10 +3792,12 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-16";
+var APP_VER = "2026-10-23-18";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-18", ["부적합 저장 중 연결이 끊기면 실제로 저장됐는지 확인해서 알려 줘요"]],
+  ["2026-10-23-17", ["부적합 입고 확인·완료·되돌리기·삭제가 누르자마자 바로 바뀌어요"]],
   ["2026-10-23-16", ["부적합 탭 문구 정리"]],
   ["2026-10-23-15", ["화면이 확대·축소된 채로 남던 문제 해결 (앱처럼 고정)"]],
   ["2026-10-23-14", ["부적합 등록: 장비명을 치는 대로 후보가 떠요 (눌러서 바로 선택)"]],
