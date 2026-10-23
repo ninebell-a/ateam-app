@@ -175,6 +175,12 @@ li:first-child{border-top:0}
 .sheet:active{background:rgba(229,72,77,.15)}
 .sheet.op{border-color:var(--accent);color:var(--accent)}
 .sheet.op:active{background:rgba(47,111,237,.12)}
+/* 📍 SITE (26_장비_LOG E열) */
+.site{display:inline-block;margin-left:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;font-family:inherit;vertical-align:1px;background:transparent;border:1.5px solid var(--sub);color:var(--sub)}
+.site.emp{border:1.5px dashed var(--warn);color:var(--warn)}
+.site.dt{border-color:var(--accent);color:var(--accent);background:rgba(47,111,237,.08)}
+.site:active{opacity:.6}
+#sitego{background:var(--accent);border-color:var(--accent);color:#fff}
 .sdone{display:inline-block;margin:6px 6px 0 0;padding:8px 12px;border-radius:999px;background:rgba(31,157,85,.12);color:var(--ok);font-size:13px;font-weight:700}
 .eq{font-weight:600}
 .hint{font-size:12px;color:var(--sub);padding:0 2px;line-height:1.5}
@@ -199,7 +205,8 @@ li:first-child{border-top:0}
 #splash .t1{margin-top:26px;font-size:clamp(22px,7.4vw,30px);font-weight:900;letter-spacing:.24em;padding-left:.24em;color:var(--text);white-space:nowrap}
 #splash .t2{margin-top:8px;font-size:clamp(9.5px,2.9vw,11.5px);font-weight:700;letter-spacing:.16em;padding-left:.16em;color:var(--sub);white-space:nowrap}
 #splash .t2 b{color:var(--accent);font-weight:800}
-#splash .spm{margin-top:34px;font-size:13.5px;font-weight:600;color:var(--sub);letter-spacing:.02em;min-height:20px;text-align:center;word-break:keep-all}
+#splash .spm{visibility:hidden;margin-top:34px;font-size:13.5px;font-weight:600;color:var(--sub);letter-spacing:.02em;min-height:20px;text-align:center;word-break:keep-all}
+#splash.wait .spm{visibility:visible}   /* 2.5초 넘으면 보임 · 자리는 미리 잡아 둬서 안 밀림 */
 #splash .spm i{font-style:normal;animation:spDot 1.2s infinite}
 #splash .spm i:nth-child(2){animation-delay:.2s}
 #splash .spm i:nth-child(3){animation-delay:.4s}
@@ -766,6 +773,18 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
     <div class="ob">
       <button id="cfno" type="button">취소</button>
       <button id="cfgo" type="button" class="go">✔ 완료로 기록</button>
+    </div>
+  </div>
+</div>
+
+<div class="ov" id="siteov">
+  <div class="box">
+    <h3>📍 SITE 선택</h3>
+    <div class="who" id="sitewho"></div>
+    <p class="sub" id="sitecur"></p>
+    <div class="ob">
+      <button id="siteno" type="button">취소</button>
+      <button id="sitego" type="button" class="go">🏭 동탄</button>
     </div>
   </div>
 </div>
@@ -1763,11 +1782,12 @@ function setBadge(n) {
  *   방금 뺀 건 1분 동안 기억 → 늦게 도착한 옛날 목록에도 다시 적용 (연달아 누를 때 다시 나타나지 않게)
  */
 var UPFIX = {};   // "행|장비명" → { at, cols: [완료한 열], op: 처음 입력한 작업자 }
-function upFixAdd(it, col, op) {
+function upFixAdd(it, col, op, site) {
   var k = it.row + "|" + it.n, f = UPFIX[k] || { cols: [] };
   f.at = Date.now();
   if (col) f.cols.push(col);
   if (op) f.op = op;
+  if (site) f.site = site;   // 📍 방금 고른 SITE
   UPFIX[k] = f;
 }
 function upFixApply(d) {
@@ -1781,6 +1801,7 @@ function upFixApply(d) {
     p.items = p.items.filter(function (it) {
       var f = UPFIX[it.row + "|" + it.n];
       if (!f) return true;
+      if (f.site) it.site = f.site;
       it.sheets = it.sheets.filter(function (s) { return f.cols.indexOf(s.col) < 0; });
       if (f.op && it.noOp) { it.noOp = false; it.done1 = false; if (it.sheets.length) moved.push([f.op, it]); return false; }
       return it.sheets.length > 0 || it.noOp;   // 남은 시트가 없고 작업자도 있으면 장비째 뺌
@@ -1808,6 +1829,42 @@ function upFixNow() {   // 지금 화면에 바로 적용
   try { cset("up", U.data); } catch (e) {}
   if (cur === 2) renderUpload(U.data);
 }
+
+/* ---------- 📍 SITE (E열) — 빈칸이면 눌러서 동탄 선택 ---------- */
+var STE = { it: null };
+function siteBtn(it) {
+  var v = it.site || "";
+  var b = el("button", "site" + (!v ? " emp" : v === "동탄" ? " dt" : ""), "📍 " + (v || "빈칸"));
+  b.type = "button";
+  b.onclick = function () { openSite(it); };
+  return b;
+}
+function openSite(it) {
+  STE.it = it;
+  $("sitewho").textContent = it.n + (it.t ? " (" + it.t + ")" : "");
+  $("sitecur").textContent = "지금 SITE: " + (it.site || "빈칸");
+  $("sitego").disabled = false; $("sitego").textContent = "🏭 동탄"; $("siteno").disabled = false;
+  $("siteov").className = "ov on";
+}
+function closeSite() { $("siteov").className = "ov"; }
+$("siteno").onclick = closeSite;
+$("siteov").onclick = function (e) { if (e.target === this) closeSite(); };
+$("sitego").onclick = function () {
+  var it = STE.it; if (!it) return;
+  $("sitego").disabled = true; $("siteno").disabled = true; $("sitego").textContent = "저장 중…";
+  callEdit("setSite", [it.row, it.n, "동탄"])
+    .then(function (r) {
+      var m = (r && r.error) ? { err: true, t: r.error } : { err: false, t: "📍 " + it.n + " SITE → 동탄 ✔" };
+      closeSite();
+      if (!m.err) { upFixAdd(it, 0, null, "동탄"); upFixNow(); }   // ⚡ 화면 버튼 바로 바꿈 (다시 불러오기는 뒤에서)
+      toast(m.err ? "⚠️ " + m.t : m.t, m.err);
+      loadUpload();
+    })
+    .catch(function (e) {
+      closeSite();
+      toast("⚠️ 저장 실패: " + errText(e), true);
+    });
+};
 
 function openConfirm(it, s) {
   CF.it = it; CF.s = s;
@@ -1890,6 +1947,7 @@ function renderUpload(d) {
       eqn.onclick = function () { openEquip(it.n); };   // 장비명을 누르면 일정
       li.appendChild(eqn);
       if (it.t) li.appendChild(el("span", "t", it.t));
+      li.appendChild(siteBtn(it));   // 📍 SITE
       li.appendChild(document.createElement("br"));
       it.sheets.forEach(function (s) {
         var b = el("button", "sheet", "☐ " + s.label);
@@ -3394,10 +3452,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-3";
+var APP_VER = "2026-10-23-4";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-4", ["시트 업로드: SITE가 비어 있으면 '빈칸'으로 표시 · 눌러서 동탄 선택", "시작 화면에서 최신 정보를 조금 더 기다려요"]],
   ["2026-10-23-3", ["시작 화면에서 최신 정보를 다 받은 다음 화면으로", "앱을 오랜만에 다시 열면 시작 화면에서 최신 내용 받아와요", "자정 지나 처음 열 때도 빠르게"]],
   ["2026-10-22-4", ["근무시간·시트 업로드 탭이 바로 열리게 개선"]],
   ["2026-10-22-3", ["업데이트 화면 → 시작 화면 순서로 · 받는 즉시 바로 화면"]],
@@ -4555,21 +4614,20 @@ function igQR(box, hint) {
  * 업데이트가 있으면: 업데이트 화면 먼저 (시작 화면은 뒤에서 멈춰 둠) → [확인] → 시작 화면 처음부터 + 그때 갱신
  */
 var SPL = { t0: Date.now(), done: false, max: null, hold: false };
-var SPL_SLOW_MS = 8000;   // 8초 넘게 걸리면 "서버가 바빠서 조금 걸리고 있어요" (받을 때까지 기다림 · 실패하면 저장된 화면 + 알림)
+var SPL_MSG_MS = 2500, SPL_MAX_MS = 8000;   // 2.5초 넘으면 "최신 정보 받는 중…" · 8초 넘으면 저장된 화면 먼저 (데이터가 오면 바로 바뀜)
 function splashMsg(t) { var m = $("spmsg"); if (!m) return; m.innerHTML = ""; m.appendChild(document.createTextNode(t)); if (/중$/.test(t)) for (var i = 0; i < 3; i++) m.appendChild(el("i", null, ".")); }
-function splashWait() {   // 받는 동안: 안내 문구 · 오래 걸리면 다른 문구 + 건너뛰기 버튼
+function splashWait() {   // 받는 동안: 2.5초 뒤 안내 문구 · 8초에 닫고 저장된 화면 (갱신은 뒤에서 계속 → 오면 화면이 바로 바뀜)
   splashMsg("최신 정보 받는 중");
   if (SPL.max) clearTimeout(SPL.max);
-  SPL.max = setTimeout(function () {
-    var s = $("splash"); if (!s || SPL.done) return;
-    s.className = "slow";
-    splashMsg("서버가 바빠서 조금 걸리고 있어요");
-  }, SPL_SLOW_MS);
+  if (SPL.msg) clearTimeout(SPL.msg);
+  SPL.msg = setTimeout(function () { var s = $("splash"); if (s && !SPL.done) s.className = "wait"; }, SPL_MSG_MS);
+  SPL.max = setTimeout(splashClose, SPL_MAX_MS);
 }
 function splashClose() {
   if (SPL.done) return;
   SPL.done = true;
   if (SPL.max) { clearTimeout(SPL.max); SPL.max = null; }
+  if (SPL.msg) { clearTimeout(SPL.msg); SPL.msg = null; }
   splashHide();
 }
 function splashHide() {   // 지우지 않고 숨김 → 사라지는 효과(0.35초) 뒤엔 그리지도 않음
