@@ -1105,7 +1105,7 @@ function devId() {
 var SLOW_MS = 6000;   // 6초 이상이면 느림으로 기록
 var SPD = { last: null };
 // 📶 조회 요청은 연결이 끊기면 1번 자동 재시도 (저장 요청은 중복 저장 막으려고 재시도 안 함)
-var READ_FNS = { ping: 1, getDashboardAll: 1, getDashboardData: 1, getUploadStatus: 1, getHoursMeta: 1, getHoursCell: 1, getLeaveData: 1, getStatsData: 1, getEquipIndex: 1, getPushStatus: 1, getTeamNames: 1 };
+var READ_FNS = { ping: 1, getMemos: 1, getDashboardAll: 1, getDashboardData: 1, getUploadStatus: 1, getHoursMeta: 1, getHoursCell: 1, getLeaveData: 1, getStatsData: 1, getEquipIndex: 1, getPushStatus: 1, getTeamNames: 1 };
 var INFLIGHT = {};   // ⚡ 같은 조회가 이미 가는 중이면 새로 안 보내고 그 결과를 같이 씀 (서버에 줄 서는 요청 줄이기)
 var CALL_TIMEOUT = 12000;   // 조회: 12초 안에 답이 없으면 끊고 한 번만 다시 보냄 (서버는 캐시로 0.5~3초에 답함 → 12초면 연결이 걸린 것 · 다시 보내면 대부분 바로 붙음)
 var LONG_TIMEOUT = 90000;   // 새로고침(getDashboardAll(true))·저장: 90초 (앱이 먼저 포기하면 실제로는 저장됐는데 '실패'로 보임)
@@ -1890,7 +1890,30 @@ function upFixNow() {   // 지금 화면에 바로 적용
  * 쓰기·상태 바꾸기는 편집 PIN · 저장되면 서버가 새 목록을 돌려줌 → 바로 다시 그림
  */
 var MM = { busy: false, sure: "", showDone: {} };
-function memoOf(name) { return (store.memo || []).filter(function (m) { return m.n === name; }); }
+function memoKey(n) { return String(n || "").toUpperCase().replace(/\s+/g, " ").trim(); }   // cc04-149 = CC04-149 (대소문자·띄어쓰기 무시)
+function memoOf(name) { var k = memoKey(name); return (store.memo || []).filter(function (m) { return memoKey(m.n) === k; }); }
+function memoCanon(n) {   // 적은 장비명이 목록에 있는 장비면 그 이름 그대로 (대소문자 맞춤)
+  var k = memoKey(n), hit = "";
+  memoNames().forEach(function (x) { if (!hit && memoKey(x) === k) hit = x; });
+  return hit || String(n || "").trim();
+}
+function memoCid() { return "M" + Date.now().toString(36).toUpperCase() + Math.floor(Math.random() * 1296).toString(36).toUpperCase(); }
+// 💾 부적합 저장: 서버엔 저장됐는데 답만 못 받는 경우(연결 끊김)가 있어서 같은 요청을 다시 보냄
+//    등록은 폰에서 만든 번호(cid)를 같이 보내서 서버가 두 번 쌓지 않음 · 상태 바꾸기는 다시 보내도 결과가 같음
+function memoSave(fn, args) {
+  var net = 0, busy = 0;
+  function wait(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+  function go() {
+    return callEdit(fn, args).then(function (r) {
+      if (r && r.error && /진행 중/.test(r.error) && busy < 3) { busy++; return wait(4000).then(go); }   // 앞 요청이 아직 저장 중
+      return r;
+    }, function (e) {
+      if (e && !e.edit && net < 2 && /network|load failed|failed to fetch|timeout/i.test(String(e.message))) { net++; return wait(2000).then(go); }
+      throw e;
+    });
+  }
+  return go();
+}
 function memoBadge(parent, name) {
   var o = memoOf(name).filter(function (m) { return m.st !== "완료"; });
   if (!o.length) return;
@@ -1932,7 +1955,7 @@ function memoSection(name) {
     if (!t2) { toast("⚠️ 부적합 내용을 적어 주세요.", true); return; }
     if (MM.busy) return;
     MM.busy = true; add.disabled = true; add.textContent = "저장 중…";
-    callEdit("addMemo", [name, t2]).then(function (r) {
+    memoSave("addMemo", [name, t2, memoCid()]).then(function (r) {
       MM.busy = false;
       if (r && r.error) { add.disabled = false; add.textContent = "＋ 부적합 등록"; toast("⚠️ " + r.error, true); return; }
       memoApply(r);
@@ -1960,7 +1983,7 @@ function memoCard(m) {
       if (st === "삭제" && MM.sure !== m.id) { MM.sure = m.id; b.textContent = "정말 삭제?"; b.className = cls + " sure"; setTimeout(function () { if (MM.sure === m.id) { MM.sure = ""; b.textContent = label; b.className = cls; } }, 3000); return; }
       if (MM.busy) return;
       MM.busy = true; MM.sure = ""; b.disabled = true; b.textContent = "저장 중…";
-      callEdit("setMemoStatus", [m.id, st]).then(function (r) {
+      memoSave("setMemoStatus", [m.id, st]).then(function (r) {
         MM.busy = false;
         if (r && r.error) { toast("⚠️ " + r.error, true); memoApply(r); return; }
         memoApply(r);
@@ -2024,12 +2047,12 @@ function renderMemoTab() {
       var ta = el("textarea"); ta.id = "mttext"; ta.placeholder = "예: 커버 1개 부적합 · 교체품 요청함"; ta.maxLength = 300;
       var sv = el("button", "madd", "＋ 부적합 등록"); sv.type = "button";
       sv.onclick = function () {
-        var n = nm.value.trim(), t = ta.value.trim();
+        var n = memoCanon(nm.value), t = ta.value.trim();
         if (!n) { toast("⚠️ 장비명을 적어 주세요.", true); return; }
         if (!t) { toast("⚠️ 부적합 내용을 적어 주세요.", true); return; }
         if (MM.busy) return;
         MM.busy = true; sv.disabled = true; sv.textContent = "저장 중…";
-        callEdit("addMemo", [n, t]).then(function (r) {
+        memoSave("addMemo", [n, t, memoCid()]).then(function (r) {
           MM.busy = false;
           if (r && r.error) { sv.disabled = false; sv.textContent = "＋ 부적합 등록"; toast("⚠️ " + r.error, true); return; }
           MT.add = false; MT.f = "open";
@@ -3690,10 +3713,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-11";
+var APP_VER = "2026-10-23-12";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-12", ["부적합 등록: 연결이 잠깐 끊겨도 실패로 안 뜨고 한 번만 저장돼요", "장비명을 소문자로 적어도 같은 장비로 묶여요"]],
   ["2026-10-23-11", ["홈 화면에 추가할 때 앱이 더 정확하게 깔려요"]],
   ["2026-10-23-10", ["연결이 잠깐 끊겼을 때 덜 기다리게 (12초 안에 답이 없으면 바로 다시 받아요)"]],
   ["2026-10-23-9", ["⚠️ 부적합 탭: 부적합 자재를 한 곳에서 (입고 대기 · 입고 확인 · 완료로 골라 보기 · 바로 등록)"]],
