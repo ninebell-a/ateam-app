@@ -5,9 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="apple-mobile-web-app-title" content="제조1-A">
 <meta name="theme-color" content="#2f6fed">
-<link rel="manifest" href="manifest.json">
+<script>
+// 📲 홈 화면 앱 이름·시작 주소: test.html이면 테스트용(manifest-test.json)으로 따로 깔리게
+(function () {
+  var t = /test\.html$/i.test(location.pathname);
+  document.write('<meta name="apple-mobile-web-app-title" content="' + (t ? "제조1-A 테스트" : "제조1-A") + '">'
+    + '<link rel="manifest" href="' + (t ? "manifest-test.json" : "manifest.json") + '">');
+})();
+</script>
 <meta name="mobile-web-app-capable" content="yes">
 <link rel="apple-touch-icon" href="icon.png">
 <link rel="icon" type="image/png" href="icon.png">
@@ -3684,10 +3690,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-10";
+var APP_VER = "2026-10-23-11";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-11", ["홈 화면에 추가할 때 앱이 더 정확하게 깔려요"]],
   ["2026-10-23-10", ["연결이 잠깐 끊겼을 때 덜 기다리게 (12초 안에 답이 없으면 바로 다시 받아요)"]],
   ["2026-10-23-9", ["⚠️ 부적합 탭: 부적합 자재를 한 곳에서 (입고 대기 · 입고 확인 · 완료로 골라 보기 · 바로 등록)"]],
   ["2026-10-23-8", ["⚠️ 부적합 자재: 장비를 누르면 맨 아래에서 등록 → 입고 확인 → 완료", "부적합이 남은 장비는 이름 옆에 ⚠️ 표시"]],
