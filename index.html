@@ -179,8 +179,14 @@ li:first-child{border-top:0}
 .site{display:inline-block;margin-left:6px;padding:3px 9px;border-radius:999px;font-size:12px;font-weight:700;font-family:inherit;vertical-align:1px;background:transparent;border:1.5px solid var(--sub);color:var(--sub)}
 .site.emp{border:1.5px dashed var(--warn);color:var(--warn)}
 .site.dt{border-color:var(--accent);color:var(--accent);background:rgba(47,111,237,.08)}
+.site.hq{border-color:var(--ok);color:var(--ok);background:rgba(31,157,85,.08)}
 .site:active{opacity:.6}
-#sitego{background:var(--accent);border-color:var(--accent);color:#fff}
+#siteov .sitebtns{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+#siteov .sitebtns button{padding:16px 10px;border-radius:12px;font-size:17px;font-weight:800;font-family:inherit;border:1.5px solid var(--line);background:var(--bg);color:var(--text)}
+#siteov .sitebtns button.cur{border-color:var(--accent);box-shadow:0 0 0 2px rgba(47,111,237,.18) inset}
+#siteov #sitehq{color:var(--ok)}
+#siteov #sitedt{color:var(--accent)}
+#siteov #siteno{width:100%;padding:14px;border-radius:12px;font-size:16px;font-weight:700;border:1px solid var(--line);background:var(--bg);color:var(--text);font-family:inherit}
 .sdone{display:inline-block;margin:6px 6px 0 0;padding:8px 12px;border-radius:999px;background:rgba(31,157,85,.12);color:var(--ok);font-size:13px;font-weight:700}
 .eq{font-weight:600}
 .hint{font-size:12px;color:var(--sub);padding:0 2px;line-height:1.5}
@@ -779,13 +785,14 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 
 <div class="ov" id="siteov">
   <div class="box">
-    <h3>📍 SITE 선택</h3>
+    <h3 id="sitettl">📍 SITE 선택</h3>
     <div class="who" id="sitewho"></div>
     <p class="sub" id="sitecur"></p>
-    <div class="ob">
-      <button id="siteno" type="button">취소</button>
-      <button id="sitego" type="button" class="go">🏭 동탄</button>
+    <div class="sitebtns">
+      <button id="sitehq" type="button">🏢 본사</button>
+      <button id="sitedt" type="button">🏭 동탄</button>
     </div>
+    <button id="siteno" type="button">취소</button>
   </div>
 </div>
 
@@ -1834,7 +1841,7 @@ function upFixNow() {   // 지금 화면에 바로 적용
 var STE = { it: null };
 function siteBtn(it) {
   var v = it.site || "";
-  var b = el("button", "site" + (!v ? " emp" : v === "동탄" ? " dt" : ""), "📍 " + (v || "빈칸"));
+  var b = el("button", "site" + (!v ? " emp" : v === "동탄" ? " dt" : v === "본사" ? " hq" : ""), "📍 " + (v || "빈칸") + (v ? " ✎" : ""));   // 값이 있으면 ✎ → 눌러서 수정
   b.type = "button";
   b.onclick = function () { openSite(it); };
   return b;
@@ -1842,21 +1849,24 @@ function siteBtn(it) {
 function openSite(it) {
   STE.it = it;
   $("sitewho").textContent = it.n + (it.t ? " (" + it.t + ")" : "");
-  $("sitecur").textContent = "지금 SITE: " + (it.site || "빈칸");
-  $("sitego").disabled = false; $("sitego").textContent = "🏭 동탄"; $("siteno").disabled = false;
+  $("sitettl").textContent = it.site ? "📍 SITE 수정" : "📍 SITE 선택";
+  $("sitecur").textContent = it.site ? "지금 SITE: " + it.site + " · 잘못 골랐으면 다른 쪽을 누르세요" : "지금 SITE: 빈칸";
+  [["sitehq", "🏢 본사", "본사"], ["sitedt", "🏭 동탄", "동탄"]].forEach(function (x) { var b = $(x[0]); b.disabled = false; b.textContent = x[1]; b.className = it.site === x[2] ? "cur" : ""; });
+  $("siteno").disabled = false;
   $("siteov").className = "ov on";
 }
 function closeSite() { $("siteov").className = "ov"; }
 $("siteno").onclick = closeSite;
 $("siteov").onclick = function (e) { if (e.target === this) closeSite(); };
-$("sitego").onclick = function () {
+function siteSave(site, btn) {
   var it = STE.it; if (!it) return;
-  $("sitego").disabled = true; $("siteno").disabled = true; $("sitego").textContent = "저장 중…";
-  callEdit("setSite", [it.row, it.n, "동탄"])
+  if (it.site === site) { closeSite(); return; }   // 같은 값이면 저장 안 함
+  $("sitehq").disabled = true; $("sitedt").disabled = true; $("siteno").disabled = true; btn.textContent = "저장 중…";
+  callEdit("setSite", [it.row, it.n, site])
     .then(function (r) {
-      var m = (r && r.error) ? { err: true, t: r.error } : { err: false, t: "📍 " + it.n + " SITE → 동탄 ✔" };
+      var m = (r && r.error) ? { err: true, t: r.error } : { err: false, t: "📍 " + it.n + " SITE → " + site + " ✔" };
       closeSite();
-      if (!m.err) { upFixAdd(it, 0, null, "동탄"); upFixNow(); }   // ⚡ 화면 버튼 바로 바꿈 (다시 불러오기는 뒤에서)
+      if (!m.err) { upFixAdd(it, 0, null, site); upFixNow(); }   // ⚡ 화면 버튼 바로 바꿈 (다시 불러오기는 뒤에서)
       toast(m.err ? "⚠️ " + m.t : m.t, m.err);
       loadUpload();
     })
@@ -1864,7 +1874,9 @@ $("sitego").onclick = function () {
       closeSite();
       toast("⚠️ 저장 실패: " + errText(e), true);
     });
-};
+}
+$("sitehq").onclick = function () { siteSave("본사", this); };
+$("sitedt").onclick = function () { siteSave("동탄", this); };
 
 function openConfirm(it, s) {
   CF.it = it; CF.s = s;
@@ -3452,11 +3464,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-4";
+var APP_VER = "2026-10-23-6";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
-  ["2026-10-23-4", ["시트 업로드: SITE가 비어 있으면 '빈칸'으로 표시 · 눌러서 동탄 선택", "시작 화면에서 최신 정보를 조금 더 기다려요"]],
+  ["2026-10-23-6", ["시트 업로드: SITE가 비어 있으면 '빈칸'으로 표시 · 눌러서 본사/동탄 선택 (잘못 골랐으면 다시 눌러 수정)", "시작 화면에서 최신 정보를 조금 더 기다려요"]],
   ["2026-10-23-3", ["시작 화면에서 최신 정보를 다 받은 다음 화면으로", "앱을 오랜만에 다시 열면 시작 화면에서 최신 내용 받아와요", "자정 지나 처음 열 때도 빠르게"]],
   ["2026-10-22-4", ["근무시간·시트 업로드 탭이 바로 열리게 개선"]],
   ["2026-10-22-3", ["업데이트 화면 → 시작 화면 순서로 · 받는 즉시 바로 화면"]],
