@@ -694,38 +694,138 @@ details.panel summary{font-weight:700;font-size:14px;cursor:pointer}
 .rv .rs.tmp{color:#c27c00}
 .rvok{background:rgba(31,157,85,.1);color:var(--ok);border-radius:12px;padding:10px 14px;font-size:13px;font-weight:700}
 /* 잠금 화면 */
-/* 📲 홈 화면 앱으로만 사용 (instGate) — 클래스는 #ig 아래로만 */
-#ig{position:fixed;inset:0;z-index:200;background:var(--bg);overflow-y:auto;-webkit-overflow-scrolling:touch;display:none}
-#ig .igw{max-width:440px;margin:0 auto;padding:calc(28px + env(safe-area-inset-top)) 18px calc(32px + env(safe-area-inset-bottom));display:grid;gap:14px}
-#ig .igtop{display:flex;align-items:center;gap:12px}
-#ig .igtop img{width:56px;height:56px;border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.12);flex:none}
-#ig .igtop b{display:block;font-size:21px;line-height:1.2}
-#ig .igtop small{display:block;font-size:13px;color:var(--sub);margin-top:2px}
-#ig h2{margin:6px 0 0;font-size:20px;line-height:1.35;word-break:keep-all}
-#ig .igmsg{font-size:14px;line-height:1.6;color:var(--text);background:rgba(47,111,237,.07);border:1px solid rgba(47,111,237,.22);border-radius:12px;padding:11px 13px;white-space:pre-line;word-break:keep-all}
-#ig .igsteps{display:grid;gap:8px}
-#ig .igstep{display:flex;align-items:center;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:12px 13px;font-size:15px;line-height:1.55;word-break:keep-all}
-#ig .ignum{flex:none;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;font-size:14px;font-weight:800;display:flex;align-items:center;justify-content:center}
+/* 📲 홈 화면 앱으로만 사용 (instGate) — 시작 화면과 같은 디자인 (웨이퍼 · 그라데이션 · 유리 카드) · 클래스는 #ig 아래로만 */
+#ig{--ig1:#ffffff;--ig2:#e6edf9;--igc:rgba(255,255,255,.78);--igbd:rgba(47,111,237,.14);--igln:rgba(47,111,237,.22);--igtx:#0f1b33;--igsb:#66768d;--igac:#2f6fed;--igac2:#7aa4ff;--iggl:rgba(47,111,237,.28);
+  --igw1:#ffffff;--igw2:#e3e9f5;--igw3:#b9c6de;--igdie:#3d74ec;--igdot:rgba(47,111,237,.10)}
+@media (prefers-color-scheme:dark){#ig{--ig1:#15295a;--ig2:#060b18;--igc:rgba(22,36,74,.62);--igbd:rgba(130,165,255,.16);--igln:rgba(130,165,255,.26);--igtx:#ffffff;--igsb:#8f9fc0;--igac:#5b8cff;--igac2:#b4cbff;--iggl:rgba(91,140,255,.45);
+  --igw1:#3a4d7d;--igw2:#1a2850;--igw3:#0b142c;--igdie:#6f9bff;--igdot:rgba(130,165,255,.09)}}
+#ig{position:fixed;inset:0;z-index:200;overflow-y:auto;-webkit-overflow-scrolling:touch;display:none;color:var(--igtx);background:radial-gradient(130% 60% at 50% 0%,var(--ig1) 0%,var(--ig2) 75%) fixed}
+#ig::before{content:"";position:fixed;inset:0;pointer-events:none;background-image:radial-gradient(var(--igdot) 1.2px,transparent 1.3px);background-size:22px 22px;-webkit-mask-image:linear-gradient(#000,transparent 55%);mask-image:linear-gradient(#000,transparent 55%)}
+#ig .igw{position:relative;max-width:440px;margin:0 auto;padding:calc(30px + env(safe-area-inset-top)) 18px calc(34px + env(safe-area-inset-bottom));display:grid;gap:14px}
+/* 위: 웨이퍼 + 이름 */
+#ig .ighero{display:flex;flex-direction:column;align-items:center;text-align:center;padding-top:4px;animation:igUp .6s ease-out both}
+#ig .igapp{position:relative;width:68px;height:68px;margin-bottom:12px;animation:igFloat 3.2s ease-in-out infinite}
+#ig .igapp::before{content:"";position:absolute;inset:-14px;border-radius:32px;background:radial-gradient(closest-side,var(--iggl),transparent);z-index:-1}
+#ig .igapp img{display:block;width:100%;height:100%;border-radius:17px;box-shadow:0 16px 34px -12px var(--iggl),0 0 0 1px rgba(255,255,255,.35)}
+#ig .igapp::after{content:"";position:absolute;inset:0;border-radius:17px;background:linear-gradient(155deg,rgba(255,255,255,.35),rgba(255,255,255,0) 45%);pointer-events:none}
+@keyframes igFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+#ig .igname{font-size:22px;font-weight:900;letter-spacing:.02em;line-height:1.1}
+#ig .igpill{margin-top:9px;display:inline-flex;align-items:baseline;gap:7px;padding:5px 13px 6px;border-radius:999px;color:#fff;background:linear-gradient(120deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 8px 20px -8px var(--iggl)}
+#ig .igpill small{font-size:9.5px;font-weight:800;letter-spacing:.26em;opacity:.85}
+#ig .igpill b{font-size:15px;font-weight:900;letter-spacing:.03em}
+/* 제목 · 설명 */
+#ig h2{margin:8px 0 0;text-align:center;font-size:23px;font-weight:900;line-height:1.35;letter-spacing:-.01em;word-break:keep-all;white-space:pre-line;animation:igUp .6s ease-out .08s both}
+#ig .iglead{text-align:center;font-size:14.5px;line-height:1.65;color:var(--igsb);word-break:keep-all;white-space:pre-line;margin-top:-4px;animation:igUp .6s ease-out .14s both}
+#ig .igchips{display:flex;justify-content:center;flex-wrap:wrap;gap:6px;animation:igUp .6s ease-out .2s both}
+#ig .igchips span{font-size:12px;font-weight:700;color:var(--igac);background:var(--igc);border:1px solid var(--igbd);border-radius:999px;padding:5px 10px;white-space:nowrap}
+/* 단계 (세로 타임라인 카드) */
+#ig .igsteps{display:grid;gap:10px;margin-top:4px}
+#ig .igstep{position:relative;display:flex;align-items:center;gap:13px;background:var(--igc);border:1px solid var(--igbd);border-radius:16px;padding:14px 14px;font-size:15.5px;line-height:1.55;word-break:keep-all;
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);box-shadow:0 8px 22px -14px rgba(15,30,80,.35);animation:igUp .5s ease-out both}
+#ig .igstep:not(:last-child)::after{content:"";position:absolute;left:28px;top:calc(50% + 16px);height:calc(50% - 6px);width:2px;background:linear-gradient(var(--igln),transparent);border-radius:2px}
+#ig .igstep.last{border-color:var(--igac);box-shadow:0 10px 28px -12px var(--iggl)}
+#ig .ignum{flex:none;width:30px;height:30px;border-radius:50%;color:#fff;font-size:14.5px;font-weight:900;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#2f6fed,#8a6bff);box-shadow:0 4px 12px -3px var(--iggl)}
 #ig .igstep b{font-weight:800}
-#ig .igstep small{display:block;font-size:12px;color:var(--sub);margin-top:2px}
-#ig .igkey{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:24px;padding:0 5px;margin:0 2px;border:1.5px solid var(--sub);border-radius:6px;font-size:15px;font-weight:800;line-height:1;vertical-align:-5px;color:var(--text);background:var(--bg)}
-#ig .igkey svg{width:15px;height:15px;stroke:var(--accent);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-#ig .igico{width:22px;height:22px;border-radius:6px;vertical-align:-6px;margin:0 2px}
-#ig .igbtn{border:0;border-radius:12px;padding:15px;font-size:16px;font-weight:800;font-family:inherit;background:var(--accent);color:#fff;width:100%}
-#ig .igbtn.sub{background:var(--card);color:var(--text);border:1px solid var(--line);font-weight:700}
-#ig .igbtn:disabled{opacity:.6}
-#ig .ignote{font-size:12.5px;color:var(--sub);line-height:1.6;word-break:keep-all;white-space:pre-line}
+#ig .igstep small{display:block;font-size:12.5px;color:var(--igsb);margin-top:3px}
+#ig .igkey{display:inline-flex;align-items:center;justify-content:center;min-width:28px;height:26px;padding:0 6px;margin:0 2px;border:1px solid var(--igln);border-radius:8px;font-size:15px;font-weight:800;line-height:1;vertical-align:-6px;color:var(--igtx);background:var(--igc);box-shadow:0 2px 6px -3px rgba(15,30,80,.3)}
+#ig .igkey svg{width:16px;height:16px;stroke:var(--igac);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#ig .igico{width:24px;height:24px;border-radius:6px;vertical-align:-7px;margin:0 2px;box-shadow:0 2px 6px -2px rgba(0,0,0,.3)}
+/* 버튼 · 알림 */
+#ig .igbtn{border:0;border-radius:14px;padding:16px;font-size:16px;font-weight:800;font-family:inherit;color:#fff;width:100%;background:linear-gradient(120deg,#2f6fed,#5b7cff 55%,#8a6bff);box-shadow:0 12px 26px -12px var(--iggl)}
+#ig .igbtn.sub{background:var(--igc);color:var(--igtx);border:1px solid var(--igbd);font-weight:700;box-shadow:none;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}
 #ig .igbtn.chrome{background:#1a73e8}
-#ig .igpadb{padding-bottom:calc(120px + env(safe-area-inset-bottom))}
-#ig .igarrow{position:fixed;left:0;right:0;bottom:calc(16px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:2px;pointer-events:none;animation:igbob 1.1s ease-in-out infinite;z-index:5}
-#ig .igarrow span{background:var(--accent);color:#fff;font-size:14px;font-weight:800;padding:8px 14px;border-radius:999px;box-shadow:0 4px 14px rgba(0,0,0,.18);white-space:nowrap}
-#ig .igarrow b{font-size:30px;line-height:1;color:var(--accent)}
-@keyframes igbob{0%,100%{transform:translateY(0)}50%{transform:translateY(10px)}}
-#ig .igok{background:rgba(31,157,85,.14);color:var(--ok);border-radius:12px;padding:12px 13px;font-size:15px;font-weight:700;line-height:1.5;word-break:keep-all}
-#ig .igsec{font-size:13px;font-weight:700;color:var(--sub);margin-top:2px;word-break:keep-all}
-#ig .igqr{justify-self:center;background:#fff;border-radius:14px;padding:12px;border:1px solid var(--line)}
+#ig .igbtn:disabled{opacity:.6}
+#ig .ignote{text-align:center;font-size:12.5px;color:var(--igsb);line-height:1.6;word-break:keep-all;white-space:pre-line}
+#ig .igsec{font-size:13px;font-weight:700;color:var(--igsb);margin-top:2px;word-break:keep-all;text-align:center}
+#ig .igok{text-align:center;background:rgba(31,157,85,.14);border:1px solid rgba(31,157,85,.35);color:var(--ok);border-radius:16px;padding:14px;font-size:15px;font-weight:800;line-height:1.55;word-break:keep-all;white-space:pre-line}
+#ig .igqr{justify-self:center;background:#fff;border-radius:18px;padding:14px;box-shadow:0 14px 34px -14px var(--iggl)}
 #ig .igqr img,#ig .igqr canvas{display:block;width:180px;height:180px}
-#ig .igurl{text-align:center;font-size:14px;font-weight:700;color:var(--accent);word-break:break-all}
+#ig .igurl{text-align:center;font-size:14px;font-weight:700;color:var(--igac);word-break:break-all}
+#ig .igpadb{padding-bottom:calc(130px + env(safe-area-inset-bottom))}
+#ig .igarrow{position:fixed;left:0;right:0;bottom:calc(14px + env(safe-area-inset-bottom));display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none;z-index:5;animation:igBob 1.2s ease-in-out infinite}
+#ig .igarrow span{color:#fff;font-size:14px;font-weight:800;padding:9px 16px;border-radius:999px;white-space:nowrap;background:linear-gradient(120deg,#2f6fed,#8a6bff);box-shadow:0 8px 22px -6px var(--iggl)}
+#ig .igarrow b{font-size:28px;line-height:1;color:var(--igac);filter:drop-shadow(0 0 6px var(--iggl))}
+@keyframes igBob{0%,100%{transform:translateY(0)}50%{transform:translateY(9px)}}
+@keyframes igUp{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes igSpin{to{transform:rotate(360deg)}}
+/* 📱 따라 하기 미리보기 (폰 화면에서 실제 순서가 움직이며 보임 · 아래 단계 카드와 같이 켜짐) */
+#ig .igph{position:relative;width:204px;height:388px;margin:4px auto 6px;border-radius:38px;padding:9px;background:linear-gradient(145deg,#3a404d,#0d1015 60%);
+  box-shadow:0 34px 60px -26px rgba(10,22,70,.6),0 0 0 1px rgba(255,255,255,.06) inset,0 0 0 2px rgba(0,0,0,.25);animation:igUp .6s ease-out .2s both}
+#ig .igsc{position:relative;width:100%;height:100%;border-radius:30px;overflow:hidden;background:#f2f3f7;color:#111;font-size:10px;line-height:1.25;letter-spacing:0}
+#ig .igisb{position:absolute;left:0;right:0;top:0;height:26px;display:flex;align-items:center;justify-content:space-between;padding:0 16px 0 20px;font-size:9.5px;font-weight:700;z-index:4}
+#ig .igisb i{width:52px;height:15px;border-radius:10px;background:#000;position:absolute;left:50%;top:6px;transform:translateX(-50%)}
+#ig .igisb u{text-decoration:none;font-size:8px;letter-spacing:1px}
+#ig .igsc .L{position:absolute;inset:0;transition:transform .45s cubic-bezier(.3,.9,.3,1),opacity .35s}
+/* 0: 브라우저 */
+#ig .igpg{position:absolute;left:12px;right:12px;top:34px;display:grid;gap:7px;justify-items:center;text-align:center}
+#ig .igpg img{width:34px;height:34px;border-radius:9px;margin-top:6px}
+#ig .igpl{height:7px;border-radius:4px;background:#d9dde6}
+#ig .igpl.w1{width:60%;height:9px;background:#c4cad8}#ig .igpl.w2{width:82%}#ig .igpl.w3{width:70%}
+#ig .igpc{width:100%;height:26px;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.06)}
+#ig .igtb{position:absolute;left:0;right:0;bottom:0;padding:7px 10px 14px;background:rgba(248,248,250,.94);border-top:1px solid #e3e5ea}
+#ig .igurl2{height:24px;border-radius:9px;background:#e6e8ee;display:flex;align-items:center;justify-content:center;font-size:9px;color:#333;margin-bottom:8px}
+#ig .igtbi{display:flex;justify-content:space-around;align-items:center;color:#2f6fed;font-size:14px;font-weight:600;height:16px}
+#ig .igtbi svg{width:15px;height:15px;stroke:#2f6fed;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+/* 1: 공유 시트 / 메뉴 */
+#ig .L1{transform:translateY(100%)}
+#ig .s1 .L1{transform:none}
+#ig .igsh{position:absolute;left:0;right:0;bottom:0;padding:8px 8px 14px;border-radius:16px 16px 0 0;background:#f2f2f6;box-shadow:0 -10px 30px rgba(0,0,0,.18)}
+#ig .iggb{width:30px;height:4px;border-radius:2px;background:#c7c7cc;margin:0 auto 8px}
+#ig .igshd{display:flex;align-items:center;gap:7px;background:#fff;border-radius:10px;padding:7px;margin-bottom:7px}
+#ig .igshd img{width:22px;height:22px;border-radius:6px}#ig .igshd b{font-size:9.5px}#ig .igshd small{display:block;font-size:8px;color:#888}
+#ig .igrs{background:#fff;border-radius:10px;overflow:hidden}
+#ig .igr{display:flex;justify-content:space-between;align-items:center;height:29px;padding:0 10px;border-top:1px solid #eee;font-size:9.5px}
+#ig .igr:first-child{border-top:0}
+#ig .igr i{font-style:normal;font-size:11px;color:#555}
+#ig .igr.igh{background:rgba(47,111,237,.10);font-weight:800;color:#1f5fe0}#ig .igr.igh i{color:#1f5fe0}
+/* 2: 추가 확인 창 */
+#ig .igsc .L2{transform:translateY(100%);top:34px;border-radius:14px 14px 0 0;background:#f2f2f6;box-shadow:0 -10px 30px rgba(0,0,0,.2)}
+#ig .s2 .igsc .L2,#ig .igph.s2 .L2{transform:none}
+#ig .igdh{display:flex;justify-content:space-between;align-items:center;padding:12px 11px;font-size:9.5px}
+#ig .igdh span{color:#2f6fed}#ig .igdh b{font-size:10px}#ig .igdh .igad{font-weight:800}
+#ig .igdr{display:flex;gap:9px;align-items:center;margin:4px 10px;background:#fff;border-radius:10px;padding:9px}
+#ig .igdr img{width:36px;height:36px;border-radius:9px}
+#ig .igdr b{display:block;font-size:10.5px;padding-bottom:4px;border-bottom:1px solid #e5e5ea;margin-bottom:4px}#ig .igdr small{font-size:8px;color:#888}
+#ig .igdn{margin:8px 14px;font-size:8px;color:#888}
+/* 3: 홈 화면 */
+#ig .L3{opacity:0;background:linear-gradient(160deg,#5b7cff 0%,#8a6bff 45%,#ff8fb1 100%)}
+#ig .s3 .L3{opacity:1}
+#ig .ighg{position:absolute;left:14px;right:14px;top:40px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px 10px}
+#ig .igap{aspect-ratio:1;border-radius:9px;background:rgba(255,255,255,.35)}
+#ig .igme{position:relative;aspect-ratio:1;transform:scale(0);opacity:0}
+#ig .igme img{display:block;width:100%;height:100%;max-width:100%;border-radius:9px;box-shadow:0 4px 12px rgba(0,0,0,.25)}
+#ig .igme b{position:absolute;left:-8px;right:-8px;top:100%;margin-top:3px;text-align:center;font-size:7.5px;color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.3)}
+#ig .s3 .igme{animation:igPop .55s cubic-bezier(.2,1.6,.4,1) .25s forwards}
+#ig .igdk{position:absolute;left:10px;right:10px;bottom:10px;height:44px;border-radius:16px;background:rgba(255,255,255,.28)}
+/* 안드로이드 */
+#ig .igctb{position:absolute;left:0;right:0;top:26px;display:flex;align-items:center;gap:6px;padding:6px 8px;background:#fff;border-bottom:1px solid #e6e6e6}
+#ig .igctb .igurl2{flex:1;margin:0;height:22px;border-radius:11px;background:#eef0f3;justify-content:flex-start;padding-left:9px}
+#ig .igctb b{font-size:13px;color:#444;width:14px;text-align:center}
+#ig .android .igpg{top:66px}
+#ig .igmn{position:absolute;right:6px;top:30px;width:120px;padding:4px 0;border-radius:8px;background:#fff;box-shadow:0 8px 24px rgba(0,0,0,.25);transform-origin:top right}
+#ig .android .L1{transform:scale(.6);opacity:0}
+#ig .android.s1 .L1{transform:none;opacity:1}
+#ig .igmn .igr{border:0;height:25px}
+#ig .android .igsc .L2{top:0;border-radius:0;background:rgba(0,0,0,.35);transform:none;opacity:0;display:flex;align-items:center;justify-content:center}
+#ig .android.s2 .L2{opacity:1}
+#ig .igdl{width:150px;border-radius:16px;background:#fff;padding:14px 12px 10px;box-shadow:0 10px 30px rgba(0,0,0,.3);transform:scale(.85);transition:transform .35s}
+#ig .android.s2 .igdl{transform:none}
+#ig .igdl b{display:block;font-size:10.5px;margin-bottom:9px}
+#ig .igdl .igdr{margin:0;padding:0;background:none}
+#ig .igdl .igdr img{width:28px;height:28px;border-radius:7px}
+#ig .igdb{display:flex;justify-content:flex-end;gap:14px;margin-top:12px;font-size:9.5px;font-weight:700;color:#1a73e8}
+/* 누르는 곳 표시 */
+#ig .igtap{position:absolute;width:28px;height:28px;margin:-14px 0 0 -14px;border-radius:50%;opacity:0;pointer-events:none;z-index:6;background:rgba(47,111,237,.35);box-shadow:0 0 0 2px rgba(47,111,237,.6)}
+#ig .s0 .t0,#ig .s1 .t1,#ig .s2 .t2,#ig .s3 .t3{animation:igTap 1.1s ease-out .55s infinite}
+@keyframes igTap{0%{opacity:0;transform:scale(.4)}25%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.6)}}
+@keyframes igPop{to{transform:none;opacity:1}}
+/* 단계 카드: 지금 미리보기에서 하는 단계가 켜짐 */
+#ig .igstep{transition:border-color .3s,box-shadow .3s,transform .3s}
+#ig .igstep.on{border-color:var(--igac);box-shadow:0 10px 28px -12px var(--iggl);transform:scale(1.015)}
+#ig .igstep.last:not(.on){border-color:var(--igbd);box-shadow:0 8px 22px -14px rgba(15,30,80,.35)}
+#ig .igmeta{text-align:center;font-size:12.5px;font-weight:700;color:var(--igac);letter-spacing:.02em;animation:igUp .6s ease-out .16s both}
+@media (prefers-reduced-motion:reduce){#ig .igsc .L{transition:none}}
+@media (prefers-reduced-motion:reduce){#ig *,#ig *::before,#ig *::after{animation:none!important}}
 #gate{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;align-items:center;justify-content:center;padding:24px}
 .gbox{width:100%;max-width:360px;text-align:center;display:grid;gap:14px;justify-items:center}
 .glogo{height:28px;width:auto;max-width:150px;object-fit:contain}
@@ -3843,10 +3943,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-23";
+var APP_VER = "2026-10-23-27";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-27", ["📲 설치 안내 화면 새 디자인"]],
   ["2026-10-23-23", ["✨ 시작 화면 새 디자인"]],
   ["2026-10-23-18", ["부적합 저장 중 연결이 끊기면 실제로 저장됐는지 확인해서 알려 줘요"]],
   ["2026-10-23-17", ["부적합 입고 확인·완료·되돌리기·삭제가 누르자마자 바로 바뀌어요"]],
@@ -4903,13 +5004,20 @@ var IG_SHARE = '<svg viewBox="0 0 24 24"><path d="M12 15V3"/><path d="M8 7l4-4 4
 function igKey(t) { return '<span class="igkey">' + t + '</span>'; }
 
 function igRender() {
-  var E = IG.env || igEnv(), W = el("div", "igw"), H = "";
+  if (IG.demoT) { clearInterval(IG.demoT); IG.demoT = null; }
+  var E = IG.env || igEnv(), W = el("div", "igw");
   var box = $("ig"); box.innerHTML = ""; box.appendChild(W);
   function add(html, cls, tag) { var d = el(tag || "div", cls); d.innerHTML = html; W.appendChild(d); return d; }
   function steps(list) {
     var S = el("div", "igsteps");
-    list.forEach(function (t, i) { var r = el("div", "igstep"); r.innerHTML = '<span class="ignum">' + (i + 1) + '</span><span>' + t + '</span>'; S.appendChild(r); });
+    list.forEach(function (t, i) {
+      var r = el("div", "igstep" + (i === list.length - 1 ? " last" : ""));
+      r.style.animationDelay = (0.26 + i * 0.08) + "s";
+      r.innerHTML = '<span class="ignum">' + (i + 1) + '</span><span>' + t + '</span>';
+      S.appendChild(r);
+    });
     W.appendChild(S);
+    return S;
   }
   function copyBtn(label) {
     var b = el("button", "igbtn sub", label); b.type = "button";
@@ -4920,7 +5028,7 @@ function igRender() {
     W.appendChild(b); return b;
   }
   function installBtn() {
-    if (IG.installed) { add("✅ 설치됐어요!\n홈 화면의 <b>제조1-A</b> 아이콘으로 열어 주세요.", "igok").style.whiteSpace = "pre-line"; return true; }
+    if (IG.installed) { add("✅ 설치가 끝났어요\n홈 화면의 <b>제조1-A</b> 아이콘으로 열어 주세요.", "igok"); return true; }
     if (!IG.prompt) return false;
     var b = el("button", "igbtn", "📲 앱 설치하기"); b.type = "button";
     b.onclick = function () {
@@ -4934,68 +5042,103 @@ function igRender() {
     };
     W.appendChild(b); return true;
   }
-
-  add('<img src="icon-192.png" alt="" onerror="this.style.visibility=\'hidden\'"><div><b>제조1-A</b><small>제조A팀 업무 앱</small></div>', "igtop");
-  var MSG = "A팀 앱은 앱으로만 쓸 수 있어요.\n설치해야 들어갈 수 있고, 1분이면 끝나요.\n한 번 설치하면 다음부터는 아이콘으로 바로 열려요.";
+  function head(title, lead) {
+    add('<div class="igapp"><img src="icon-192.png" alt="" onerror="this.parentNode.style.display=\'none\'"></div><div class="igname">제조1-A</div>', "ighero");   // 홈 화면에 생길 바로 그 아이콘
+    add(title, null, "h2");
+    add(lead, "iglead");
+    add("1분이면 끝나요 · 처음 한 번만 하면 돼요", "igmeta");
+  }
+  var LEAD = "제조1-A는 홈 화면 앱으로만 열려요.\n한 번 추가하면 다음부터 아이콘으로 바로 열려요.";
   var ICON = '<img class="igico" src="icon-192.png" alt="">';
-  var OPEN = "홈 화면의 " + ICON + " <b>제조1-A</b> 아이콘으로 열기";
+  var OPEN = "홈 화면의 " + ICON + " <b>제조1-A</b> 아이콘으로 열기<small>이제 이 아이콘으로만 들어오면 돼요</small>";
 
   if (E.pc) {   // 💻 PC
-    add("📱 제조1-A는 휴대폰 전용이에요", null, "h2");
-    add(MSG, "igmsg");
+    head("휴대폰에서 열어 주세요", "제조1-A는 휴대폰 전용 앱이에요.");
     var hint = add("휴대폰 카메라로 아래 QR을 찍으면 바로 열려요.", "igsec");
     var q = el("div", "igqr"); W.appendChild(q);
-    igQR(q, hint);
+    igQR(q, hint);   // QR을 못 그리면 안내 문구도 같이 숨김
     add(igUrl(), "igurl");
     copyBtn("🔗 링크 복사");
     add("휴대폰에서 열면 홈 화면에 추가하는 방법이 나와요.", "ignote");
     return;
   }
   if (E.inApp) {   // 💬 카톡·네이버·인스타 등 앱 안 브라우저
-    add(E.ios ? "📲 Safari로 열어 주세요" : "📲 Chrome으로 열어 주세요", null, "h2");
-    add(MSG + "\n지금 화면(" + (E.kakao ? "카카오톡" : "앱 안 브라우저") + ")에서는 홈 화면에 추가할 수 없어요.", "igmsg");
-    if (E.kakao && E.ios) steps(["오른쪽 아래 " + igKey("⋯") + " 누르기", "<b>다른 브라우저로 열기</b> 또는 <b>Safari로 열기</b>", "Safari에서 홈 화면에 추가 (방법이 다시 나와요)"]);
-    else if (E.kakao) steps(["오른쪽 위 " + igKey("⋮") + " 누르기", "<b>다른 브라우저로 열기</b> → <b>Chrome</b>", "Chrome에서 앱 설치 (방법이 다시 나와요)"]);
-    else steps(["메뉴 " + igKey(E.ios ? "⋯" : "⋮") + " 에서 <b>" + (E.ios ? "Safari로 열기" : "다른 브라우저로 열기") + "</b>", "메뉴가 없으면 아래 링크를 복사해서 " + (E.ios ? "Safari" : "Chrome") + " 주소창에 붙여넣기"]);
+    var app = E.kakao ? "카카오톡" : "지금 앱";
+    head(E.ios ? "Safari로 열어 주세요" : "Chrome으로 열어 주세요", app + " 안에서는 홈 화면에 추가할 수 없어요.\n" + (E.ios ? "Safari" : "Chrome") + "로 연 다음 추가하면 돼요.");
+    if (E.kakao && E.ios) steps(["오른쪽 아래 " + igKey("⋯") + " 누르기", "<b>Safari로 열기</b><small>'다른 브라우저로 열기'로 보일 수도 있어요</small>", "Safari에서 홈 화면에 추가<small>방법이 다시 나와요</small>"]);
+    else if (E.kakao) steps(["오른쪽 위 " + igKey("⋮") + " 누르기", "<b>다른 브라우저로 열기</b> → <b>Chrome</b>", "Chrome에서 앱 설치<small>방법이 다시 나와요</small>"]);
+    else steps(["메뉴 " + igKey(E.ios ? "⋯" : "⋮") + " 에서 <b>" + (E.ios ? "Safari로 열기" : "다른 브라우저로 열기") + "</b>", "메뉴가 없으면 아래 링크를 복사해서<br>" + (E.ios ? "Safari" : "Chrome") + " 주소창에 붙여넣기"]);
     copyBtn("🔗 링크 복사");
     return;
   }
   if (E.ios && !E.iosOther) {   // 🍎 아이폰 사파리
-    add("📲 홈 화면에 추가해야 쓸 수 있어요", null, "h2");
-    add(MSG, "igmsg");
-    steps(["화면 아래 " + igKey(IG_SHARE) + " <b>공유</b> 버튼 누르기<small>안 보이면 아래 " + igKey("⋯") + " 먼저 누르기</small>",
-           "아래로 내려서 <b>홈 화면에 추가</b>",
+    head("홈 화면에 추가해 주세요", LEAD);
+    var S1 = steps(["화면 아래 " + igKey(IG_SHARE) + " <b>공유</b> 누르기<small>안 보이면 아래 " + igKey("⋯") + " 를 먼저 눌러요</small>",
+           "목록을 내려서 " + igKey("＋") + " <b>홈 화면에 추가</b>",
            "오른쪽 위 <b>추가</b>",
            OPEN]);
+    igDemo(W, "ios", [0, 1, 2, 3], S1);   // 📱 폰 그림으로 따라 하기 (단계 카드와 같이 켜짐)
     add("추가했는데도 이 화면이 계속 뜨면 손성민에게 알려 주세요.", "ignote");
     W.classList.add("igpadb");   // 아래 화살표에 가리지 않게
-    var ar = el("div", "igarrow"); ar.innerHTML = '<span>여기 공유 버튼 ⬆ 누르기</span><b>⬇</b>';
+    var ar = el("div", "igarrow"); ar.innerHTML = '<span>여기 공유 버튼을 눌러요</span><b>⬇</b>';
     W.appendChild(ar);   // ⬇ 화면 맨 아래(사파리 공유 버튼 자리)를 가리키며 위아래로 움직임
     return;
   }
   if (E.ios) {   // 🍎 아이폰 크롬 등
-    add("📲 홈 화면에 추가해야 쓸 수 있어요", null, "h2");
-    add(MSG, "igmsg");
-    steps(["주소창 옆 " + igKey(IG_SHARE) + " <b>공유</b> 버튼 누르기", "<b>홈 화면에 추가</b>", OPEN]);
+    head("홈 화면에 추가해 주세요", LEAD);
+    steps(["주소창 옆 " + igKey(IG_SHARE) + " <b>공유</b> 누르기", "<b>홈 화면에 추가</b>", OPEN]);
     add("공유 메뉴에 '홈 화면에 추가'가 없으면 Safari에서 열어 주세요.", "ignote");
     copyBtn("🔗 링크 복사 (Safari에서 열기)");
     return;
   }
   // 🤖 갤럭시
-  add("📲 앱을 설치해야 쓸 수 있어요", null, "h2");
-  add(MSG, "igmsg");
+  head("앱을 설치해 주세요", LEAD);
   if (E.samsung && !IG.installed) {   // 삼성 인터넷: 크롬에서 설치하는 게 제일 확실 → 맨 위에 크롬으로 열기 버튼
     var cb = el("button", "igbtn chrome", "🌐 Chrome으로 열어서 설치하기"); cb.type = "button";
     cb.onclick = function () { location.href = "intent://" + location.host + location.pathname.replace(/index\.html$/, "") + "#Intent;scheme=https;package=com.android.chrome;end"; };
     W.appendChild(cb);
-    add("Chrome이 없으면 아래 순서로 삼성 인터넷에서 추가해 주세요 ↓", "igsec");
+    add("Chrome이 없으면 삼성 인터넷에서 이렇게 추가해 주세요", "igsec");
   }
   var hasBtn = installBtn();
   if (IG.installed) return;
-  if (hasBtn) add("버튼이 안 되면 직접 설치해 주세요 ↓", "igsec");
-  else if (!E.samsung) add("버튼이 안 보이면 직접 설치해 주세요 ↓", "igsec");
+  if (hasBtn) add("버튼이 안 되면 직접 설치해 주세요", "igsec");
+  else if (!E.samsung) add("이렇게 설치해 주세요", "igsec");
   if (E.samsung) steps(["화면 아래 " + igKey("≡") + " <b>메뉴</b> 누르기", "<b>현재 페이지 추가</b> → <b>홈 화면</b>", OPEN]);
-  else steps(["오른쪽 위 " + igKey("⋮") + " 누르기", "<b>앱 설치</b> 누르기<small>'홈 화면에 추가'만 보이면 누르고 창에서 <b>설치</b> 선택 (바로가기 ❌)</small>", OPEN]);
+  else {
+    var S2 = steps(["오른쪽 위 " + igKey("⋮") + " 누르기", "<b>앱 설치</b> → <b>설치</b><small>'홈 화면에 추가'만 보이면 누르고 창에서 <b>설치</b> 선택 (바로가기 ❌)</small>", OPEN]);
+    if (!hasBtn) igDemo(W, "android", [0, 1, 1, 2], S2);   // 설치 버튼이 없을 때만 따라 하기 그림
+  }
+}
+
+// 📱 따라 하기 미리보기 (폰 그림 안에서 순서대로 움직임) · map: 장면 → 같이 켜질 단계 카드 번호
+function igDemoHtml(kind) {
+  var ICO = '<img src="icon-192.png" alt="">';
+  var home = '<div class="L L3"><div class="ighg">' + new Array(7).join('<div class="igap"></div>') + '<div class="igme">' + ICO + '<b>제조1-A</b></div>' + new Array(6).join('<div class="igap"></div>') + '</div><div class="igdk"></div><span class="igtap t3" style="left:114px;top:102px"></span></div>';
+  var page = '<div class="igpg">' + ICO + '<span class="igpl w1"></span><span class="igpl w2"></span><span class="igpl w3"></span><span class="igpc"></span><span class="igpc"></span><span class="igpc"></span></div>';
+  if (kind === "ios") return '<div class="igsc"><div class="igisb"><b>9:41</b><i></i><u>●●● ▮</u></div>' +
+    '<div class="L L0">' + page + '<div class="igtb"><div class="igurl2">ninebell-a.github.io</div><div class="igtbi"><span>‹</span><span>›</span><span>' + IG_SHARE + '</span><span>⌑</span><span>⧉</span></div></div><span class="igtap t0" style="left:93px;top:348px"></span></div>' +
+    '<div class="L L1"><div class="igsh"><div class="iggb"></div><div class="igshd">' + ICO + '<div><b>제조1-A</b><small>ninebell-a.github.io</small></div></div><div class="igrs"><div class="igr">복사<i>⧉</i></div><div class="igr">읽기 목록에 추가<i>◎</i></div><div class="igr igh">홈 화면에 추가<i>＋</i></div><div class="igr">책갈피 추가<i>⌑</i></div></div></div><span class="igtap t1" style="left:162px;top:308px"></span></div>' +
+    '<div class="L L2"><div class="igdh"><span>취소</span><b>홈 화면에 추가</b><span class="igad">추가</span></div><div class="igdr">' + ICO + '<div><b>제조1-A</b><small>ninebell-a.github.io</small></div></div><div class="igdn">홈 화면에 아이콘이 추가돼요.</div><span class="igtap t2" style="left:165px;top:18px"></span></div>' +
+    home + '</div>';
+  return '<div class="igsc"><div class="igisb"><b>9:41</b><i></i><u>▾ ▮</u></div>' +
+    '<div class="L L0"><div class="igctb"><b>⌂</b><div class="igurl2">ninebell-a.github.io</div><b>⋮</b></div>' + page + '<span class="igtap t0" style="left:171px;top:43px"></span></div>' +
+    '<div class="L L1"><div class="igmn"><div class="igr">새 탭</div><div class="igr">방문 기록</div><div class="igr igh">앱 설치<i>⤓</i></div><div class="igr">공유</div><div class="igr">설정</div></div><span class="igtap t1" style="left:150px;top:96px"></span></div>' +
+    '<div class="L L2"><div class="igdl"><b>앱을 설치할까요?</b><div class="igdr">' + ICO + '<div><b>제조1-A</b><small>ninebell-a.github.io</small></div></div><div class="igdb"><span>취소</span><span>설치</span></div></div><span class="igtap t2" style="left:150px;top:219px"></span></div>' +
+    home + '</div>';
+}
+function igDemo(W, kind, map, before) {
+  var ph = el("div", "igph" + (kind === "android" ? " android" : ""));
+  ph.innerHTML = igDemoHtml(kind);
+  W.insertBefore(ph, before || null);
+  var k = 0, base = ph.className;
+  function tick() {
+    ph.className = base + " s" + k;
+    var cards = W.querySelectorAll(".igstep");
+    for (var i = 0; i < cards.length; i++) cards[i].classList.toggle("on", i === map[k]);
+    k = (k + 1) % 4;
+  }
+  tick();
+  IG.demoT = setInterval(tick, 2400);   // 장면 하나 2.4초 · 4장면 반복
 }
 
 function igCopyOld(u) {
