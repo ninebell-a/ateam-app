@@ -1101,7 +1101,7 @@ var SPD = { last: null };
 // 📶 조회 요청은 연결이 끊기면 1번 자동 재시도 (저장 요청은 중복 저장 막으려고 재시도 안 함)
 var READ_FNS = { ping: 1, getDashboardAll: 1, getDashboardData: 1, getUploadStatus: 1, getHoursMeta: 1, getHoursCell: 1, getLeaveData: 1, getStatsData: 1, getEquipIndex: 1, getPushStatus: 1, getTeamNames: 1 };
 var INFLIGHT = {};   // ⚡ 같은 조회가 이미 가는 중이면 새로 안 보내고 그 결과를 같이 씀 (서버에 줄 서는 요청 줄이기)
-var CALL_TIMEOUT = 30000;   // 조회: 30초 넘게 응답 없으면 끊음 (타임아웃은 다시 시도 안 함 — 서버가 바쁠 때 또 보내면 더 막힘)
+var CALL_TIMEOUT = 12000;   // 조회: 12초 안에 답이 없으면 끊고 한 번만 다시 보냄 (서버는 캐시로 0.5~3초에 답함 → 12초면 연결이 걸린 것 · 다시 보내면 대부분 바로 붙음)
 var LONG_TIMEOUT = 90000;   // 새로고침(getDashboardAll(true))·저장: 90초 (앱이 먼저 포기하면 실제로는 저장됐는데 '실패'로 보임)
 function callTimeout(fn, args) {
   if (!READ_FNS[fn]) return LONG_TIMEOUT;
@@ -1178,9 +1178,10 @@ function rawCall1(pin, fn, args, editPin) {
   var ms0 = callTimeout(fn, args), rd = !!READ_FNS[fn];
   return fetchJson(body, ms0, rd)
     .catch(function (e) {
-      // 조회만 한 번 다시 시도 · 네트워크 타임아웃(서버가 바쁨)은 다시 안 보냄 → 줄 선 요청을 더 늘리지 않게
-      if (!READ_FNS[fn] || /timeout/i.test(String(e && e.message))) throw e;
-      return new Promise(function (res) { setTimeout(res, 1500); }).then(function () { return fetchJson(body, ms0, rd); });
+      // 조회만 한 번 다시 시도 (12초 안에 답이 없었거나 연결이 끊김) · 저장·새로고침(90초)은 두 번 처리될 수 있어서 다시 안 보냄
+      if (!READ_FNS[fn] || ms0 !== CALL_TIMEOUT) throw e;
+      var to = /timeout/i.test(String(e && e.message));
+      return new Promise(function (res) { setTimeout(res, to ? 0 : 1500); }).then(function () { return fetchJson(body, ms0, rd); });
     })
     .then(function (j) {
       var ms = Date.now() - t0;
@@ -3683,10 +3684,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-23-9";
+var APP_VER = "2026-10-23-10";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-23-10", ["연결이 잠깐 끊겼을 때 덜 기다리게 (12초 안에 답이 없으면 바로 다시 받아요)"]],
   ["2026-10-23-9", ["⚠️ 부적합 탭: 부적합 자재를 한 곳에서 (입고 대기 · 입고 확인 · 완료로 골라 보기 · 바로 등록)"]],
   ["2026-10-23-8", ["⚠️ 부적합 자재: 장비를 누르면 맨 아래에서 등록 → 입고 확인 → 완료", "부적합이 남은 장비는 이름 옆에 ⚠️ 표시"]],
   ["2026-10-23-7", ["브라우저로 열면 항상 앱 설치 안내 (앱으로만 사용)"]],
