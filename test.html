@@ -281,14 +281,16 @@ li:first-child{border-top:0}
 #splash .rgd{transform-box:view-box;transform-origin:50% 50%;animation:spRingD 1.6s cubic-bezier(.55,0,.3,1) .25s both}
 #splash .rgd circle{fill:#fff;filter:drop-shadow(0 0 2px var(--sacc2)) drop-shadow(0 0 4px var(--sacc));animation:spFadeOut .35s ease-out 1.85s forwards}
 /* 🏷 TEAM 1-A 배지 (글자 아래 · 톡 튀어나오고 빛이 훑고 지나감) */
-#splash .tb{position:relative;margin-top:16px;display:inline-flex;align-items:baseline;gap:8px;padding:7px 18px 8px;border-radius:999px;overflow:hidden;color:#fff;
-  background:linear-gradient(120deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 10px 26px -8px var(--sglow),inset 0 1px 0 rgba(255,255,255,.35);
-  opacity:0;transform:scale(.6);animation:spBadge .65s cubic-bezier(.2,1.5,.4,1) .75s forwards}
-#splash .tb small{font-size:10.5px;font-weight:800;letter-spacing:.28em;opacity:.85}
-#splash .tb b{font-size:21px;font-weight:900;letter-spacing:.04em;line-height:1}
-#splash .tb::after{content:"";position:absolute;top:0;bottom:0;left:0;width:45%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.55),transparent);transform:translateX(-120%) skewX(-18deg);animation:spPill 2.8s ease-in-out 1.85s infinite}   /* 원이 다 그려지자마자(1.85초) 빛이 한 번 쭉 지나감 → 2.75초에 끝 */
-@keyframes spBadge{0%{opacity:0;transform:scale(.6)}100%{opacity:1;transform:none}}
-@keyframes spPill{0%{transform:translateX(-120%) skewX(-18deg)}32%,100%{transform:translateX(330%) skewX(-18deg)}}
+#splash .tb{position:relative;margin-top:18px;display:flex;align-items:center;gap:12px;opacity:0;transform:scale(.85);animation:spBadge .7s cubic-bezier(.2,1.4,.4,1) .75s forwards}
+#splash .tb::before,#splash .tb::after{content:"";width:34px;height:1.5px;border-radius:1px;background:linear-gradient(90deg,transparent,var(--sacc))}
+#splash .tb::after{background:linear-gradient(90deg,var(--sacc),transparent)}
+#splash .tb small{font-size:11px;font-weight:800;letter-spacing:.42em;padding-left:.42em;color:var(--ssub)}
+#splash .tb b{font-size:28px;font-weight:900;letter-spacing:.02em;line-height:1;margin-left:-4px;
+  background:linear-gradient(100deg,var(--sacc) 0%,#8a6bff 38%,#fff 50%,#8a6bff 62%,var(--sacc) 100%);background-size:260% 100%;background-position:100% 0;
+  -webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;filter:drop-shadow(0 4px 10px var(--sglow));
+  animation:spTxt 2.8s ease-in-out 1.85s infinite}   /* 원이 다 그려지자마자 글자 위로 빛이 한 번 지나감 (2.75초에 끝) */
+@keyframes spBadge{0%{opacity:0;transform:scale(.85)}100%{opacity:1;transform:none}}
+@keyframes spTxt{0%{background-position:100% 0}32%,100%{background-position:0 0}}
 /* 글자 */
 #splash .t1{position:relative;margin-top:56px;font-size:clamp(22px,7.4vw,30px);font-weight:900;letter-spacing:.26em;padding-left:.26em;white-space:nowrap;
   color:var(--stext);background:linear-gradient(100deg,var(--stext) 0%,var(--stext) 40%,var(--sacc2) 50%,var(--stext) 60%,var(--stext) 100%);background-size:250% 100%;
@@ -320,7 +322,7 @@ li:first-child{border-top:0}
 @keyframes spScan{0%{transform:translateY(-10px);opacity:0}10%{opacity:1}85%{opacity:1}100%{transform:translateY(calc(min(60vw,240px) + 10px));opacity:0}}
 @keyframes spShine{0%,100%{background-position:100% 0}50%{background-position:0 0}}
 @keyframes spLoad{0%{transform:translateX(-100%)}100%{transform:translateX(250%)}}
-@media (prefers-reduced-motion:reduce){#splash *{animation:none!important}#splash .d{opacity:.85;fill:var(--dieOn)}#splash .tb{opacity:1;transform:none}#splash .scan,#splash .orb2,#splash .rgd{display:none}#splash .rgh{stroke-dashoffset:0}#splash{transition:none}}
+@media (prefers-reduced-motion:reduce){#splash *{animation:none!important}#splash .d{opacity:.85;fill:var(--dieOn)}#splash .tb{opacity:1;transform:none}#splash .tb b{background-position:0 0}#splash .scan,#splash .orb2,#splash .rgd{display:none}#splash .rgh{stroke-dashoffset:0}#splash{transition:none}}
 /* 👤 처음 쓰는 폰: 이름 고르기는 앱 화면을 가리는 전체 화면 */
 #nmov.full{background:var(--bg);align-items:center}
 #nmov.full .box{border-radius:18px;max-width:440px;margin:0 16px;border:1px solid var(--line);box-shadow:0 10px 40px rgba(0,0,0,.08)}
@@ -4659,10 +4661,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-24-17";
+var APP_VER = "2026-10-25-1";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-25-1", ["시작 화면 팀 표시 다듬기"]],
   ["2026-10-24-17", ["✨ 위쪽 버튼 · 장비 검색 · 메뉴 · 공지 보내기 · 확인 창 새 디자인"]],
   ["2026-10-24-15", ["요약 창이 깜빡이지 않고, 창이 열린 동안 뒤 화면이 움직이지 않아요"]],
   ["2026-10-24-14", ["✨ 연차 현황 · 근무시간 새 디자인 (주 52시간 · 내 이번 주 · 입력 칸)"]],
