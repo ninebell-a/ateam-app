@@ -1160,6 +1160,73 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 #chips .chip{padding:11px 0;text-align:center;font-size:14.5px;font-weight:800;border-radius:13px;font-family:inherit}
 #chips .chip:nth-child(n+7){font-size:13px}
 #hcur{border-radius:14px}
+/* ✨ 위쪽 아이콘 버튼 · 검색 화면 */
+button.ref.ib{display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0!important;border-radius:14px;color:var(--text)}
+button.ref.ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
+button.ref.rf{color:#fff;border:0;background:var(--gr);box-shadow:0 8px 18px -8px var(--glow)}
+button.ref.rf.busy svg{animation:pvSpin .8s linear infinite}
+button.ref.rf:disabled{opacity:1}
+@media (max-width:389px){button.ref.ib{width:36px;height:36px;border-radius:12px}}
+.sbar{gap:8px;align-items:center}
+.sqw{flex:1;min-width:0;display:flex;align-items:center;gap:8px;height:48px;padding:0 6px 0 14px;border-radius:16px;background:var(--card);box-shadow:inset 0 0 0 1.5px var(--line),var(--sh);transition:box-shadow .2s}
+.sqw:focus-within{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px rgba(47,111,237,.14),var(--sh)}
+.sqw>svg{flex:none;width:19px;height:19px;fill:none;stroke:var(--accent);stroke-width:2.2;stroke-linecap:round}
+.sbar .sqw input{flex:1;min-width:0;height:100%;padding:0;border:0!important;background:transparent!important;font-size:16px;font-weight:700;color:var(--text);outline:0;-webkit-appearance:none;appearance:none}
+.sbar .sqw input::-webkit-search-cancel-button{display:none}
+.sbar .sqw input::placeholder{font-weight:600;color:var(--sub);opacity:.8}
+#sqx{display:none;flex:none;align-items:center;justify-content:center;width:26px;height:26px;margin-right:4px;padding:0;border:0;border-radius:50%;background:rgba(127,140,170,.22);color:var(--sub);font-size:17px;line-height:1;font-family:inherit}
+.sbar #sclose{flex:none;height:48px;border:0;background:none;box-shadow:none;color:var(--accent);font-size:15.5px;font-weight:800;padding:0 4px}
+#srch>.hint{padding:6px 8px;text-align:center}
+/* 검색 결과 목록 */
+.sres{border:0;box-shadow:var(--sh2);border-radius:18px}
+.sres .it{padding:12px 16px;transition:background .15s}
+.sres .nm{font-size:16px;font-weight:900}
+.sres .nx{font-weight:700}
+/* 장비 상세 */
+.eqd{border:0;border-radius:20px;box-shadow:var(--sh2);padding:16px 18px;gap:12px}
+.eqd::before{top:18px;bottom:auto;height:30px}
+.eqd .h b{font-size:24px;font-weight:900;letter-spacing:-.02em}
+.eqd .h b .ow{font-size:17px;font-weight:800}
+.eqtags span{padding:4px 11px;font-weight:800}
+.eqtags .loc,.eqtags .tu{background:rgba(229,72,77,.08)}
+.eqv{padding:10px 12px;border-radius:14px;background:rgba(47,111,237,.05)}
+.eqtl{position:relative;padding-left:20px}
+.eqtl::before{content:"";position:absolute;left:5px;top:14px;bottom:14px;width:2px;border-radius:2px;background:var(--line)}
+.eqtl .r{position:relative;border-top:0;padding:8px 0;grid-template-columns:96px 1fr auto}
+.eqtl .r::before{content:"";position:absolute;left:-20px;top:50%;width:12px;height:12px;margin-top:-6px;border-radius:50%;background:var(--card);box-shadow:inset 0 0 0 2px var(--line)}
+.eqtl .done::before{background:var(--ok);box-shadow:0 0 0 3px var(--card)}
+.eqtl .done{opacity:.72}
+.eqtl .now{background:linear-gradient(90deg,rgba(47,111,237,.10),rgba(47,111,237,0));border-radius:12px;margin-left:-8px;padding-left:8px}
+.eqtl .now::before{left:-12px;width:14px;height:14px;margin-top:-7px;background:var(--gr);box-shadow:0 0 0 3px var(--card),0 0 12px var(--glow)}
+.eqtl .s{border-radius:999px;padding:2px 9px}
+.eqtl .now .s{background:var(--gr)}
+.sback{border:0;box-shadow:var(--sh);padding:10px 14px;font-weight:800}
+/* ✨ 모든 창(아래에서 올라오는 창) 공통 */
+.ov{background:rgba(6,12,30,.45);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px)}
+.ov .box{border-radius:26px 26px 0 0;background:linear-gradient(180deg,var(--card) 0%,var(--bg) 100%);box-shadow:0 -20px 50px -20px rgba(6,12,30,.5);padding-top:12px;gap:13px;animation:pvSheet .4s cubic-bezier(.2,.9,.3,1) both}
+.ov .box::before{content:"";justify-self:center;width:38px;height:5px;border-radius:3px;background:var(--line)}
+.ov .box h3{font-size:19px;font-weight:900;letter-spacing:-.01em}
+.box .who{font-size:12.5px;font-weight:800;color:var(--sub);letter-spacing:.02em}
+.box p.sub{font-size:12.5px}
+.ob{gap:10px}
+.ob button{border-radius:14px;padding:15px;font-weight:800;border:1px solid var(--line);background:var(--card);box-shadow:var(--sh)}
+.ob .go{border:0!important;color:#fff;background:linear-gradient(135deg,#25b46e,#1f9d55)!important;box-shadow:0 12px 26px -12px rgba(31,157,85,.6)}
+.ob .go[style*="accent"],#epgo,#apgo{background:var(--gr)!important;box-shadow:0 12px 26px -12px var(--glow)}
+.ob button:active{transform:scale(.98)}
+#ntov textarea,#ntov input,#apov input,#nmcpin,#epin,#opin{border-radius:14px!important;background:var(--card)!important;box-shadow:inset 0 0 0 1.5px var(--line);border:0!important}
+#ntov textarea:focus,#ntov input:focus,#apov input:focus,#epin:focus,#opin:focus{box-shadow:inset 0 0 0 2px var(--accent),0 0 0 4px rgba(47,111,237,.14);outline:0}
+.ntpv{border:0;border-radius:18px;background:var(--card);box-shadow:var(--sh2)}
+.ntpv .ic{border-radius:10px}
+/* 메뉴 */
+.mnl{gap:8px}
+.mnl button{justify-content:flex-start;gap:12px;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--card);box-shadow:var(--sh);transition:transform .12s}
+.mnl button:active{transform:scale(.98)}
+.mnl button i{flex:none;display:flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:12px;font-style:normal;font-size:18px;background:rgba(47,111,237,.10)}
+.mnl button span{display:flex;flex-direction:column;gap:2px;min-width:0}
+.mnl button small{font-weight:600}
+.mnl button.dev{opacity:.6;box-shadow:none;background:transparent}
+#siteov .sitebtns button{border-radius:16px;box-shadow:var(--sh)}
+#siteov .sitebtns button.cur{background:var(--gr);color:#fff;border-color:transparent}
 /* ✨ 처음 쓰는 화면들 (PIN · 이름 고르기 · 알림 받기) — 시작 화면·설치 안내와 같은 디자인 */
 #gate,#nmov,#pushov{--pv1:#ffffff;--pv2:#e6edf9;--pvc:rgba(255,255,255,.80);--pvbd:rgba(47,111,237,.14);--pvln:rgba(47,111,237,.22);--pvtx:#0f1b33;--pvsb:#66768d;--pvac:#2f6fed;--pvac2:#7aa4ff;--pvgl:rgba(47,111,237,.28);--pvdot:rgba(47,111,237,.10);--pvgr:linear-gradient(120deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%)}
 @media (prefers-color-scheme:dark){#gate,#nmov,#pushov{--pv1:#15295a;--pv2:#060b18;--pvc:rgba(22,36,74,.66);--pvbd:rgba(130,165,255,.16);--pvln:rgba(130,165,255,.26);--pvtx:#ffffff;--pvsb:#8f9fc0;--pvac:#5b8cff;--pvac2:#b4cbff;--pvgl:rgba(91,140,255,.45);--pvdot:rgba(130,165,255,.09)}}
@@ -1285,9 +1352,9 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
       <h1><span id="ttlbtn">제조1-A<small id="ver"></small></span> <span id="upd"></span><span id="testtag"></span></h1>
     </div>
     <div class="hb">
-      <button class="ref" id="srchbtn" type="button" aria-label="장비 검색">🔍</button>
-      <button class="ref" id="lockbtn" type="button">🔒</button>
-      <button class="ref" id="ref" type="button">새로고침</button>
+      <button class="ref ib" id="srchbtn" type="button" aria-label="장비 검색"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg></button>
+      <button class="ref ib" id="lockbtn" type="button" aria-label="잠그기"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4.5" y="11" width="15" height="10" rx="2.5"/><path d="M8 11V7.5a4 4 0 0 1 8 0V11"/></svg></button>
+      <button class="ref ib rf" id="ref" type="button" aria-label="새로고침"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 1 1-2.34-5.66"/><path d="M20 4v5h-5"/></svg></button>
     </div>
   </div>
   <div class="tabs">
@@ -1302,8 +1369,8 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
   </div>
   <div id="pbar" role="button"><span><span id="pbt">🔕 알림이 꺼져 있어요</span><small id="pbs">공지가 폰으로 안 와요</small></span><span class="go" id="pbg">알림 켜기</span></div>
   <div id="sbar" class="sbar" style="display:none">
-    <input id="sq" type="search" inputmode="text" enterkeyhint="search" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="장비명·담당자·업체 (예: 373, 손성민)">
-    <button id="sclose" type="button">닫기</button>
+    <label class="sqw"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="sq" type="search" inputmode="text" enterkeyhint="search" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="장비명 · 담당자 · 업체"><button id="sqx" type="button" aria-label="지우기">×</button></label>
+    <button id="sclose" type="button">취소</button>
   </div>
 </header>
 <section id="srch"></section>
@@ -1503,7 +1570,7 @@ A팀 모두 켜 두는 <b>필수 설정</b>이에요.</p>
 
 <div class="ov" id="ntov">
   <div class="box">
-    <h3>📢 공지 보내기</h3>
+    <h3>공지 보내기</h3>
     <div class="who">보낸 사람</div>
     <div class="chips" id="ntfrom"></div>
     <div class="who">내용</div>
@@ -1521,7 +1588,7 @@ A팀 모두 켜 두는 <b>필수 설정</b>이에요.</p>
 
 <div class="ov" id="mnov">
   <div class="box">
-    <h3>⚙️ 메뉴</h3>
+    <h3>메뉴</h3>
     <div class="mnl" id="mnlist"></div>
     <div class="ob" style="grid-template-columns:1fr"><button id="mnno" type="button">닫기</button></div>
   </div>
@@ -3564,7 +3631,7 @@ function openSearch() {
   $("srch").style.display = "grid";
   loadEquipIndex(false);
   renderSearch();
-  tbSync();
+  tbSync(); $("sqx").style.display = "none";
   setTimeout(function () { try { $("sq").focus(); } catch (e) {} }, 50);
 }
 
@@ -3579,7 +3646,7 @@ function openEquip(name) {
   $("srch").style.display = "grid";
   loadEquipIndex(false);
   renderSearch();
-  tbSync();
+  tbSync(); $("sqx").style.display = $("sq").value ? "flex" : "none";
   window.scrollTo(0, 0);
 }
 
@@ -3597,7 +3664,8 @@ function closeSearch(silent) {
 
 $("srchbtn").onclick = function () { SR.backY = null; openSearch(); window.scrollTo(0, 0); };   // 열려 있어도 초기화 (닫기는 '닫기' 버튼)
 $("sclose").onclick = function () { closeSearch(); };
-$("sq").oninput = function () { SR.sel = -1; renderSearch(); };
+$("sq").oninput = function () { SR.sel = -1; $("sqx").style.display = $("sq").value ? "flex" : "none"; renderSearch(); };
+$("sqx").onclick = function (e) { e.preventDefault(); $("sq").value = ""; $("sqx").style.display = "none"; SR.sel = -1; renderSearch(); try { $("sq").focus(); } catch (x) {} };
 $("sq").onkeydown = function (e) { if (e.key === "Enter") { try { $("sq").blur(); } catch (x) {} } };
 
 function eqStatus(d, today) { return !d ? "none" : d < today ? "done" : d === today ? "now" : "next"; }
@@ -3765,11 +3833,11 @@ $("ref").onclick = function () {
   REF = true;
   var b = $("ref");
   b.disabled = true;
-  b.textContent = "갱신 중…";
+  b.classList.add("busy");   // 🔄 도는 동안 아이콘 회전
   Promise.resolve(p).then(function (err) {
     REF = false;
     b.disabled = false;
-    b.textContent = "새로고침";
+    b.classList.remove("busy");
     if ($("app").style.display === "none") return;   // PIN 오류로 잠긴 경우
     var d = new Date();
     var hm = ("0" + d.getHours()).slice(-2) + ":" + ("0" + d.getMinutes()).slice(-2);
@@ -4591,10 +4659,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-24-15";
+var APP_VER = "2026-10-24-17";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-24-17", ["✨ 위쪽 버튼 · 장비 검색 · 메뉴 · 공지 보내기 · 확인 창 새 디자인"]],
   ["2026-10-24-15", ["요약 창이 깜빡이지 않고, 창이 열린 동안 뒤 화면이 움직이지 않아요"]],
   ["2026-10-24-14", ["✨ 연차 현황 · 근무시간 새 디자인 (주 52시간 · 내 이번 주 · 입력 칸)"]],
   ["2026-10-24-12", ["📱 탭이 화면 아래로 (금일 · 명일 · 업로드 · 부적합 · 더보기)"]],
@@ -5390,8 +5459,11 @@ function openMenu() {
   L.innerHTML = "";
   function item(t, sub, fn, ov) {
     var b = el("button"); b.type = "button";
-    b.appendChild(el("span", null, t));
-    if (sub) b.appendChild(el("small", null, sub));
+    var mm = String(t).match(/^(\S+)\s+(.*)$/);   // 앞 이모지 → 아이콘 칸
+    if (mm) b.appendChild(el("i", null, mm[1]));
+    var tx = el("span", null, mm ? mm[2] : t);
+    if (sub) tx.appendChild(el("small", null, sub));
+    b.appendChild(tx);
     b.onclick = function () { closeMenu(); mnBackHide(); fn(); if (ov) mnBackShow(ov); };
     L.appendChild(b);
   }
