@@ -890,25 +890,50 @@ button.ref:active{transform:scale(.95)}
 /* 알림 띠(토스트) */
 #toast{border-radius:14px;box-shadow:0 14px 32px -10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.2)}
 /* ✨ 금일·명일 요약 카드 + 공정 타임라인 */
-.dhero{position:relative;overflow:hidden;border-radius:20px;padding:16px 18px 14px;color:#fff;background:linear-gradient(125deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 18px 36px -18px var(--glow),inset 0 1px 0 rgba(255,255,255,.25);display:grid;gap:10px}
-.dhero::before{content:"";position:absolute;right:-40px;top:-50px;width:190px;height:190px;border-radius:50%;opacity:.22;
-  background:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 9px,transparent 9px 12px),repeating-linear-gradient(0deg,rgba(255,255,255,.9) 0 9px,transparent 9px 12px);
+.dhero{position:relative;overflow:hidden;border-radius:18px;padding:12px 14px 11px 16px;color:#fff;background:linear-gradient(125deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 14px 30px -16px var(--glow),inset 0 1px 0 rgba(255,255,255,.25);display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px;transition:transform .12s;-webkit-tap-highlight-color:transparent}
+.dhero.tap{cursor:pointer}
+.dhero.tap:active{transform:scale(.985)}
+.dhero::before{content:"";position:absolute;right:-30px;top:-60px;width:150px;height:150px;border-radius:50%;opacity:.2;
+  background:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 8px,transparent 8px 11px),repeating-linear-gradient(0deg,rgba(255,255,255,.9) 0 8px,transparent 8px 11px);
   -webkit-mask-image:radial-gradient(circle,#000 0 62%,transparent 63%);mask-image:radial-gradient(circle,#000 0 62%,transparent 63%)}
-.dhero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(80% 90% at 0% 0%,rgba(255,255,255,.22),transparent 60%)}
+.dhero::after{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(80% 120% at 0% 0%,rgba(255,255,255,.2),transparent 60%)}
 .dhero>*{position:relative}
-.dh1{display:flex;align-items:center;gap:8px}
-.dh1 .dl{font-size:11.5px;font-weight:800;letter-spacing:.06em;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35)}
-.dh1 b{font-size:15px;font-weight:800;opacity:.95}
-.dh2{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}
-.dbig{display:flex;align-items:baseline;gap:4px;line-height:1}
-.dbig b{font-size:44px;font-weight:900;letter-spacing:-.02em;text-shadow:0 6px 18px rgba(0,0,0,.18)}
-.dbig small{font-size:15px;font-weight:800;opacity:.92}
-.dsub{font-size:13px;font-weight:700;opacity:.9;padding-bottom:4px;white-space:nowrap}
-.dnone{font-size:17px;font-weight:800;padding:6px 0 2px}
-.dflow{display:flex;gap:4px}
-.dflow i{flex:1;height:6px;border-radius:3px;background:rgba(255,255,255,.22)}
-.dflow i.on{background:#fff;box-shadow:0 0 10px rgba(255,255,255,.7)}
-.dfl{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;opacity:.8;margin-top:-4px}
+.dhl{display:flex;align-items:center;gap:8px;min-width:0}
+.dhl .dl{font-size:11px;font-weight:800;letter-spacing:.06em;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.22);border:1px solid rgba(255,255,255,.35)}
+.dhl b{font-size:14.5px;font-weight:800}
+.dhc{display:flex;align-items:baseline;gap:3px;line-height:1}
+.dhc small{font-size:12px;font-weight:800;opacity:.92}
+.dhc b{font-size:24px;font-weight:900;letter-spacing:-.02em;margin-left:3px}
+.dgo{font-size:22px;font-weight:700;margin-left:6px;opacity:.85;transform:translateY(1px)}
+.dprev{grid-column:1/-1;font-size:12px;font-weight:600;opacity:.88;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 장비별 창 */
+#dhov{z-index:25}
+.dhbox{max-height:84vh;overflow-y:auto;-webkit-overflow-scrolling:touch;border-radius:24px 24px 0 0;background:linear-gradient(180deg,var(--card),var(--bg));gap:10px;animation:pvSheet .4s cubic-bezier(.2,.9,.3,1) both}
+.dhbox::before{content:"";justify-self:center;width:38px;height:5px;border-radius:3px;background:var(--line);margin-bottom:2px}
+.dhhd{display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.dhhd b{font-size:18px;font-weight:900}
+.dhhd span{font-size:13px;font-weight:700;color:var(--sub)}
+.dhhd em{font-style:normal;font-size:22px;font-weight:900;margin:0 2px;background:var(--gr);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.dhsub{font-size:12px;color:var(--sub);margin-top:-6px}
+.dlist{display:grid;gap:8px}
+.drow{display:grid;gap:6px;padding:11px 13px;border-radius:14px;background:var(--card);border:1px solid var(--line);box-shadow:var(--sh);cursor:pointer;transition:transform .12s}
+.drow:active{transform:scale(.985)}
+.dra{display:flex;align-items:baseline;gap:6px;min-width:0}
+.dra b{font-size:15.5px;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 0 auto;max-width:55%}
+.dra b.urg{color:var(--urg)}
+.dra small{font-size:12px;color:var(--sub);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0;flex:0 10 auto}
+.drb{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.ddl{margin-left:auto;flex:none;display:flex;align-items:center;gap:5px;padding:2px 3px 2px 8px;border-radius:999px;background:rgba(47,111,237,.08)}
+.ddl small{font-size:11px;font-weight:700;color:var(--sub);white-space:nowrap}
+.ddl b{font-size:11.5px;font-weight:900;color:#fff;background:var(--gr);border-radius:999px;padding:2px 7px;white-space:nowrap}
+.ddl.d3 b{background:linear-gradient(135deg,#ffa62b,#f08c00)}
+.ddl.d1 b{background:linear-gradient(135deg,#ff6a6f,#e5484d)}
+.drs{display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.drs span{font-size:12px;font-weight:700;padding:2px 9px;border-radius:999px;background:rgba(47,111,237,.08);color:var(--sub)}
+.drs span.now{background:var(--gr);color:#fff}
+.dloc{flex:none;font-size:13px;font-weight:800;color:var(--accent);white-space:nowrap}
+.dloc.no{color:var(--sub);font-weight:600}
+.dhclose{margin-top:4px;padding:14px;border-radius:14px;border:1px solid var(--line);background:var(--card);color:var(--text);font-size:16px;font-weight:800;font-family:inherit}
 .tl{position:relative;display:grid;gap:10px;padding-left:22px}
 .tl::before{content:"";position:absolute;left:7px;top:22px;bottom:22px;width:2px;border-radius:2px;background:linear-gradient(180deg,rgba(91,124,255,.55),rgba(138,107,255,.35) 60%,var(--line))}
 .tl>.card::after{content:"";position:absolute;left:-21px;top:17px;width:10px;height:10px;border-radius:50%;background:var(--bg);border:2px solid var(--line)}
@@ -1860,32 +1885,101 @@ function render() {
     tl.appendChild(card);
   });
 }
-// ✨ 금일·명일 맨 위 요약 카드 (받아 둔 데이터로만 계산 · 요청 없음)
+// ✨ 금일·명일 맨 위 요약 (작게 한 줄) → 누르면 창으로 장비별 "공정 · 자리" (받아 둔 데이터로만 · 요청 없음)
+function heroData(d) {
+  var map = {}, order = [];
+  d.stages.forEach(function (s) {
+    s.items.forEach(function (it) {
+      var e = map[it.n];
+      if (!e) { e = map[it.n] = { n: it.n, u: !!it.u, t: it.t || "", loc: "", noLoc: false, st: [] }; order.push(e); }
+      if (it.noLoc) e.noLoc = true;
+      if (it.u) e.u = true;
+      if (!e.loc && it.loc) e.loc = it.loc;
+      if (!e.t && it.t) e.t = it.t;
+      if (e.st.indexOf(s.label) < 0) e.st.push(s.label);
+    });
+  });
+  order.sort(function (a, b) { return (b.u ? 1 : 0) - (a.u ? 1 : 0); });   // 긴급 장비 먼저
+  return order;
+}
 function dashHero(d) {
-  var uniq = {}, items = 0, on = 0;
-  d.stages.forEach(function (s) { if (s.items.length) on++; items += s.items.length; s.items.forEach(function (it) { uniq[it.n] = 1; }); });
-  var eq = Object.keys(uniq).length;
-  var h = el("div", "dhero");
-  var top = el("div", "dh1");
-  top.appendChild(el("span", "dl", cur === 0 ? "오늘" : "내일"));
-  top.appendChild(el("b", null, d.label || ""));
-  h.appendChild(top);
-  var mid = el("div", "dh2");
-  if (eq) {
-    var big = el("div", "dbig"); big.appendChild(el("b", null, String(eq))); big.appendChild(el("small", null, "대 진행"));
-    mid.appendChild(big);
-    mid.appendChild(el("div", "dsub", "공정 " + on + "곳 · " + items + "건"));
-  } else mid.appendChild(el("div", "dnone", (cur === 0 ? "오늘" : "내일") + " 진행할 장비가 없어요"));
-  h.appendChild(mid);
-  var fl = el("div", "dflow");
-  d.stages.forEach(function (s) { var i = el("i", s.items.length ? "on" : ""); i.title = s.label; fl.appendChild(i); });
-  h.appendChild(fl);
-  if (d.stages.length) {
-    var lb = el("div", "dfl");
-    lb.appendChild(el("span", null, d.stages[0].label)); lb.appendChild(el("span", null, d.stages[d.stages.length - 1].label));
-    h.appendChild(lb);
+  var order = heroData(d), day = cur === 0 ? "오늘" : "내일";
+  var h = el("div", "dhero" + (order.length ? " tap" : ""));
+  var lt = el("div", "dhl"); lt.appendChild(el("span", "dl", day)); lt.appendChild(el("b", null, d.label || ""));
+  h.appendChild(lt);
+  var rt = el("div", "dhc");
+  if (order.length) {
+    rt.appendChild(el("small", null, "진행 장비")); rt.appendChild(el("b", null, String(order.length))); rt.appendChild(el("small", null, "대"));
+    rt.appendChild(el("span", "dgo", "›"));
+  } else rt.appendChild(el("small", null, "진행 장비 없음"));
+  h.appendChild(rt);
+  if (order.length) {
+    var names = order.slice(0, 3).map(function (e) { return e.n; }).join(" · ") + (order.length > 3 ? " 외 " + (order.length - 3) + "대" : "");
+    h.appendChild(el("div", "dprev", names));
+    h.onclick = function () { dashSheet(order, day + " " + (d.label || "")); };
+    if (SR.idx && SR.idx.rows) { dlSort(order); h.querySelector(".dprev").textContent = order.slice(0, 3).map(function (e) { return e.n; }).join(" · ") + (order.length > 3 ? " 외 " + (order.length - 3) + "대" : ""); }
   }
   return h;
+}
+// ⏳ 다음 공정 마감이 가까운 순서: 오늘 이후 처음 오는 공정 날짜 (예: 오늘 FRAME 배선 → 다음 Module 작업 10/27 = D-3)
+//    배선·제조완료처럼 여러 날 하는 공정은 그 끝나는 날이 마감 · 장비 검색 목록(날짜) 사용
+function dlOf(name) {
+  var I = SR.idx; if (!I || !I.rows) return null;
+  var row = null; for (var i = 0; i < I.rows.length; i++) if (I.rows[i][0] === name) { row = I.rows[i]; break; }
+  if (!row) return null;
+  var today = ymdLocal(), st = I.stages, dates = row[5];
+  for (var m = 0; m < st.length; m++) if (dates[m] && dates[m] > today) return { label: st[m][1], d: dates[m] };
+  return null;
+}
+function dDays(ymd) { var a = ymdLocal().split("-"), b = ymd.split("-"); return Math.round((new Date(+b[0], +b[1] - 1, +b[2]) - new Date(+a[0], +a[1] - 1, +a[2])) / 864e5); }
+function dlSort(order) {
+  order.forEach(function (e) { e.dl = dlOf(e.n); });
+  order.sort(function (a, b) {
+    var x = a.dl ? a.dl.d : "9999", y = b.dl ? b.dl.d : "9999";
+    return x < y ? -1 : x > y ? 1 : ((b.u ? 1 : 0) - (a.u ? 1 : 0));   // 같은 날이면 긴급 먼저
+  });
+  return order;
+}
+function dashSheet(order, title) {
+  if (!(SR.idx && SR.idx.rows)) {   // 날짜 목록이 아직 없으면 받아서 다시 그림 (10분에 한 번 · 검색과 같이 씀)
+    loadEquipIndex(false).then(function () { if ($("dhov") && $("dhov").className.indexOf("on") >= 0) dashSheet(order, title); });
+  }
+  if (SR.idx && SR.idx.rows) dlSort(order);
+  var ov = $("dhov");
+  if (!ov) { ov = el("div", "ov"); ov.id = "dhov"; document.body.appendChild(ov); ov.onclick = function (e) { if (e.target === ov) ov.className = "ov"; }; }
+  ov.innerHTML = "";
+  var box = el("div", "box dhbox");
+  var hd = el("div", "dhhd"); hd.appendChild(el("b", null, title)); var c = el("span", null, "진행 장비 "); c.appendChild(el("em", null, String(order.length))); c.appendChild(document.createTextNode("대")); hd.appendChild(c);
+  box.appendChild(hd);
+  box.appendChild(el("div", "dhsub", SR.idx && SR.idx.rows ? "다음 공정 마감이 가까운 순서예요" : "마감 날짜 불러오는 중…"));
+  var L = el("div", "dlist");
+  order.forEach(function (e) {
+    var r = el("div", "drow tap");
+    var a = el("div", "dra");
+    a.appendChild(el("b", e.u ? "urg" : null, e.n));
+    memoBadge(a, e.n);   // ⚠️ 부적합 있으면 여기도
+    if (e.t) a.appendChild(el("small", null, e.t));
+    if (e.dl) {   // ⏳ 마감 D-day
+      var dd = dDays(e.dl.d), dt = el("span", "ddl" + (dd <= 1 ? " d1" : dd <= 3 ? " d3" : ""));
+      dt.appendChild(el("small", null, e.dl.label + " " + mdw(e.dl.d)));
+      dt.appendChild(el("b", null, dd === 0 ? "D-DAY" : "D-" + dd));
+      a.appendChild(dt);
+    }
+    r.appendChild(a);
+    var bt = el("div", "drb"), st = el("div", "drs");   // 아래 줄: 공정(왼쪽) · 자리(오른쪽)
+    e.st.forEach(function (x, k) { st.appendChild(el("span", k === e.st.length - 1 ? "now" : null, x)); });
+    bt.appendChild(st);
+    if (e.loc) bt.appendChild(el("span", "dloc", "📍 " + String(e.loc).replace(/^\((본사|동탄)\)\s*/, "$1 ")));
+    else if (e.noLoc) bt.appendChild(el("span", "dloc no", "📍 자리 정보 없음"));
+    r.appendChild(bt);
+    r.onclick = function () { ov.className = "ov"; openEquip(e.n); };
+    L.appendChild(r);
+  });
+  box.appendChild(L);
+  var cb = el("button", "dhclose", "닫기"); cb.type = "button"; cb.onclick = function () { ov.className = "ov"; };
+  box.appendChild(cb);
+  ov.appendChild(box);
+  ov.className = "ov on";
 }
 
 // 마지막으로 서버 데이터를 받은 시각·날짜 (다시 켤 때 오래됐으면 자동 갱신)
@@ -4129,11 +4223,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-24-5";
+var APP_VER = "2026-10-24-9";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
-  ["2026-10-24-5", ["✨ 메인 화면 새 디자인", "금일·명일 맨 위에 오늘 요약 · 공정 흐름"]],
+  ["2026-10-24-9", ["✨ 메인 화면 새 디자인", "금일·명일 맨 위 한 줄 요약 → 누르면 다음 공정 마감 가까운 순으로 장비별 공정 · 자리"]],
   ["2026-10-24-2", ["✨ PIN · 이름 고르기 · 알림 받기 화면 새 디자인", "처음 설정이 끝나면 시작 화면을 거쳐 앱으로"]],
   ["2026-10-23-27", ["📲 설치 안내 화면 새 디자인"]],
   ["2026-10-23-23", ["✨ 시작 화면 새 디자인"]],
