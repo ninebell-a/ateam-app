@@ -4751,7 +4751,7 @@ var APP_VER = "2026-10-25-4";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
-  ["2026-10-25-4", ["✨ 화면 전체 새 디자인 (시작 화면 · 모든 탭 · 창)", "📱 탭이 화면 아래로 (금일 · 명일 · 업로드 · 부적합 · 더보기)", "금일·명일 맨 위 요약 → 누르면 장비별 공정 · 자리 · 마감 D-day", "연차 현황 · 근무시간 · 장비통계 새 화면", "🛠 Claude 자동 업데이트: 예약된 시간에 맞춰 자동으로 업데이트돼요"]],
+  ["2026-10-25-4", ["✨ 화면 전체 새 디자인 (시작 화면 · 모든 탭 · 창)", "📱 탭이 화면 아래로 (금일 · 명일 · 업로드 · 부적합 · 더보기)", "금일·명일 맨 위 요약 → 누르면 장비별 공정 · 자리 · 마감 D-day", "연차 현황 · 근무시간 · 장비통계 새 화면", "🛠 Claude 자동 업데이트: 예약된 시간에 맞춰 자동으로 업데이트돼요", "업데이트 후엔 최신 정보를 다 받은 다음 화면이 열려요"]],
   ["2026-10-25-3", ["🛠 Claude 자동 업데이트: 예약된 시간에 맞춰 자동으로 업데이트돼요"]],
   ["2026-10-25-2", ["장비통계 화면 새 디자인 (이번 달 요약 · 12달 그래프)"]],
   ["2026-10-25-1", ["시작 화면 팀 표시 다듬기"]],
@@ -6154,14 +6154,36 @@ function splashRun(work) {
   splashWait();
   Promise.resolve(work).then(function () { splashClose(); }, function () { splashClose(); });
 }
-// 업데이트 화면 [확인] → 시작 화면에서 금일 데이터 갱신 → 받으면 바로 화면
+// 업데이트 화면 [확인] → 시작 화면에서 금일 데이터 갱신 → 새 정보를 다 받을 때까지 시작 화면 유지 (8초에 옛 화면으로 안 넘어감)
+//   못 받으면 자동으로 다시 시도 (2→3→5→8초 간격, 계속) · 인터넷이 돌아오거나 앱으로 다시 오면 바로 다시 시도
+//   PIN이 틀렸거나(잠금 화면) 앱이 멈춤 상태면 시작 화면을 닫고 그 화면을 보여줌
+var SPU = { n: 0, t: null, busy: false };
 function splashAfterUpdate() {
   if (!SPL.hold) { splashRun(null); return; }   // (보통은 여기 안 옴)
   SPL.hold = false;
-  var work = null;
-  if ($("app").style.display !== "none" && getPin()) { work = loadDash(false); setTimeout(loadUpload, 0); }
-  splashRun(work);
+  if ($("app").style.display === "none" || !getPin()) { splashRun(null); return; }
+  splashRun(new Promise(function () {}));   // 시작 화면 처음부터 · 닫기는 아래에서 직접
+  if (SPL.max) { clearTimeout(SPL.max); SPL.max = null; }   // ⛔ 8초 자동 닫기 없음
+  setTimeout(loadUpload, 0);
+  SPU.n = 0;
+  spuTry();
 }
+function spuTry() {
+  if (SPL.done || SPU.busy) return;
+  if (SPU.t) { clearTimeout(SPU.t); SPU.t = null; }
+  SPU.busy = true; SPU.n++;
+  loadDash(false).then(function (err) {
+    SPU.busy = false;
+    if (SPL.done) return;
+    var ok = !err && store[0] && !store[0].error;
+    if (ok || $("app").style.display === "none" || BLOCKED) { splashClose(); return; }   // ✅ 새 정보 받음 (또는 잠금·멈춤 화면) → 메인으로
+    var s = $("splash"); if (s) s.className = "wait";
+    splashMsg(SPU.n >= 3 ? "인터넷 연결을 확인해 주세요 · 다시 연결하는 중" : "서버 연결이 느려요 · 다시 연결하는 중");
+    SPU.t = setTimeout(spuTry, [2000, 3000, 5000][SPU.n - 1] || 8000);
+  });
+}
+window.addEventListener("online", function () { if (SPU.n && !SPL.done) spuTry(); });
+document.addEventListener("visibilitychange", function () { if (!document.hidden && SPU.n && !SPL.done) spuTry(); });
 // 💾 영구 저장 요청 (폰이 저장 공간을 정리할 때 PIN·이름·기기 번호가 덜 지워지게) · 이미 허용이면 다시 안 물음 · 기다리지 않음
 function askPersist() {
   try {
