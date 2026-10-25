@@ -1,0 +1,83 @@
+# 🛠 Claude 자동 업데이트 (예약 업데이트) — 한 번 만들어 두고 안 건드림
+#  - 저장소 맨 바깥에 index_next.html(또는 test_next.html) + release.json 을 올리면 예약이 걸림
+#      release.json 예) {"start":"2026-10-26 11:30","at":"2026-10-26 11:50","tasks":["새 디자인 적용","데이터 연결 확인"]}
+#      start = 점검 시작(앱 막기) · at = 새 버전으로 바뀌는 시각 · 둘 다 한국 시간 · tasks는 없어도 됨
+#  - at 까지 5시간 30분 이하로 남으면 기다렸다가 정각에 ○○_next.html → ○○.html 로 바꾸고 release.json 삭제
+#    (GitHub 예약 cron은 10~60분 늦거나 건너뛰어서, 매시간 확인 + 안에서 sleep 으로 정각을 맞춤)
+#  - 취소: at 전에 index_next.html · release.json 삭제
+#  - Actions → Claude 자동 업데이트 → Run workflow 를 누르면 기다리지 않고 바로 바꿈
+name: Claude 자동 업데이트
+
+on:
+  push:
+    paths:
+      - index_next.html
+      - test_next.html
+      - release.json
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pages: write
+
+concurrency:
+  group: scheduled-release
+  cancel-in-progress: true
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 예약 확인 · 정각까지 기다리기 · 교체
+        id: rel
+        env:
+          EVENT: ${{ github.event_name }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -e
+          has_next() { [ -f index_next.html ] || [ -f test_next.html ]; }
+          if ! has_next; then echo "_next 파일 없음 → 할 일 없음"; exit 0; fi
+          AT=""
+          if [ "$EVENT" != "workflow_dispatch" ]; then
+            if [ ! -f release.json ]; then echo "release.json 없음 → 자동으로는 안 바꿈 (Run workflow 로만)"; exit 0; fi
+            AT=$(python3 -c "import json;print(json.load(open('release.json'))['at'])")
+            LEFT=$(python3 -c "
+          import datetime as d
+          at=d.datetime.strptime('$AT'.replace('T',' ')[:16],'%Y-%m-%d %H:%M').replace(tzinfo=d.timezone(d.timedelta(hours=9)))
+          print(int((at-d.datetime.now(d.timezone.utc)).total_seconds())+1)")
+            echo "예약: $AT (한국) · 남은 초: $LEFT"
+            if [ "$LEFT" -gt 19800 ]; then echo "5시간 30분보다 멀어서 끝냄 → 매시간 다시 확인"; exit 0; fi
+            if [ "$LEFT" -gt 0 ]; then echo "정각까지 기다림 ($LEFT 초)"; sleep "$LEFT"; fi
+            git fetch -q origin "$BRANCH"
+            git reset -q --hard "origin/$BRANCH"
+            if ! has_next; then echo "_next 파일이 지워짐 → 취소된 예약"; exit 0; fi
+            if [ ! -f release.json ]; then echo "release.json 이 지워짐 → 취소된 예약"; exit 0; fi
+            AT2=$(python3 -c "import json;print(json.load(open('release.json'))['at'])")
+            if [ "$AT2" != "$AT" ]; then echo "예약 시각이 바뀜($AT → $AT2) → 새 작업에 맡김"; exit 0; fi
+          fi
+          for f in index test; do
+            if [ -f "${f}_next.html" ]; then mv "${f}_next.html" "${f}.html"; echo "${f}_next.html → ${f}.html"; fi
+          done
+          rm -f release.json
+          git config user.name "Claude 자동 업데이트"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git commit -q -m "🛠 Claude 자동 업데이트 ($(TZ=Asia/Seoul date '+%Y-%m-%d %H:%M') KST)"
+          for i in 1 2 3; do
+            if git push -q origin "HEAD:${BRANCH}"; then echo "done=1" >> "$GITHUB_OUTPUT"; echo "✅ 교체 완료"; exit 0; fi
+            git pull -q --rebase origin "$BRANCH" || true
+          done
+          echo "❌ 푸시 실패"; exit 1
+
+      - name: GitHub Pages 다시 만들기
+        if: steps.rel.outputs.done == '1'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X POST "repos/${{ github.repository }}/pages/builds" >/dev/null 2>&1 || echo "커밋으로 자동 반영"
