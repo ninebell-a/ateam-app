@@ -1229,6 +1229,34 @@ button.ref.rf:disabled{opacity:1}
 .mnl button.dev{opacity:.6;box-shadow:none;background:transparent}
 #siteov .sitebtns button{border-radius:16px;box-shadow:var(--sh)}
 #siteov .sitebtns button.cur{background:var(--gr);color:#fff;border-color:transparent}
+/* ✨ 장비통계 (B팀과 같은 모양) */
+.sthero{position:relative;overflow:hidden;border-radius:22px;padding:16px;color:#fff;background:linear-gradient(125deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 16px 32px -16px var(--glow),inset 0 1px 0 rgba(255,255,255,.25);display:grid;gap:12px}
+.sthero::before{content:"";position:absolute;right:-20px;top:-40px;width:220px;height:180px;opacity:.28;pointer-events:none;background-image:radial-gradient(rgba(255,255,255,.9) 1.5px,transparent 1.6px);background-size:15px 15px;-webkit-mask-image:radial-gradient(70% 80% at 80% 20%,#000,transparent);mask-image:radial-gradient(70% 80% at 80% 20%,#000,transparent)}
+.sthero>*{position:relative}
+.sthero .dl{justify-self:start;font-size:13px;font-weight:800;padding:5px 12px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.4)}
+.sttiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stt{border-radius:16px;padding:10px 11px;background:rgba(255,255,255,.14);box-shadow:inset 0 0 0 1px rgba(255,255,255,.3);min-width:0}
+.stt small{display:block;font-size:12px;font-weight:800;opacity:.92}
+.stt b{display:block;font-size:24px;font-weight:900;letter-spacing:-.02em;line-height:1.25;white-space:nowrap}
+.stt b i{font-style:normal;font-size:12px;font-weight:800;margin-left:2px;opacity:.9}
+.stt em{display:block;font-style:normal;font-size:11.5px;font-weight:700;opacity:.92}
+.stt.win{background:rgba(255,255,255,.24)}
+.stacc::before{display:none}
+.stacc h4{margin-bottom:6px}
+.stacr{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stac{display:flex;align-items:baseline;gap:6px;min-width:0;white-space:nowrap}
+.stac .tm{font-size:13px;font-weight:800;margin-right:auto}
+.stac .tm.a{color:var(--ta)}.stac .tm.b{color:var(--tb)}
+.stac .v{font-size:21px;font-weight:900;letter-spacing:-.02em}
+.stac.win .v{background:var(--gr);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.stac small{font-size:11px;color:var(--sub);font-weight:700}
+.stchart{position:relative;gap:2px;height:180px;padding-top:0;background:repeating-linear-gradient(to top,transparent 0,transparent calc(25% - 1px),var(--line) calc(25% - 1px),var(--line) 25%);background-size:100% calc(100% - 18px);background-repeat:no-repeat;border-top:1px solid var(--line)}
+.stchart .mc{border-radius:10px 10px 0 0}
+.stchart .mc.now{background:linear-gradient(180deg,rgba(47,111,237,.12),rgba(47,111,237,.04))}
+.stchart .mc.now label{background:none;color:var(--accent);padding:0}
+.stchart .mc .bars{gap:2px}
+.stchart .mc .bars b{width:44%;max-width:13px}
+#stats .leg i{border-radius:50%;width:10px;height:10px}
 /* ✨ 처음 쓰는 화면들 (PIN · 이름 고르기 · 알림 받기) — 시작 화면·설치 안내와 같은 디자인 */
 #gate,#nmov,#pushov{--pv1:#ffffff;--pv2:#e6edf9;--pvc:rgba(255,255,255,.80);--pvbd:rgba(47,111,237,.14);--pvln:rgba(47,111,237,.22);--pvtx:#0f1b33;--pvsb:#66768d;--pvac:#2f6fed;--pvac2:#7aa4ff;--pvgl:rgba(47,111,237,.28);--pvdot:rgba(47,111,237,.10);--pvgr:linear-gradient(120deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%)}
 @media (prefers-color-scheme:dark){#gate,#nmov,#pushov{--pv1:#15295a;--pv2:#060b18;--pvc:rgba(22,36,74,.66);--pvbd:rgba(130,165,255,.16);--pvln:rgba(130,165,255,.26);--pvtx:#ffffff;--pvsb:#8f9fc0;--pvac:#5b8cff;--pvac2:#b4cbff;--pvgl:rgba(91,140,255,.45);--pvdot:rgba(130,165,255,.09)}}
@@ -3297,29 +3325,43 @@ function renderStats(d) {
   var cm = null;
   months.forEach(function (m) { if (m.m === d.current) cm = m; });
 
-  // 요약 카드 2개
-  var grid = el("div", "sgrid");
-  var c1 = el("div", "sc");
-  c1.appendChild(el("h4", null, cm ? parseInt(cm.m.slice(5), 10) + "월 (이번 달)" : "이번 달"));
-  if (cm) {
-    c1.appendChild(srow("A", cm.aPts, cm.aCnt, (cm.aPts || 0) > (cm.bPts || 0)));
-    c1.appendChild(srow("B", cm.bPts, cm.bCnt, (cm.bPts || 0) > (cm.aPts || 0)));
-  } else c1.appendChild(el("div", "sdiff", "이번 달 데이터 없음"));
-  if (d.info && d.info.planned != null) {   // 🚚 현재까지 출하 / 이번 달 예정
-    var done = cm ? (cm.aCnt || 0) + (cm.bCnt || 0) : null;
-    var sd = el("div", "sdiff");
-    if (done != null) { sd.appendChild(document.createTextNode("현재까지 ")); sd.appendChild(el("b", null, done + "대")); sd.appendChild(document.createTextNode(" 출하")); sd.appendChild(el("br")); sd.appendChild(document.createTextNode("/ 예정 " + d.info.planned + "대")); }
-    else sd.appendChild(document.createTextNode("출하 예정 " + d.info.planned + "대"));
-    c1.appendChild(sd);
+  // ✨ 이번 달 (그라데이션 카드 · A팀 / B팀 / 출하·예정 세 칸)
+  var hero = el("div", "sthero");
+  hero.appendChild(el("span", "dl", cm ? parseInt(cm.m.slice(5), 10) + "월 (이번 달)" : "이번 달"));
+  var tiles = el("div", "sttiles");
+  function tile(label, big, unit, sub, win) {
+    var t = el("div", "stt" + (win ? " win" : ""));
+    t.appendChild(el("small", null, label));
+    var bb = el("b", null, big); if (unit) bb.appendChild(el("i", null, unit)); t.appendChild(bb);
+    if (sub) t.appendChild(el("em", null, sub));
+    tiles.appendChild(t);
   }
-  grid.appendChild(c1);
+  if (cm) {
+    tile("A팀", fnum(cm.aPts || 0), "점", (cm.aCnt || 0) + "대 출하", (cm.aPts || 0) > (cm.bPts || 0));
+    tile("B팀", fnum(cm.bPts || 0), "점", (cm.bCnt || 0) + "대 출하", (cm.bPts || 0) > (cm.aPts || 0));
+  }
+  var done = cm ? (cm.aCnt || 0) + (cm.bCnt || 0) : null;
+  if (d.info && d.info.planned != null) tile("출하 / 예정", (done != null ? done : "-") + "/" + d.info.planned, "대", "", false);
+  else if (done != null) tile("출하", String(done), "대", "", false);
+  if (!cm) tiles.appendChild(el("div", "stt", "이번 달 데이터 없음"));
+  hero.appendChild(tiles);
+  box.appendChild(hero);
 
-  var c2 = el("div", "sc");
+  // 올해 누적 (한 줄 · A팀 | B팀)
+  var c2 = el("div", "sc stacc");
   c2.appendChild(el("h4", null, "올해 누적"));
   var tp = d.totals && d.totals.pts, tc = d.totals && d.totals.cnt;
   if (tp) {
-    c2.appendChild(srow("A", tp.A, tc ? tc.A : null, (tp.A || 0) > (tp.B || 0)));
-    c2.appendChild(srow("B", tp.B, tc ? tc.B : null, (tp.B || 0) > (tp.A || 0)));
+    var rw = el("div", "stacr");
+    [["A", tp.A, tc ? tc.A : null], ["B", tp.B, tc ? tc.B : null]].forEach(function (x) {
+      var win = (x[1] || 0) > ((x[0] === "A" ? tp.B : tp.A) || 0);
+      var cc = el("div", "stac" + (win ? " win" : ""));
+      cc.appendChild(el("span", "tm " + x[0].toLowerCase(), x[0] + "팀"));
+      var v = el("span", "v", fnum(x[1] || 0) + "점"); cc.appendChild(v);
+      if (x[2] != null) cc.appendChild(el("small", null, x[2] + "대"));
+      rw.appendChild(cc);
+    });
+    c2.appendChild(rw);
     var diff = d.overall && d.overall.diff;
     if (!diff && tp.A != null && tp.B != null) {
       var df = Math.round((tp.B - tp.A) * 10) / 10;
@@ -3327,8 +3369,7 @@ function renderStats(d) {
     }
     if (diff) c2.appendChild(el("div", "sdiff", diff));
   } else c2.appendChild(el("div", "sdiff", "합계 없음"));
-  grid.appendChild(c2);
-  box.appendChild(grid);
+  box.appendChild(c2);
 
   // 🔍 검토필요 (TYPE으로 카테고리를 판단 못 한 장비)
   if (d.review) {
@@ -3372,9 +3413,13 @@ function renderStats(d) {
   p1.appendChild(leg);
   var max = 0;
   months.forEach(function (m) { max = Math.max(max, m.aPts || 0, m.bPts || 0); });
-  var chart = el("div", "chart");
-  months.forEach(function (m) {
-    var col = el("div", "mc" + (m.m === d.current ? " now" : ""));
+  var cmon = months.slice();   // 1~12월 칸을 다 보여줌 (아직 안 온 달은 빈 칸)
+  var yy = (d.current || (months[0] && months[0].m) || "").slice(0, 4);
+  if (yy) for (var mi = 1; mi <= 12; mi++) { var key = yy + "-" + ("0" + mi).slice(-2); if (!cmon.some(function (x) { return x.m === key; })) cmon.push({ m: key, aPts: 0, bPts: 0, empty: true }); }
+  cmon.sort(function (x, y) { return x.m < y.m ? -1 : 1; });
+  var chart = el("div", "chart stchart");
+  cmon.forEach(function (m) {
+    var col = el("div", "mc" + (m.m === d.current ? " now" : "") + (m.empty ? " fut" : ""));
     var bars = el("div", "bars");
     var a = el("b", "a"), b = el("b", "b");
     a.style.height = max ? Math.round((m.aPts || 0) / max * 100) + "%" : "0";
@@ -3497,7 +3542,7 @@ function fxEnter() {
 }
 function fxCount(root) {
   try { if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return; } catch (e) {}
-  var els = root.querySelectorAll(".sum b, .ssum b, .dhc b, .lv .big, .srow .v, .cnt");
+  var els = root.querySelectorAll(".sum b, .ssum b, .dhc b, .lv .big, .srow .v, .cnt, .stt b, .stac .v, .lvst b, .wkc b");
   Array.prototype.forEach.call(els, function (e) {
     var tn = null; for (var k = 0; k < e.childNodes.length; k++) if (e.childNodes[k].nodeType === 3 && /\d/.test(e.childNodes[k].nodeValue)) { tn = e.childNodes[k]; break; }
     if (!tn) return;
@@ -4661,10 +4706,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-25-1";
+var APP_VER = "2026-10-25-2";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-25-2", ["장비통계 화면 새 디자인 (이번 달 요약 · 12달 그래프)"]],
   ["2026-10-25-1", ["시작 화면 팀 표시 다듬기"]],
   ["2026-10-24-17", ["✨ 위쪽 버튼 · 장비 검색 · 메뉴 · 공지 보내기 · 확인 창 새 디자인"]],
   ["2026-10-24-15", ["요약 창이 깜빡이지 않고, 창이 열린 동안 뒤 화면이 움직이지 않아요"]],
