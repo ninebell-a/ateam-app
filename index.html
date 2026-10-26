@@ -415,6 +415,8 @@ li:first-child{border-top:0}
 #ntfrom .chip.on,#ntto .chip.on{background:var(--accent);border-color:var(--accent);color:#fff}
 #ttlbtn{cursor:pointer;-webkit-tap-highlight-color:transparent}
 #ttlbtn.adm{color:var(--warn)}
+#ttlbtn.dev{color:#10b981}
+@media (prefers-color-scheme:dark){#ttlbtn.dev{color:#34d399}}
 .chip:disabled{opacity:1;background:transparent;color:var(--sub);border:1.5px dashed var(--line);font-weight:500}
 .chip:disabled::before{content:"🔒 ";font-size:12px}
 .btns .clr.lock{color:var(--sub);border-style:dashed}
@@ -4846,7 +4848,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-26-15";
+var APP_VER = "2026-10-26-17";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
@@ -5666,7 +5668,7 @@ function adminSetChief() {   // 👔 총괄팀장: 관리자 모드 PIN 창 없�
 function adminUI() {
   try { pushBarUI(); } catch (e) {}
   var on = adminOn();
-  $("ttlbtn").className = on ? "adm" : "";
+  $("ttlbtn").className = DV.pin ? "dev" : on ? "adm" : "";   // 🛠 개발자 = 초록 (관리자 빨강보다 우선)
   if ($("hname")) updNote();
 }
 function isOther(name) { return !!(name && myName() && name !== myName()); }
@@ -5710,7 +5712,7 @@ $("apgo").onclick = function () {
       return;
     }
     if (NT.next === "devnotice") {   // 🛠 개발자로 공지: PIN 확인 뒤 쓰던 내용 그대로 다시 열기
-      DV.pin = pin; closeAdminGate();
+      DV.pin = pin; adminUI(); closeAdminGate();
       var keepPin = NT.keepPin || "", keepBody = NT.keep || "";
       openNotice(); NT.pin = keepPin; NT.from = DEV_SENDER; ntChips();
       $("ntbody").value = keepBody; ntPreview();
@@ -5718,7 +5720,7 @@ $("apgo").onclick = function () {
       return;
     }
     if (NT.next === "devname") {   // 🛠 이 폰을 개발자 이름으로
-      DV.pin = pin; closeAdminGate();
+      DV.pin = pin; adminUI(); closeAdminGate();
       chiefClear(); sset("myName", DEV_NAME); sset("nameOK", "1");
       toast("🛠 개발자(" + DEV_NAME + ")로 정해졌어요");
       devRegister(true);
@@ -5726,7 +5728,7 @@ $("apgo").onclick = function () {
       setTimeout(pushAutoAsk, 800);
       return;
     }
-    if (dev) { DV.pin = pin; closeAdminGate(); mnBackHide(); openDevPanel(); if (cur === 0) render(); return; }
+    if (dev) { DV.pin = pin; adminUI(); closeAdminGate(); mnBackHide(); openDevPanel(); if (cur === 0) render(); return; }
     if (NT.next === "mode") { adminSet(pin); closeAdminGate(); mnBackHide(); toast("🔑 관리자 모드 켜짐 · 오늘 자정까지"); return; }   // 관리자 모드는 이 메뉴로만 켜짐 (공지 보내기로는 안 켜짐)
     NT.pin = pin;
     closeAdminGate(); mnBackHide();
