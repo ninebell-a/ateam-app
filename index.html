@@ -5,21 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<meta name="theme-color" content="#2f6fed">
 <script>
 // 📱 앱처럼: 두 손가락 확대·축소 막기 (아이폰은 viewport 설정만으론 안 막혀서)
 document.addEventListener("gesturestart", function (e) { e.preventDefault(); });
 document.addEventListener("touchmove", function (e) { if (e.touches && e.touches.length > 1) e.preventDefault(); }, { passive: false });
 // 📲 홈 화면 앱 이름·시작 주소: test.html이면 테스트용(manifest-test.json)으로 따로 깔리게
+// 🎄 크리스마스: 11/30 0시 ~ 12/31 (1/1 0시에 끝) 자동 (개발자 "미리보기"를 켠 폰은 언제나) → <html class="xmas"> · 아이콘도 크리스마스용
+function xmasDate(d) { return (d.getMonth() === 10 && d.getDate() === 30) || d.getMonth() === 11; }
+var XMAS = (function () {
+  var d = new Date(), on = xmasDate(d);
+  try { if (localStorage.getItem((/test\.html$/i.test(location.pathname) ? "ta_" : "a_") + "xmasPv") === "1") on = true; } catch (e) {}
+  if (on) document.documentElement.className += " xmas";
+  return on;
+})();
 (function () {
   var t = /test\.html$/i.test(location.pathname);
+  var ic = XMAS ? "icon-xmas.png" : "icon.png";
+  document.write('<link rel="apple-touch-icon" href="' + ic + '"><link rel="icon" type="image/png" href="' + ic + '">'
+    + (XMAS ? '<meta name="theme-color" content="#b3132a">' : '<meta name="theme-color" content="#2f6fed">'));
   document.write('<meta name="apple-mobile-web-app-title" content="' + (t ? "제조1-A 테스트" : "제조1-A") + '">'
     + '<link rel="manifest" href="' + (t ? "manifest-test.json" : "manifest.json") + '">');
 })();
 </script>
 <meta name="mobile-web-app-capable" content="yes">
-<link rel="apple-touch-icon" href="icon.png">
-<link rel="icon" type="image/png" href="icon.png">
 <title>제조1-A</title>
 <style>
 :root{--urg:#d92d20;--bg:#f4f6f9;--card:#fff;--text:#1d2530;--sub:#7b8794;--line:#e3e8ee;--accent:#2f6fed;--warn:#e5484d;--ok:#1f9d55;--ta:#3b82f6;--tb:#ef4444}
@@ -1431,6 +1439,184 @@ button.ref.rf:disabled{opacity:1}
 @keyframes pvSpin{to{transform:rotate(360deg)}}
 @keyframes pvFade{from{opacity:0}}
 @media (prefers-reduced-motion:reduce){#gate *,#nmov *,#pushov *{animation:none!important}}
+/* 🎄 크리스마스 (12/1~12/26 자동 · html.xmas) ─ 밤하늘 · 오로라 · 회로로 자라는 트리 · 눈 쌓인 카드 · 오너먼트 */
+html.xmas{--gr:linear-gradient(120deg,#a50f25 0%,#d62f43 55%,#ef5a4c 100%);--glow:rgba(214,47,67,.34);--accent:#16824a;--xg:#b9821a;--fl:#c6d3e8;
+  --xcap:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 18' preserveAspectRatio='none'%3E%3Cpath d='M0 0H400V7C388 13 378 9 366 12S344 18 334 11 314 8 300 12 278 15 266 9 246 11 232 15 214 9 196 12 178 16 164 10 146 9 130 13 108 16 96 10 76 9 60 13 40 15 28 9 10 11 0 8Z' fill='%23fff'/%3E%3C/svg%3E");
+  --xstar:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='90' height='90'%3E%3Cg fill='%23fff'%3E%3Ccircle cx='12' cy='18' r='.9' opacity='.7'/%3E%3Ccircle cx='58' cy='9' r='1.2' opacity='.9'/%3E%3Ccircle cx='76' cy='44' r='.8' opacity='.6'/%3E%3Ccircle cx='30' cy='62' r='1' opacity='.75'/%3E%3Ccircle cx='66' cy='78' r='.7' opacity='.5'/%3E%3Ccircle cx='8' cy='84' r='.8' opacity='.6'/%3E%3C/g%3E%3Cpath d='M44 34l1.2 3.3 3.3 1.2-3.3 1.2L44 43l-1.2-3.3-3.3-1.2 3.3-1.2z' fill='%23ffe08a' opacity='.85'/%3E%3C/svg%3E")}
+@media (prefers-color-scheme:dark){html.xmas{--gr:linear-gradient(120deg,#b3132a 0%,#e0424f 55%,#ff6f5e 100%);--glow:rgba(255,90,100,.42);--accent:#4fcf8a;--xg:#ffd36b;--fl:#fff}}
+
+/* ── 큰 요약 카드: 밤하늘·빨강·초록 + 위에 눈이 소복이 ── */
+html.xmas .dhero{background:var(--xcap) top/100% 13px no-repeat,var(--xstar) 0 0/90px 90px,linear-gradient(135deg,#132049 0%,#2b2163 55%,#62204f 100%)}
+html.xmas #upload>.sum{background:var(--xcap) top/100% 13px no-repeat,var(--xstar) 0 0/90px 90px,linear-gradient(130deg,#860c20 0%,#c3233a 55%,#e2553f 100%)}
+html.xmas .lvhero,html.xmas #memo>.sum{background:var(--xcap) top/100% 13px no-repeat,var(--xstar) 0 0/90px 90px,linear-gradient(130deg,#0b3a2b 0%,#12623f 55%,#2b8a55 100%)}
+html.xmas .sthero,html.xmas #sched>.ssum{background:var(--xcap) top/100% 13px no-repeat,var(--xstar) 0 0/90px 90px,linear-gradient(130deg,#171c3c 0%,#2a2a5f 55%,#7a5a1e 100%)}
+html.xmas .dhero,html.xmas .lvhero,html.xmas .sthero,html.xmas #upload>.sum,html.xmas #memo>.sum,html.xmas #sched>.ssum{padding-top:18px;box-shadow:0 16px 30px -16px rgba(120,20,40,.45),inset 0 -1px 0 rgba(255,255,255,.12)}
+html.xmas .dhero::before,html.xmas .dhero::after{opacity:.35}
+.xdd{display:inline-flex;align-items:center;gap:3px;margin-left:8px;padding:2px 9px;border-radius:999px;background:rgba(255,255,255,.16);border:1px solid rgba(255,224,138,.55);color:#ffe08a;font-size:11.5px;font-weight:900;letter-spacing:.02em;vertical-align:2px;white-space:nowrap}
+/* 🍬 카드 왼쪽 줄 = 지팡이 사탕 · 타임라인 점 = 오너먼트 */
+html.xmas .card::before,html.xmas .lvb::before,html.xmas .eqd::before,html.xmas .ntc::before{background:repeating-linear-gradient(160deg,#d62f43 0 6px,#fff 6px 11px);box-shadow:0 0 0 .5px rgba(214,47,67,.35)}
+html.xmas .tl>.card:not(.empty)::after{width:14px;height:14px;left:-23px;background:radial-gradient(circle at 34% 30%,#fff 0 14%,#ff6b78 16%,#c81e34 62%,#7e0d1f 100%);box-shadow:0 0 0 3px var(--bg),0 0 12px rgba(214,47,67,.55)}
+html.xmas .tl>.card:not(.empty):nth-of-type(4n+2)::after{background:radial-gradient(circle at 34% 30%,#fff 0 14%,#ffe08a 16%,#e3a826 62%,#8a5d0c 100%);box-shadow:0 0 0 3px var(--bg),0 0 12px rgba(233,185,73,.6)}
+html.xmas .tl>.card:not(.empty):nth-of-type(4n+3)::after{background:radial-gradient(circle at 34% 30%,#fff 0 14%,#6fe0a2 16%,#1e9a5c 62%,#0b4d2c 100%);box-shadow:0 0 0 3px var(--bg),0 0 12px rgba(46,170,100,.55)}
+html.xmas .tl>.card:not(.empty):nth-of-type(4n+4)::after{background:radial-gradient(circle at 34% 30%,#fff 0 14%,#8fc4ff 16%,#2f6fed 62%,#132f78 100%);box-shadow:0 0 0 3px var(--bg),0 0 12px rgba(47,111,237,.55)}
+/* 🎅 제목 위 산타 모자 */
+html.xmas #ttlbtn{position:relative}
+html.xmas #ttlbtn::before{content:"";position:absolute;left:-15px;top:-15px;width:21px;height:19px;transform:rotate(-24deg);pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 44'%3E%3Cpath d='M6 34C10 16 22 4 36 6c6 1 9 7 8 14l-6-3c-1 9-3 14-6 17z' fill='%23d62f43'/%3E%3Crect x='3' y='31' width='34' height='9' rx='4.5' fill='%23fff'/%3E%3Ccircle cx='42' cy='22' r='5' fill='%23fff'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 2px 2px rgba(0,0,0,.18))}
+/* 💡 헤더 아래 전구 줄 (두 겹이 번갈아 반짝) */
+#xlights{position:absolute;left:0;right:0;bottom:-8px;height:15px;pointer-events:none;z-index:1;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='15' viewBox='0 0 120 15'%3E%3Cpath d='M0 2Q15 9 30 2T60 2T90 2T120 2' fill='none' stroke='%23395e45' stroke-width='1.2'/%3E%3Crect x='13.6' y='4' width='2.8' height='2.4' rx='.6' fill='%23395e45'/%3E%3Crect x='43.6' y='4' width='2.8' height='2.4' rx='.6' fill='%23395e45'/%3E%3Crect x='73.6' y='4' width='2.8' height='2.4' rx='.6' fill='%23395e45'/%3E%3Crect x='103.6' y='4' width='2.8' height='2.4' rx='.6' fill='%23395e45'/%3E%3Cellipse cx='15' cy='9.6' rx='3' ry='4.2' fill='%23ff4d5e'/%3E%3Cellipse cx='45' cy='9.6' rx='3' ry='4.2' fill='%23ffd166'/%3E%3Cellipse cx='75' cy='9.6' rx='3' ry='4.2' fill='%2337c27a'/%3E%3Cellipse cx='105' cy='9.6' rx='3' ry='4.2' fill='%2359a6ff'/%3E%3C/svg%3E") 0 0/120px 15px repeat-x}
+#xlights::before,#xlights::after{content:"";position:absolute;inset:0;background:inherit;filter:blur(4px) brightness(1.4) saturate(1.4);opacity:.2;animation:xTw 1.8s ease-in-out infinite alternate}
+#xlights::after{background-position:60px 0;animation-delay:-.9s}
+@keyframes xTw{from{opacity:.08}to{opacity:.9}}
+/* ⬜ 아래 탭바 위에 쌓인 눈 · 고른 탭은 빨강 + 금빛 테 */
+html.xmas #tbar::before{content:"";position:absolute;left:18px;right:18px;top:-5px;height:11px;pointer-events:none;background:var(--xcap) top/100% 100% no-repeat;filter:drop-shadow(0 1px 1px rgba(30,50,90,.15));border-radius:6px 6px 0 0}
+html.xmas #tbar button.on{box-shadow:0 8px 18px -8px var(--glow),inset 0 0 0 1.5px rgba(255,224,138,.6)}
+/* ❄ 눈 (메인은 은은하게) */
+.xsnow{position:fixed;inset:0;pointer-events:none;overflow:hidden;z-index:3}
+.xsnow i{position:absolute;top:-4vh;left:var(--x);width:var(--s);height:var(--s);border-radius:50%;background:var(--fl,#c6d3e8);opacity:var(--o);
+  animation:xFall var(--d) linear var(--dl) infinite;will-change:transform}
+@keyframes xFall{0%{transform:translate3d(0,0,0)}50%{transform:translate3d(var(--w),55vh,0)}100%{transform:translate3d(0,112vh,0)}}
+@media (prefers-color-scheme:dark){.xsnow i{box-shadow:0 0 4px rgba(255,255,255,.7)}}
+@media (prefers-reduced-motion:reduce){.xsnow,#xs .xaur{display:none}}
+
+/* ════ ⭐ 크리스마스 시작 화면: 밤하늘 · 오로라 · 칩에서 회로가 자라 트리가 되고 별이 켜짐 ════ */
+html.xmas #splash>*:not(#xs):not(.spm){display:none!important}
+html.xmas #splash{background:#04060d}
+html.xmas #splash::before{display:none}
+#xs{position:absolute;inset:0;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;padding-bottom:6vh;color:#fff;
+  background:radial-gradient(130% 70% at 50% 0%,#1d2c63 0%,#0c1430 45%,#04060d 100%)}
+#xs .xsnow{position:absolute;z-index:4}
+#xs .xsnow.far i{filter:blur(.6px)}
+#xs .xaur{position:absolute;left:-30%;right:-30%;top:-8%;height:55%;pointer-events:none;filter:blur(38px);opacity:.55;mix-blend-mode:screen;
+  background:radial-gradient(40% 50% at 30% 50%,rgba(52,214,140,.55),transparent 70%),radial-gradient(35% 45% at 70% 40%,rgba(120,90,255,.5),transparent 70%),radial-gradient(30% 40% at 52% 62%,rgba(40,190,230,.4),transparent 70%);
+  animation:xAur 9s ease-in-out infinite alternate}
+@keyframes xAur{from{transform:translate3d(-6%,0,0) scaleY(1)}to{transform:translate3d(6%,4%,0) scaleY(1.15)}}
+#xs .xstars{position:absolute;left:0;top:0;width:1px;height:1px;border-radius:50%;pointer-events:none;opacity:.8;animation:xTwS 3.2s ease-in-out infinite alternate;
+  -webkit-mask-image:linear-gradient(#000 0%,#000 55%,transparent 80%);mask-image:linear-gradient(#000 0%,#000 55%,transparent 80%)}
+@keyframes xTwS{from{opacity:.4}to{opacity:.85}}
+#xs .xgnd{position:absolute;left:-5%;right:-5%;bottom:-2px;height:22vh;pointer-events:none;z-index:3}
+#xs .xtree{position:relative;z-index:2;width:min(64vw,250px);height:auto;overflow:visible;filter:drop-shadow(0 0 10px rgba(80,230,150,.25))}
+#xs .xtr{fill:none;stroke:#47e294;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:1;stroke-dashoffset:1;animation:xDraw 1.05s cubic-bezier(.5,0,.3,1) var(--t) forwards;filter:drop-shadow(0 0 3px rgba(71,226,148,.9))}
+#xs .xtr.xtk{stroke-width:3;animation-duration:1.5s}
+#xs .xsil{fill:none;stroke:rgba(120,240,180,.22);stroke-width:1;stroke-dasharray:3 4;opacity:0;animation:xFade 1s ease 2.3s forwards}
+@keyframes xDraw{to{stroke-dashoffset:0}}
+@keyframes xFade{to{opacity:1}}
+#xs .xvia{transform-box:fill-box;transform-origin:center;transform:scale(0);animation:xPop .45s cubic-bezier(.2,1.6,.4,1) var(--t) forwards,xBlink var(--b) ease-in-out calc(var(--t) + .6s) infinite alternate}
+#xs .xvia.r{fill:#ff4d5e;filter:drop-shadow(0 0 4px #ff4d5e)}#xs .xvia.g{fill:#ffd166;filter:drop-shadow(0 0 4px #ffd166)}
+#xs .xvia.b{fill:#6cb6ff;filter:drop-shadow(0 0 4px #6cb6ff)}#xs .xvia.w{fill:#fff;filter:drop-shadow(0 0 4px #fff)}
+@keyframes xPop{to{transform:scale(1)}}
+@keyframes xBlink{from{opacity:1}to{opacity:.35}}
+#xs .xchip rect.xbd{fill:#0e1730;stroke:#e9b949;stroke-width:1.4}
+#xs .xchip .xpin{stroke:#e9b949;stroke-width:2;stroke-linecap:round}
+#xs .xchip text{fill:#ffe08a;font:900 13px -apple-system,BlinkMacSystemFont,"Pretendard","Apple SD Gothic Neo",sans-serif;letter-spacing:1px}
+#xs .xchip{opacity:0;animation:xFade .7s ease .08s forwards}
+#xs .xstar{transform-box:fill-box;transform-origin:center;transform:scale(0) rotate(-90deg);animation:xStar .9s cubic-bezier(.2,1.5,.4,1) 3.3s forwards}
+#xs .xstar path{fill:url(#xsg);filter:drop-shadow(0 0 6px #ffd166) drop-shadow(0 0 16px rgba(255,209,102,.8))}
+@keyframes xStar{to{transform:scale(1) rotate(0)}}
+#xs .xray{transform-box:fill-box;transform-origin:center;opacity:0;animation:xRay 1.5s ease-out 3.6s forwards}
+@keyframes xRay{0%{opacity:0;transform:scale(.2)}35%{opacity:.9}100%{opacity:0;transform:scale(2.6)}}
+#xs .xhalo{transform-box:fill-box;transform-origin:center;opacity:0;animation:xFade .8s ease 3.7s forwards,xHalo 2.4s ease-in-out 4.6s infinite alternate}
+@keyframes xHalo{from{transform:scale(1);opacity:.55}to{transform:scale(1.25);opacity:.9}}
+#xs .xmc{position:relative;z-index:2;margin-top:14px;font:italic 400 clamp(30px,9.5vw,40px)/1.1 Georgia,"Times New Roman",serif;letter-spacing:.01em;
+  background:linear-gradient(100deg,#ffe9a8 0%,#ffd166 35%,#fff 50%,#ffd166 65%,#e9b949 100%) 120% 0/250% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  opacity:0;filter:blur(6px);animation:xMc 1.1s ease 3.55s forwards,xShine .9s ease-in-out 4.75s forwards;text-shadow:none}
+@keyframes xMc{to{opacity:1;filter:none}}
+@keyframes xShine{to{background-position:-30% 0}}
+#xs .xtm{position:relative;z-index:2;margin-top:10px;font-size:11.5px;font-weight:800;letter-spacing:.5em;padding-left:.5em;color:rgba(255,255,255,.78);opacity:0;animation:xFade .8s ease 4.1s forwards}
+#xs .xtm b{color:#ffe08a;font-weight:900}
+#xs .xcd{position:relative;z-index:2;margin-top:14px;padding:5px 13px;border-radius:999px;background:rgba(255,255,255,.08);border:1px solid rgba(255,224,138,.35);color:#ffe9b0;font-size:12.5px;font-weight:800;opacity:0;animation:xFade .8s ease 4.4s forwards;-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px)}
+html.xmas #splash .spm{position:absolute;left:0;right:0;bottom:calc(7vh + env(safe-area-inset-bottom));z-index:6;color:rgba(255,255,255,.85)}
+/* ════ 🎄 크리스마스 디테일 (탭마다) ════ */
+html.xmas{--ta:#1f9d5c;--tb:#d62f43;
+  --xholly:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cpath d='M20 18C16 11 8 10 3 14c3 1 4 4 3 7 1-1 3-1 4 0 0-2 2-3 4-2 1-2 4-1 6-1z' fill='%231f8a4c'/%3E%3Cpath d='M20 18c4-7 12-8 17-4-3 1-4 4-3 7-1-1-3-1-4 0 0-2-2-3-4-2-1-2-4-1-6-1z' fill='%232fa865'/%3E%3Cpath d='M20 18 6 15M20 18l14-3' stroke='%23146b3a' stroke-width='.7'/%3E%3Ccircle cx='16.6' cy='19.6' r='3.1' fill='%23c41d35'/%3E%3Ccircle cx='23.4' cy='19.6' r='3.1' fill='%23e23d4b'/%3E%3Ccircle cx='20' cy='15.2' r='3.1' fill='%23d62f43'/%3E%3Ccircle cx='15.6' cy='18.6' r='.9' fill='%23fff' opacity='.8'/%3E%3Ccircle cx='22.4' cy='18.6' r='.9' fill='%23fff' opacity='.8'/%3E%3Ccircle cx='19' cy='14.2' r='.9' fill='%23fff' opacity='.8'/%3E%3C/svg%3E");
+  --xflake:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='none' stroke='%23b8c8e2' stroke-width='1.2' stroke-linecap='round' opacity='.55'%3E%3Cg transform='translate(40 46)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5M-2-7 0-5 2-7M-2 7 0 5 2 7'/%3E%3C/g%3E%3Cg transform='translate(168 120) scale(.7)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3Cg transform='translate(96 186) scale(.55)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}
+@media (prefers-color-scheme:dark){html.xmas{--ta:#42c983;--tb:#ff5f6b;
+  --xflake:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1.2' stroke-linecap='round' opacity='.07'%3E%3Cg transform='translate(40 46)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5M-2-7 0-5 2-7M-2 7 0 5 2 7'/%3E%3C/g%3E%3Cg transform='translate(168 120) scale(.7)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3Cg transform='translate(96 186) scale(.55)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")}}
+/* 바탕: 은은한 눈송이 무늬 */
+html.xmas body{background-image:var(--xflake);background-size:220px 220px;background-attachment:fixed}
+/* 카드: 오른쪽 아래 호랑가시나무 (빨간 열매) */
+html.xmas .card:not(.empty):not(.lcal):not(.lv),html.xmas .wk{background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--card)}
+html.xmas .card.empty{background:rgba(255,255,255,.45);border-style:dashed}
+@media (prefers-color-scheme:dark){html.xmas .card.empty{background:rgba(255,255,255,.03)}}
+/* 타임라인 세로줄 = 반짝이 갈런드 */
+html.xmas .tl::before{width:3px;left:6.5px;background:repeating-linear-gradient(180deg,#1f8a4c 0 9px,#e9b949 9px 12px,#1f8a4c 12px 21px,#d62f43 21px 24px);opacity:.85;box-shadow:0 0 6px rgba(31,138,76,.35)}
+
+/* ── 아래 탭바: 초록 타탄 + 금빛 글자 · 고른 탭은 빨강 리본 + 작은 별 ── */
+html.xmas #tbar{background:repeating-linear-gradient(90deg,rgba(255,255,255,.05) 0 2px,transparent 2px 16px),repeating-linear-gradient(0deg,rgba(0,0,0,.08) 0 2px,transparent 2px 16px),
+  repeating-linear-gradient(90deg,transparent 0 6px,rgba(214,47,67,.18) 6px 8px,transparent 8px 16px),linear-gradient(180deg,#17704a 0%,#0d4f33 100%);
+  box-shadow:0 18px 36px -14px rgba(8,50,30,.6),inset 0 1px 0 rgba(255,255,255,.18),inset 0 0 0 1px rgba(233,185,73,.35)}
+html.xmas #tbar button{color:rgba(255,246,225,.78)}
+html.xmas #tbar button.on{color:#fff;background:linear-gradient(160deg,#e0424f 0%,#b3132a 100%);box-shadow:0 8px 16px -8px rgba(120,10,30,.8),inset 0 0 0 1.5px rgba(255,224,138,.75),inset 0 1px 0 rgba(255,255,255,.3)}
+html.xmas #tbar button.on::after{content:"";position:absolute;top:-6px;left:50%;width:12px;height:12px;margin-left:-6px;pointer-events:none;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5l3 6.6 7.2.8-5.4 4.8 1.5 7.1L12 17.2 5.7 20.8l1.5-7.1L1.8 8.9 9 8.1z' fill='%23ffd166' stroke='%23b8860b' stroke-width='.8'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 0 4px rgba(255,209,102,.9));animation:xTwk 2.2s ease-in-out infinite alternate}
+@keyframes xTwk{from{transform:scale(.85) rotate(-8deg)}to{transform:scale(1.1) rotate(8deg)}}
+html.xmas #tbar button em{box-shadow:0 0 0 2px #fff}
+html.xmas #tbar::before{filter:drop-shadow(0 1px 1px rgba(0,0,0,.25))}
+
+/* ── 📊 장비통계: 막대 = 지팡이 사탕 (A팀 초록 · B팀 빨강) · 막대 위 눈 · 이번 달 위에 별 ── */
+html.xmas .mc .bars b{box-shadow:inset 0 3px 0 rgba(255,255,255,.95),0 2px 6px -2px rgba(0,0,0,.25)}
+html.xmas .mc .bars .a{background:repeating-linear-gradient(135deg,#1f8a4c 0 5px,#f2fbf5 5px 8px)}
+html.xmas .mc .bars .b{background:repeating-linear-gradient(135deg,#d62f43 0 5px,#fff5f6 5px 8px)}
+html.xmas .stchart .mc.now{position:relative;background:linear-gradient(180deg,rgba(233,185,73,.16),rgba(233,185,73,.03))}
+html.xmas .stchart .mc.now::before{content:"";position:absolute;top:-4px;left:50%;width:16px;height:16px;margin-left:-8px;
+  background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 1.5l3 6.6 7.2.8-5.4 4.8 1.5 7.1L12 17.2 5.7 20.8l1.5-7.1L1.8 8.9 9 8.1z' fill='%23ffd166' stroke='%23b8860b' stroke-width='.8'/%3E%3C/svg%3E") center/contain no-repeat;filter:drop-shadow(0 0 5px rgba(255,209,102,.9))}
+html.xmas .stchart .mc.now label{color:#b8860b}
+html.xmas .tcmp .bar i{background-image:repeating-linear-gradient(135deg,rgba(255,255,255,.5) 0 4px,transparent 4px 9px)!important}
+
+/* ── ⏱ 근무시간·진행 막대: 움직이는 지팡이 사탕 ── */
+html.xmas .bar i{background:linear-gradient(135deg,#d62f43 25%,#fff4f5 25% 50%,#d62f43 50% 75%,#fff4f5 75%) 0 0/16px 16px;box-shadow:0 0 10px -2px rgba(214,47,67,.6);animation:xCane 1.1s linear infinite}
+html.xmas .enter .bar i{animation:fxX .9s cubic-bezier(.2,.9,.3,1) .2s both,xCane 1.1s linear infinite}
+html.xmas .lv.low .bar i{background:linear-gradient(135deg,#a50f25 25%,#ffd9dd 25% 50%,#a50f25 50% 75%,#ffd9dd 75%) 0 0/16px 16px}
+@keyframes xCane{to{background-position:16px 0}}
+/* 🔴 연차 링: 빨강 → 초록 */
+html.xmas .lvring stop:first-child{stop-color:#e0424f}html.xmas .lvring stop:last-child{stop-color:#1f8a4c}
+html.xmas .lv2.low .lvring stop:first-child{stop-color:#ffb3b8}html.xmas .lv2.low .lvring stop:last-child{stop-color:#c41d35}
+html.xmas .lvring .rf{filter:drop-shadow(0 2px 4px rgba(214,47,67,.35))}
+/* 📅 연차 달력: 이브·크리스마스 칸 */
+.lcd.lc-xm{background:linear-gradient(160deg,rgba(214,47,67,.16),rgba(31,138,76,.16));border-color:rgba(233,185,73,.6)}
+.lcd.lc-xm i::after{content:attr(data-x);margin-left:1px}
+/* 불러오는 중 */
+html.xmas .msg::before{content:"❄ ";color:#8fb0e0}
+/* ⏱ 근무시간 달력: 입력한 날 = 리본 묶은 선물 상자 · 빈 평일 = 빨간 표시 그대로 · 주말은 서리 · 이브·크리스마스 표시 */
+html.xmas .cal .cd:not(.gap):not(.we):not(.fut):not(.txt){background:linear-gradient(90deg,transparent 45%,rgba(214,47,67,.22) 45% 55%,transparent 55%),linear-gradient(transparent 38%,rgba(214,47,67,.22) 38% 48%,transparent 48%),linear-gradient(180deg,rgba(31,138,76,.10),rgba(31,138,76,.04));box-shadow:inset 0 0 0 1px rgba(31,138,76,.28)}
+html.xmas .cal .cd.txt{background:linear-gradient(180deg,rgba(233,185,73,.16),rgba(233,185,73,.05));box-shadow:inset 0 0 0 1px rgba(233,185,73,.45)}
+html.xmas .cal .cd.we{background:repeating-linear-gradient(135deg,rgba(150,175,215,.10) 0 4px,transparent 4px 8px),var(--card)}
+html.xmas .cal .cd.xm{box-shadow:inset 0 0 0 1.5px rgba(233,185,73,.8)}
+html.xmas .cal .cd.xm i::after{content:attr(data-x);margin-left:1px}
+html.xmas .cal .cd.today i{background:linear-gradient(135deg,#e0424f,#a50f25);box-shadow:0 0 0 1.5px rgba(255,224,138,.7)}
+/* 🎁 연차 사람 카드: 오른쪽 위 모서리에 리본 + 나비매듭 */
+html.xmas .card.lv{background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 40 30'%3E%3Cpath d='M20 15C14 5 4 4 4 11s10 6 16 4z' fill='%23d62f43'/%3E%3Cpath d='M20 15c6-10 16-11 16-4s-10 6-16 4z' fill='%23e8475a'/%3E%3Cpath d='M18 16l-6 13 4-1 3 3 2-14zM22 16l6 13-4-1-3 3-2-14z' fill='%23b3132a'/%3E%3Ccircle cx='20' cy='15' r='3.6' fill='%23c41d35'/%3E%3Cpath d='M9 9c2-2 6-1 8 3M31 9c-2-2-6-1-8 3' stroke='%23fff' stroke-width='1' fill='none' opacity='.45'/%3E%3C/svg%3E") right 8px top 6px/34px 26px no-repeat,
+  linear-gradient(225deg,transparent 0 21px,#d62f43 21px 28px,transparent 28px) right top/64px 64px no-repeat,var(--card)}
+html.xmas .card.lv .lvnm{padding-right:30px}
+/* 🦌 나인벨 로고: 순록 뿔 머리띠 + 흔들리는 금종 (NINE·BELL) */
+html.xmas .brand picture{position:relative}
+#xdeer{position:absolute;left:50%;top:-15px;width:44px;height:17px;margin-left:-22px;pointer-events:none;z-index:2}
+#xdeer svg{width:100%;height:100%;overflow:visible}
+#xbell{position:absolute;right:3px;bottom:-15px;width:13px;height:16px;pointer-events:none;transform-origin:50% 0;animation:xBell 1.8s ease-in-out infinite;z-index:2}
+@keyframes xBell{0%,100%{transform:rotate(14deg)}50%{transform:rotate(-14deg)}}
+@media (prefers-reduced-motion:reduce){#xbell{animation:none}}
+/* 🔖 업로드 시트 버튼 = 선물 태그 (작은 구멍) */
+html.xmas .sheet:not(.op)::after{content:"";display:inline-block;width:5px;height:5px;margin-left:6px;border-radius:50%;box-shadow:inset 0 0 0 1.4px currentColor;vertical-align:2px;opacity:.7}
+/* 창(시트) 위 손잡이 = 작은 오너먼트 줄 */
+html.xmas #tmov .box::before,html.xmas .ov.on:not(#nmov)>.box::before{background:linear-gradient(90deg,#d62f43 0 33%,#e9b949 33% 66%,#1f8a4c 66%)!important}
+/* 🎁 카드 바탕: 흰색 대신 따뜻한 크리스마스 종이 (작은 눈송이 무늬) · 공정 카드는 오너먼트 색으로 은은하게 */
+html.xmas{--xpap:#fffaf2;--xsn:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70'%3E%3Cg fill='none' stroke='%23d9b98a' stroke-width='1' stroke-linecap='round' opacity='.38'%3E%3Cg transform='translate(16 18) scale(.55)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3Cg transform='translate(52 50) scale(.4)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3C/g%3E%3Ccircle cx='50' cy='14' r='1.1' fill='%23e9b949' opacity='.5'/%3E%3Ccircle cx='22' cy='56' r='.9' fill='%23d62f43' opacity='.35'/%3E%3C/svg%3E")}
+@media (prefers-color-scheme:dark){html.xmas{--xpap:#141c36;--xsn:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='70' height='70'%3E%3Cg fill='none' stroke='%23ffffff' stroke-width='1' stroke-linecap='round' opacity='.09'%3E%3Cg transform='translate(16 18) scale(.55)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3Cg transform='translate(52 50) scale(.4)'%3E%3Cpath d='M0-9V9M-7.8-4.5 7.8 4.5M-7.8 4.5 7.8-4.5'/%3E%3C/g%3E%3C/g%3E%3Ccircle cx='50' cy='14' r='1.1' fill='%23ffd166' opacity='.35'/%3E%3C/svg%3E")}}
+html.xmas .card:not(.empty):not(.lcal):not(.lv),html.xmas .wk{background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,var(--xpap);border-color:rgba(214,170,120,.28)}
+html.xmas .card.lv,html.xmas .card.lcal{--card:var(--xpap)}
+html.xmas .lvb,html.xmas .ntc{background:var(--xsn) 0 0/70px 70px,var(--xpap);border-color:rgba(214,170,120,.28)}
+html.xmas .card.lcal{background:var(--xsn) 0 0/70px 70px,var(--xpap)}
+/* 공정 카드 = 매달린 오너먼트 색 (빨강 · 금 · 초록 · 파랑) */
+html.xmas .tl>.card:not(.empty){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(214,47,67,.10) 0%,rgba(214,47,67,.02) 55%,transparent 100%),var(--xpap);border-color:rgba(214,47,67,.22)}
+html.xmas .tl>.card:not(.empty):nth-of-type(4n+2){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(233,185,73,.16) 0%,rgba(233,185,73,.03) 55%,transparent 100%),var(--xpap);border-color:rgba(233,185,73,.35)}
+html.xmas .tl>.card:not(.empty):nth-of-type(4n+3){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(31,138,76,.12) 0%,rgba(31,138,76,.02) 55%,transparent 100%),var(--xpap);border-color:rgba(31,138,76,.25)}
+html.xmas .tl>.card:not(.empty):nth-of-type(4n+4){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(47,111,237,.11) 0%,rgba(47,111,237,.02) 55%,transparent 100%),var(--xpap);border-color:rgba(47,111,237,.22)}
+@media (prefers-color-scheme:dark){
+  html.xmas .tl>.card:not(.empty){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(255,90,102,.20) 0%,rgba(255,90,102,.04) 60%,transparent 100%),var(--xpap)}
+  html.xmas .tl>.card:not(.empty):nth-of-type(4n+2){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(255,209,102,.18) 0%,rgba(255,209,102,.04) 60%,transparent 100%),var(--xpap)}
+  html.xmas .tl>.card:not(.empty):nth-of-type(4n+3){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(66,201,131,.18) 0%,rgba(66,201,131,.04) 60%,transparent 100%),var(--xpap)}
+  html.xmas .tl>.card:not(.empty):nth-of-type(4n+4){background:var(--xholly) right 9px bottom 3px/25px 19px no-repeat,var(--xsn) 0 0/70px 70px,linear-gradient(135deg,rgba(108,182,255,.18) 0%,rgba(108,182,255,.04) 60%,transparent 100%),var(--xpap)}}
 </style>
 </head>
 <body>
@@ -2292,7 +2478,8 @@ function render() {
   var lb = leaveBanner(cur);
   if (lb) main.appendChild(lb);
   if (cur === 0) { var pb = prevBanner(); if (pb) main.appendChild(pb); }   // ⏰ 내가 어제 근무시간을 안 넣었으면
-  if (cur === 0) { var nb = noAppBanner(); if (nb) main.appendChild(nb); }   // 📲 앱 설치 안 한 사람 (김은수 팀장님 · 개발자 모드만)
+  if (cur === 0) { var nb = noAppBanner(); if (nb) main.appendChild(nb); }
+  if (XMAS) { var xh = main.querySelector(".dhero .dhl"); if (xh) xh.appendChild(el("span", "xdd", xmasDD().s)); }   // 🎄 크리스마스까지 D-N   // 📲 앱 설치 안 한 사람 (김은수 팀장님 · 개발자 모드만)
   pushBarUI();
   if (d.missing && d.missing.length)
     main.appendChild(el("div", "warn", "⚠️ 열을 찾지 못한 공정: " + d.missing.join(", ")));
@@ -3397,9 +3584,11 @@ function leaveCal(d) {
   for (var b = 0; b < first; b++) g.appendChild(el("span", "lcd lc-e"));
   for (var dd = 1; dd <= last; dd++) (function (dd) {
     var ymd = Y + "-" + pad(M) + "-" + pad(dd), list = byDay[ymd] || [], dow = (first + dd - 1) % 7;
-    var c = el("button", "lcd" + (dow === 0 ? " lc-su" : dow === 6 ? " lc-sa" : "") + (ymd === today ? " lc-td" : "") + (list.length ? " lc-has" : "") + (list.length >= 2 ? " lc-ov" : "") + (ymd === LV.cal.sel ? " lc-sel" : ""));
+    var xm = XMAS && M === 12 && (dd === 24 || dd === 25);
+    var c = el("button", "lcd" + (xm ? " lc-xm" : "") + (dow === 0 ? " lc-su" : dow === 6 ? " lc-sa" : "") + (ymd === today ? " lc-td" : "") + (list.length ? " lc-has" : "") + (list.length >= 2 ? " lc-ov" : "") + (ymd === LV.cal.sel ? " lc-sel" : ""));
     c.type = "button";
     c.appendChild(el("i", null, String(dd) + (list.length >= 2 ? "⚠️" : "")));
+    if (xm) c.lastChild.setAttribute("data-x", dd === 25 ? "🎄" : "⭐");
     list.slice(0, 2).forEach(function (x) { c.appendChild(el("em", /반차|반반|오전|오후/.test(x.k) ? "lc-hf" : "", x.n)); });
     if (list.length > 2) c.appendChild(el("em", "lc-more", "+" + (list.length - 2)));
     c.onclick = function (e) { e.stopPropagation(); LV.cal.sel = LV.cal.sel === ymd ? "" : ymd; renderLeave(LV.data); };
@@ -4714,9 +4903,12 @@ function renderMonth(name, r) {
     else { txt = "!"; cls += " gap"; }
     if (ymd === today) cls += " today";
     if (ymd === sel) cls += " sel";
+    var xm = XMAS && /-12$/.test(r.ym) && (x.d === 24 || x.d === 25);
+    if (xm) cls += " xm";
 
     var c = el("div", cls);
     c.appendChild(el("i", null, x.d));
+    if (xm) c.firstChild.setAttribute("data-x", x.d === 25 ? "🎄" : "⭐");
     c.appendChild(el("b", null, txt || " "));
     if (x.v) c.title = x.v;
     else if (x.sv) c.title = x.sv + " (schedule에만 있음 · 근무시간 칸은 비어 있음)";
@@ -4983,7 +5175,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-26-31";
+var APP_VER = "2026-10-27-3";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
@@ -6122,6 +6314,10 @@ function openDevPanel() {
   item("👤 이 폰 이름 바꾸기", myName() || "-", function () { $("dvov").className = "ov"; openNameChange(); });
   item("📱 팀 기기 목록", "원격 이름 변경", function () { $("dvov").className = "ov"; openDevList(); });
   item("🐞 오류 기록", "팀원 폰에서 난 앱 오류", function () { $("dvov").className = "ov"; openErrList(); });
+  item("🎄 크리스마스 미리보기", (sget("xmasPv") === "1" ? "켜짐" : "꺼짐") + " · 이 폰만 · 11/30~12/31엔 모두 자동", function () {
+    if (sget("xmasPv") === "1") sdel("xmasPv"); else sset("xmasPv", "1");
+    location.reload();
+  });
   if (ONESIGNAL_APP_ID) item("🔁 알림 다시 연결", "알림이 안 올 때", function (b) {
     var n = myName();
     if (!n || !pushOn()) { $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = "이 폰은 알림이 꺼져 있어요.\n🔔 알림 설정에서 먼저 켜 주세요."; return; }
@@ -6415,7 +6611,9 @@ function splElapsed() {
   var wall = Date.now() - SPL.t0;
   try {
     var s = $("splash"), as = s && s.getAnimations ? s.getAnimations({ subtree: true }) : [];
-    for (var i = 0; i < as.length; i++) if (as[i].playState === "running" && as[i].currentTime != null) return Math.min(wall, as[i].currentTime);
+    var mn = wall;
+    for (var i = 0; i < as.length; i++) if (as[i].playState === "running" && as[i].currentTime != null && as[i].currentTime >= 0) mn = Math.min(mn, as[i].currentTime);
+    return mn;
   } catch (e) {}
   return wall;
 }
@@ -6488,6 +6686,105 @@ function askPersist() {
     st.persisted().then(function (ok) { if (!ok) st.persist().catch(function () {}); }).catch(function () {});
   } catch (e) {}
 }
+
+function xmasDD() {   // 🎄 크리스마스까지 며칠
+  var t = new Date(), y = t.getFullYear(), d = Math.round((new Date(y, 11, 25) - new Date(y, t.getMonth(), t.getDate())) / 864e5);
+  if (d > 0) return { s: "🎄 D-" + d, l: "🎄 크리스마스까지 D-" + d, t: "Merry Christmas" };
+  if (d === 0) return { s: "🎁 Merry Christmas", l: "🎁 오늘은 크리스마스!", t: "Merry Christmas" };
+  var n = Math.round((new Date(y + 1, 0, 1) - new Date(y, t.getMonth(), t.getDate())) / 864e5);   // 12/26~31: 새해까지
+  return { s: "🎉 새해 D-" + n, l: n === 1 ? "🎉 내일은 새해! Happy New Year" : "🎉 새해까지 D-" + n, t: "Happy New Year" };
+}
+// 🕛 켜 둔 채로 11/30 0시(시작) · 1/1 0시(끝)가 지나면 바로 바뀌게 → 1분마다 확인 · 다시 열 때도 확인
+//    창이 열려 있거나 글자 입력 중이면 다음 확인 때 (입력하던 게 날아가지 않게)
+function xmasCheck() {
+  try {
+    if (localStorage.getItem(SP + "xmasPv") === "1") return;
+    if (xmasDate(new Date()) === XMAS) return;
+    if (document.querySelector(".ov.on") || $("upddone")) return;
+    var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+    location.reload();
+  } catch (e) {}
+}
+setInterval(xmasCheck, 60000);
+document.addEventListener("visibilitychange", function () { if (!document.hidden) xmasCheck(); });
+function xmasDeco() {
+  if (!XMAS) return;
+  SPL_RING_MS = 5700;   // 별이 켜지고 글자 위로 빛이 지나갈 때까지 (5.7초)
+  function snow(box, n, cls, big) {
+    var w = el("div", "xsnow" + (cls ? " " + cls : ""));
+    for (var i = 0; i < n; i++) {
+      var f = el("i"), s = (big ? 2.6 : 1.6) + Math.random() * (big ? 3.4 : 2.2);
+      f.style.cssText = "--x:" + (Math.random() * 100).toFixed(1) + "%;--s:" + s.toFixed(1) + "px;--o:" + (0.45 + Math.random() * 0.5).toFixed(2) +
+        ";--d:" + ((big ? 6 : 10) + Math.random() * 7).toFixed(1) + "s;--dl:-" + (Math.random() * 16).toFixed(1) + "s;--w:" + (Math.random() * 46 - 23).toFixed(0) + "px";
+      w.appendChild(f);
+    }
+    box.insertBefore(w, box.firstChild);
+    return w;
+  }
+  // ⭐ 시작 화면: 칩(1-A)에서 회로가 자라 트리가 되고 → 오너먼트(LED)가 켜지고 → 별이 켜짐
+  var sp = $("splash");
+  if (sp) {
+    var xs = el("div"); xs.id = "xs";
+    var col = ["r", "g", "b", "w"], k = 0, g = "";
+    var tiers = [[222, 96], [186, 78], [150, 60], [114, 42], [80, 26]];
+    tiers.forEach(function (tw, i) {
+      var y = tw[0], w = tw[1], t = (0.55 + i * 0.28) * 1.54, xl = 120 - w, xr = 120 + w, m = Math.round(w * 0.55);
+      g += '<path class="xtr" pathLength="1" style="--t:' + t.toFixed(2) + 's" d="M120 ' + y + 'H' + (xl + 10) + 'L' + xl + ' ' + (y - 10) + '"/>' +
+           '<path class="xtr" pathLength="1" style="--t:' + t.toFixed(2) + 's" d="M120 ' + y + 'H' + (xr - 10) + 'L' + xr + ' ' + (y - 10) + '"/>';
+      if (w > 30) g += '<path class="xtr" pathLength="1" style="--t:' + (t + 0.31).toFixed(2) + 's;stroke-width:1.6" d="M' + (120 - m) + ' ' + y + 'l-8 8"/>' +
+                       '<path class="xtr" pathLength="1" style="--t:' + (t + 0.31).toFixed(2) + 's;stroke-width:1.6" d="M' + (120 + m) + ' ' + y + 'l8 8"/>';
+      var v = function (x, yy, r, c, dt) { return '<circle class="xvia ' + c + '" cx="' + x + '" cy="' + yy + '" r="' + r + '" style="--t:' + dt.toFixed(2) + 's;--b:' + (0.9 + Math.random() * 1.4).toFixed(2) + 's"/>'; };
+      g += v(xl, y - 10, 4.4, col[k++ % 4], t + 0.85) + v(xr, y - 10, 4.4, col[k++ % 4], t + 0.85);
+      if (w > 30) g += v(120 - m - 8, y + 8, 2.6, col[(k + 1) % 4], t + 1.08) + v(120 + m + 8, y + 8, 2.6, col[(k + 3) % 4], t + 1.08);
+    });
+    var st = "", R = 15, r2 = 6.4;
+    for (var a = 0; a < 10; a++) { var ang = -Math.PI / 2 + a * Math.PI / 5, rr = a % 2 ? r2 : R; st += (a ? "L" : "M") + (120 + rr * Math.cos(ang)).toFixed(1) + " " + (34 + rr * Math.sin(ang)).toFixed(1); }
+    var rays = ""; for (var q = 0; q < 8; q++) { var an = q * Math.PI / 4; rays += '<line x1="' + (120 + 18 * Math.cos(an)).toFixed(1) + '" y1="' + (34 + 18 * Math.sin(an)).toFixed(1) + '" x2="' + (120 + 34 * Math.cos(an)).toFixed(1) + '" y2="' + (34 + 34 * Math.sin(an)).toFixed(1) + '"/>'; }
+    var pins = ""; for (var pI = 0; pI < 4; pI++) { var py = 268 + pI * 6; pins += '<line class="xpin" x1="82" y1="' + py + '" x2="88" y2="' + py + '"/><line class="xpin" x1="152" y1="' + py + '" x2="158" y2="' + py + '"/>'; }
+    var svg = '<svg class="xtree" viewBox="0 0 240 300" aria-hidden="true"><defs><linearGradient id="xsg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff6d6"/><stop offset=".5" stop-color="#ffd166"/><stop offset="1" stop-color="#e09a1c"/></linearGradient>' +
+      '<radialGradient id="xsh"><stop offset="0" stop-color="rgba(255,214,110,.75)"/><stop offset="1" stop-color="rgba(255,214,110,0)"/></radialGradient></defs>' +
+      '<polygon class="xsil" points="18,234 120,40 222,234"/>' +
+      '<path class="xtr xtk" pathLength="1" style="--t:.38s" d="M120 262V52"/>' + g +
+      '<circle class="xhalo" cx="120" cy="34" r="30" fill="url(#xsh)"/>' +
+      '<g class="xray" stroke="#ffe08a" stroke-width="1.6" stroke-linecap="round">' + rays + '</g>' +
+      '<g class="xstar"><path d="' + st + 'Z"/></g>' +
+      '<g class="xchip">' + pins + '<rect class="xbd" x="88" y="262" width="64" height="28" rx="5"/><text x="120" y="281" text-anchor="middle">1-A</text></g></svg>';
+    var dd = xmasDD();
+    var sh = [];   // ✨ 별: 위쪽에 많이 · 아래로 갈수록 적게 (무작위)
+    for (var si = 0; si < 70; si++) { var yy = Math.pow(Math.random(), 1.6) * 70, sz = Math.random() < 0.12 ? 1.3 : 0.4 + Math.random() * 0.6;
+      sh.push((Math.random() * 100).toFixed(1) + "vw " + yy.toFixed(1) + "vh 0 " + sz.toFixed(1) + "px rgba(255," + (Math.random() < 0.2 ? "230,170" : "255,255") + "," + (0.35 + Math.random() * 0.6).toFixed(2) + ")"); }
+    xs.innerHTML = '<div class="xaur"></div><div class="xstars" style="box-shadow:' + sh.join(",") + '"></div>' + svg +
+      '<div class="xmc">' + dd.t + '</div><div class="xtm">TEAM <b>1-A</b></div><div class="xcd">' + dd.l + '</div>' +
+      '<svg class="xgnd" viewBox="0 0 400 100" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="xgn" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#eef4ff"/><stop offset="1" stop-color="#b9cbea"/></linearGradient></defs>' +
+      '<path d="M0 62C60 40 110 58 170 50S300 30 400 52V100H0Z" fill="#7e93bf" opacity=".35"/><path d="M0 74C70 58 130 76 200 68S330 56 400 70V100H0Z" fill="url(#xgn)"/></svg>';
+    snow(xs, 22, "far", false); snow(xs, 14, "near", true);
+    sp.insertBefore(xs, sp.firstChild);
+  }
+  snow(document.body, 16, "", false);
+  var hd = document.querySelector("header");
+  if (hd) { var l = el("div"); l.id = "xlights"; hd.appendChild(l); }
+  // 🦌 나인벨 로고: 순록 뿔 + 흔들리는 금종
+  var pic = document.querySelector(".brand picture");
+  if (pic) {
+    var dr = el("span"); dr.id = "xdeer";
+    dr.innerHTML = '<svg viewBox="0 0 44 17" aria-hidden="true"><g fill="none" stroke="#9a6233" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round">' +
+      '<path d="M15 16C14 11 11 7 6 4M11.5 9.5 5.5 10M9 6.2 8.6 1.5"/><path d="M29 16C30 11 33 7 38 4M32.5 9.5l6 .5M35 6.2l.4-4.7"/></g>' +
+      '<g fill="none" stroke="#c98a52" stroke-width=".8" stroke-linecap="round" opacity=".8"><path d="M14.4 14C13.6 10.5 11.4 7.6 7.4 5"/><path d="M29.6 14c.8-3.5 3-6.4 7-9"/></g></svg>';
+    pic.appendChild(dr);
+    var bl = el("span"); bl.id = "xbell";
+    bl.innerHTML = '<svg viewBox="0 0 13 16" aria-hidden="true"><path d="M6.5 0v3.2" stroke="#b8860b" stroke-width="1"/><path d="M6.5 3C3.6 3 2.4 5.6 2.4 8.4V11L1 12.6h11L10.6 11V8.4C10.6 5.6 9.4 3 6.5 3z" fill="url(#xbg)" stroke="#a7740a" stroke-width=".6"/>' +
+      '<circle cx="6.5" cy="14" r="1.6" fill="#c9971c"/><path d="M4.2 6.2c.4-1.2 1.2-1.8 2.1-1.9" stroke="#fff" stroke-width=".8" fill="none" opacity=".7"/>' +
+      '<defs><linearGradient id="xbg" x1="0" x2="1"><stop offset="0" stop-color="#ffe08a"/><stop offset=".55" stop-color="#e9b949"/><stop offset="1" stop-color="#b8860b"/></linearGradient></defs></svg>';
+    pic.appendChild(bl);
+  }
+  // 🎁 12/24 · 12/25 하루 한 번 인사
+  var t = new Date();
+  if (t.getMonth() === 11 && (t.getDate() === 24 || t.getDate() === 25) && sget("xmasHi") !== ymdLocal()) {
+    sset("xmasHi", ymdLocal());
+    setTimeout(function () { toast(t.getDate() === 24 ? "🎄 메리 크리스마스 이브! 오늘도 수고 많았어요" : "🎁 메리 크리스마스! 따뜻한 하루 보내세요"); }, 5000);
+  }
+}
+try { xmasDeco(); } catch (eX) {}
 
 function boot() {
   if (IS_TEST) $("spsub").appendChild(document.createTextNode(" · TEST"));
