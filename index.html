@@ -1101,6 +1101,30 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 #tmov .tmg button.on{border-color:transparent;background:var(--gr);color:#fff;box-shadow:0 12px 24px -12px var(--glow)}
 #tmov .tmg button.on i{background:rgba(255,255,255,.22);color:#fff}
 /* ✨ 연차 현황 (팀 요약 + 남은 비율 링) */
+.lcal{padding:12px 10px 10px}
+.lch{display:flex;align-items:center;justify-content:space-between;gap:6px;margin:0 2px 8px}
+.lct{text-align:center}.lct b{display:block;font-size:15.5px}.lct small{display:block;font-size:12px;color:var(--sub);font-weight:600;margin-top:1px}
+.lcnav{width:36px;height:36px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--text);font-size:20px;font-weight:700;line-height:1;font-family:inherit}
+.lcnav:disabled{opacity:.3}
+.lcg{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:3px}
+.lcw{text-align:center;font-size:11.5px;font-weight:800;color:var(--sub);padding:2px 0 4px}.lcw.lc-su{color:#e5484d}.lcw.lc-sa{color:#2f6fed}
+.lcd{min-height:54px;display:flex;flex-direction:column;align-items:stretch;gap:1px;padding:3px 2px;border-radius:9px;border:1px solid transparent;background:var(--bg);font-family:inherit;color:var(--text);overflow:hidden;text-align:center}
+.lcd.lc-e{background:transparent}
+.lcd i{font-style:normal;font-size:11.5px;font-weight:700;color:var(--sub);line-height:1.3;white-space:nowrap}
+.lcd.lc-su i{color:#e5484d}.lcd.lc-sa i{color:#2f6fed}
+.lcd.lc-td{border-color:var(--accent)}.lcd.lc-td i{color:var(--accent);font-weight:900}
+.lcd em{display:block;font-style:normal;font-size:10.5px;font-weight:800;line-height:1.35;border-radius:5px;padding:0 1px;background:rgba(47,111,237,.14);color:#2554c7;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.lcd em.lc-hf{background:rgba(47,111,237,.06);color:#6d8fe0}
+.lcd em.lc-more{background:transparent;color:var(--sub)}
+.lcd.lc-ov{background:rgba(255,138,31,.13);border-color:rgba(255,138,31,.55)}
+.lcd.lc-sel{box-shadow:0 0 0 2px var(--accent) inset}
+.lcl{margin:10px 2px 0;font-size:13px;color:var(--sub);line-height:1.9;word-break:keep-all}
+.lcl b{color:var(--text);margin-right:6px}
+.lcp{display:inline-block;margin:0 5px 0 0;padding:1px 9px;border-radius:999px;background:rgba(47,111,237,.12);color:#2554c7;font-weight:800}
+.lcp.lc-hf{background:rgba(47,111,237,.06);color:#6d8fe0}
+.lcp small{font-weight:600;margin-left:4px;opacity:.8}
+.lcw2{color:#e08600;font-weight:800}
+@media (prefers-color-scheme:dark){.lcd em,.lcp{background:rgba(126,166,255,.2);color:#b8cdff}.lcd em.lc-hf,.lcp.lc-hf{background:rgba(126,166,255,.08);color:#8ea8e6}.lcd em.lc-more{background:transparent}}
 .lvhero{position:relative;overflow:hidden;border-radius:20px;padding:15px 16px;color:#fff;background:linear-gradient(125deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 14px 30px -16px var(--glow),inset 0 1px 0 rgba(255,255,255,.25);display:grid;gap:12px}
 .lvhero::before{content:"";position:absolute;right:-30px;top:-60px;width:150px;height:150px;border-radius:50%;opacity:.18;background:repeating-linear-gradient(90deg,rgba(255,255,255,.9) 0 8px,transparent 8px 11px),repeating-linear-gradient(0deg,rgba(255,255,255,.9) 0 8px,transparent 8px 11px);-webkit-mask-image:radial-gradient(circle,#000 0 62%,transparent 63%);mask-image:radial-gradient(circle,#000 0 62%,transparent 63%)}
 .lvhero>*{position:relative}
@@ -1752,7 +1776,7 @@ var LOCK_MIN = 10;   // 초과 시 잠금 시간(분)
 var cur = 0, store = {};
 var H = { meta: null, loaded: false, confirm: false, token: 0, busy: false };
 var U = { loaded: false, data: null, msg: null };
-var LV = { loaded: false, data: null, open: {} };
+var LV = { loaded: false, data: null, open: {}, cal: null };
 var ST = { loaded: false, data: null, open: {} };
 var CF = { it: null, s: null };
 var G = { busy: false, timer: null };
@@ -2693,6 +2717,15 @@ function setBadge(n) {
   var t = $("d2");
   t.innerHTML = "";
   if (n > 0) t.appendChild(el("span", "bd", String(n)));
+  appBadge(n);
+}
+// 🔴 홈 화면 앱 아이콘 숫자 = 업로드 탭 숫자 (알림을 켠 폰만 · 아이폰 iOS 16.4 이상 · 안드로이드 크롬) · 0이면 지움
+function appBadge(n) {
+  try {
+    if (!navigator.setAppBadge) return;
+    if (n > 0) navigator.setAppBadge(n).catch(function () {});
+    else navigator.clearAppBadge().catch(function () {});
+  } catch (e) {}
 }
 
 /* ⚡ 완료 처리·작업자 처음 입력이 서버에서 성공하면 화면 목록에서 바로 뺌 (다시 불러오기는 뒤에서 확인만)
@@ -3334,6 +3367,57 @@ function daySec(title, list, plan) {
   return w;
 }
 
+/* 📅 팀 연차 달력: 한 달에 누가 언제 쉬는지 (schedule 시트 · 연차 현황과 같은 데이터 → 서버 요청 없음)
+ *   같은 날 2명 이상이면 ⚠️ · 날짜를 누르면 아래에 그날 명단 · ‹ › 로 달 이동 (올해만) */
+function leaveCal(d) {
+  var today = ymdLocal(), Y = +today.slice(0, 4);
+  if (!LV.cal) LV.cal = { m: +today.slice(5, 7), sel: today };
+  var M = LV.cal.m, byDay = {};
+  d.people.forEach(function (p) {
+    if (!p.days) return;
+    p.days.used.concat(p.days.plan).forEach(function (x) { (byDay[x.d] = byDay[x.d] || []).push({ n: p.name, k: x.k || "연차" }); });
+  });
+  var pad = function (v) { return ("0" + v).slice(-2); };
+  var w = el("div", "card lcal");
+  var hd = el("div", "lch");
+  var pv = el("button", "lcnav", "‹"), nx = el("button", "lcnav", "›"); pv.type = nx.type = "button";
+  pv.disabled = M <= 1; nx.disabled = M >= 12;
+  pv.onclick = function (e) { e.stopPropagation(); LV.cal.m--; LV.cal.sel = ""; renderLeave(LV.data); };
+  nx.onclick = function (e) { e.stopPropagation(); LV.cal.m++; LV.cal.sel = ""; renderLeave(LV.data); };
+  var cnt = 0, over = 0;
+  Object.keys(byDay).forEach(function (k) { if (k.slice(0, 7) === Y + "-" + pad(M)) { cnt += byDay[k].length; if (byDay[k].length >= 2) over++; } });
+  var tt = el("div", "lct"); tt.appendChild(el("b", null, "📅 " + M + "월 팀 연차"));
+  tt.appendChild(el("small", null, cnt ? cnt + "건" + (over ? " · ⚠️ 겹침 " + over + "일" : "") : "없음"));
+  hd.appendChild(pv); hd.appendChild(tt); hd.appendChild(nx);
+  w.appendChild(hd);
+  var g = el("div", "lcg");
+  ["일", "월", "화", "수", "목", "금", "토"].forEach(function (x, i) { g.appendChild(el("span", "lcw" + (i === 0 ? " lc-su" : i === 6 ? " lc-sa" : ""), x)); });
+  var first = new Date(Y, M - 1, 1).getDay(), last = new Date(Y, M, 0).getDate();
+  for (var b = 0; b < first; b++) g.appendChild(el("span", "lcd lc-e"));
+  for (var dd = 1; dd <= last; dd++) (function (dd) {
+    var ymd = Y + "-" + pad(M) + "-" + pad(dd), list = byDay[ymd] || [], dow = (first + dd - 1) % 7;
+    var c = el("button", "lcd" + (dow === 0 ? " lc-su" : dow === 6 ? " lc-sa" : "") + (ymd === today ? " lc-td" : "") + (list.length ? " lc-has" : "") + (list.length >= 2 ? " lc-ov" : "") + (ymd === LV.cal.sel ? " lc-sel" : ""));
+    c.type = "button";
+    c.appendChild(el("i", null, String(dd) + (list.length >= 2 ? "⚠️" : "")));
+    list.slice(0, 2).forEach(function (x) { c.appendChild(el("em", /반차|반반|오전|오후/.test(x.k) ? "lc-hf" : "", x.n)); });
+    if (list.length > 2) c.appendChild(el("em", "lc-more", "+" + (list.length - 2)));
+    c.onclick = function (e) { e.stopPropagation(); LV.cal.sel = LV.cal.sel === ymd ? "" : ymd; renderLeave(LV.data); };
+    g.appendChild(c);
+  })(dd);
+  w.appendChild(g);
+  var sel = LV.cal.sel && LV.cal.sel.slice(0, 7) === Y + "-" + pad(M) ? LV.cal.sel : "";
+  var dl = el("div", "lcl");
+  if (sel) {
+    var sl = byDay[sel] || [], sd = new Date(Y, M - 1, +sel.slice(8));
+    dl.appendChild(el("b", null, M + "/" + (+sel.slice(8)) + "(" + "일월화수목금토".charAt(sd.getDay()) + ")"));
+    if (!sl.length) dl.appendChild(el("span", "lc-none", " 쉬는 사람 없음"));
+    sl.forEach(function (x) { var s2 = el("span", "lcp" + (/반차|반반|오전|오후/.test(x.k) ? " lc-hf" : ""), x.n); s2.appendChild(el("small", null, x.k)); dl.appendChild(s2); });
+    if (sl.length >= 2) dl.appendChild(el("span", "lcw2", "⚠️ " + sl.length + "명 겹침"));
+  } else dl.appendChild(el("span", "lc-none", "날짜를 누르면 그날 쉬는 사람이 보여요 · 연한 색은 반차"));
+  w.appendChild(dl);
+  return w;
+}
+
 function renderLeave(d) {
   var box = $("leave");
   box.innerHTML = "";
@@ -3356,6 +3440,7 @@ function renderLeave(d) {
   });
   lh.appendChild(l2);
   box.appendChild(lh);
+  box.appendChild(leaveCal(d));   // 📅 팀 연차 달력
 
   var hasDays = false;
   d.people.forEach(function (p, pi) {
@@ -4896,10 +4981,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-26-23";
+var APP_VER = "2026-10-26-25";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-26-25", ["🔴 홈 화면 앱 아이콘에 업로드 대기 숫자가 떠요 (알림 켠 폰)", "📅 연차 현황: 팀 연차 달력 (같은 날 2명 이상이면 ⚠️)", "⏳ 업로드가 3일 넘게 밀리면 아침에 작업자에게 알림"]],
   ["2026-10-26-23", ["앱을 켜 둔 채로 보고 있으면 10분마다 자동으로 최신 정보로 바뀌어요"]],
   ["2026-10-26-21", ["⏳ 시트 업로드: 버튼에 D+숫자 = 업로드할 날부터 지난 날 (1차검수는 DRY · 2차검수·ISSUE는 Packing 날짜 기준)", "7일 넘으면 주황 · 14일 넘으면 빨강 · 카드 안에서는 오래된 장비가 위로"]],
   ["2026-10-26-15", ["시트 업로드: 이름(✎)을 누르면 장비별 작업자를 한 화면에서 바꿀 수 있어요"]],
