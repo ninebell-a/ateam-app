@@ -563,6 +563,18 @@ li.tap:active{background:rgba(47,111,237,.08)}
 .ttl.opedit .pen{color:var(--accent);margin-left:4px;text-decoration:none;display:inline-block}
 #opeq{display:none;margin:2px 0 0}
 #opeq .chip{font-weight:700}
+#opeq.oprows{margin:4px 0 2px;max-height:56vh;overflow:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+.oprows .orh{position:sticky;top:0;z-index:1;display:flex;justify-content:space-between;padding:8px 14px;font-size:12px;font-weight:800;color:var(--sub);background:var(--bg);border-bottom:1px solid var(--line)}
+.oprows .orw{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 12px 10px 14px;border-bottom:1px solid var(--line);transition:background .25s}
+.oprows .orw:last-child{border-bottom:0}
+.oprows .orw.ok{background:rgba(34,160,90,.08)}.oprows .orw.bad{background:rgba(229,72,77,.08)}.oprows .orw.busy{opacity:.6}
+.oprows .orn{min-width:0;flex:1}
+.oprows .orn b{display:block;font-size:14.5px;word-break:keep-all;overflow-wrap:anywhere}
+.oprows .orn small{display:block;font-size:12px;color:var(--sub);margin-top:1px}
+.oprows .orr{flex:none;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.oprows .ors{font:inherit;font-size:16px;font-weight:700;color:var(--accent);background:var(--bg);border:1.5px solid var(--line);border-radius:10px;padding:7px 8px;width:118px;max-width:118px}
+.oprows .ost{font-size:11.5px;font-weight:700;color:var(--sub);min-height:14px}
+.oprows .orw.ok .ost{color:var(--ok)}.oprows .orw.bad .ost{color:var(--warn)}
 .card.oprec li{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .card.oprec .ol b{font-size:15px}
 .card.oprec .ol small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
@@ -1549,7 +1561,7 @@ button.ref.rf:disabled{opacity:1}
     <input type="text" id="opin" inputmode="text" autocomplete="off" maxlength="20" placeholder="직접 입력 (목록에 없는 이름)">
     <button id="opclr" type="button">🗑 작업자 비우기 (이 장비 작업 안 함)</button>
     <p class="sub" id="ophint">저장하면 26_장비_LOG 작업자(F열)에 들어가요.
-잘못 넣었으면 내 이름 카드의 ✎에서 고칠 수 있어요.</p>
+잘못 넣었으면 이름 카드의 ✎에서 고칠 수 있어요.</p>
     <div class="ob" id="opob">
       <button id="opno" type="button">취소</button>
       <button id="opgo" type="button" class="go">저장</button>
@@ -3099,7 +3111,7 @@ function renderUpload(d) {
 }
 
 /* ---------- 👷 작업자 입력 (26_장비_LOG F열) ---------- */
-var OP = { it: null, pick: "", prev: "" };
+var OP = { it: null, pick: "", prev: "", rows: false, dirty: false };
 
 function opPick(n, typing) {
   OP.pick = n;
@@ -3113,25 +3125,53 @@ function opNameList(d) {
   if (!n) { var cn = cget("names"), ch = cget("hours"); n = (cn && cn.names) || PUSH.names || (H.meta && H.meta.names) || (ch && ch.names) || []; }
   return n.filter(function (x) { return x !== CHIEF_NAME; });
 }
-// 카드 제목(작업자 이름)을 누르면: 장비 1대 → 바로 수정 창 / 여러 대 → 먼저 장비 고르기
+// 카드 제목(작업자 이름 ✎)을 누르면: 장비 | 작업자 표 → 줄마다 이름을 바꾸면 바로 저장 (여러 대도 한 화면에서)
 function opEditOwner(p, d) {
   var names = opNameList(d);
-  if (p.items.length === 1) { var it = p.items[0]; openOp({ row: it.row, n: it.n, t: it.t }, names, p.name); return; }
-  openOp(p.items[0], names, p.name);   // 창 모양을 먼저 수정 창으로 맞춘 뒤 장비 고르기 화면으로
-  $("opwho").textContent = p.name + " 이름으로 적힌 장비";
-  var oc = $("opcur"); oc.innerHTML = ""; oc.textContent = "고칠 장비를 골라 주세요."; oc.style.display = "block";
-  var eq = $("opeq"); eq.innerHTML = ""; eq.style.display = "flex";
+  openOp(p.items[0], names, p.name);   // 창 모양을 수정 창으로 맞춘 뒤 표로 바꿈
+  OP.rows = true;
+  $("opttl").textContent = "✏️ 작업자 수정(FT)";
+  $("opwho").textContent = p.name + " 이름으로 적힌 장비 " + p.items.length + "대";
+  var oc = $("opcur"); oc.innerHTML = ""; oc.textContent = "실제 작업자가 다르면 오른쪽 이름을 바꿔 주세요. 바꾸면 바로 저장돼요."; oc.style.display = "block";
+  var eq = $("opeq"); eq.innerHTML = ""; eq.style.display = "block"; eq.className = "oprows";
+  var hd = el("div", "orh"); hd.appendChild(el("span", null, "장비")); hd.appendChild(el("span", null, "작업자")); eq.appendChild(hd);
   p.items.forEach(function (it) {
-    var c = el("button", "chip", it.n); c.type = "button";   // 장비명만 (타입까지 붙이면 헷갈림)
-    c.onclick = function () { openOp({ row: it.row, n: it.n, t: it.t }, names, p.name); };
-    eq.appendChild(c);
+    var row = el("div", "orw"), cur = p.name;
+    var nm = el("div", "orn"); nm.appendChild(el("b", null, it.n)); if (it.t) nm.appendChild(el("small", null, it.t));
+    row.appendChild(nm);
+    var sel = document.createElement("select"); sel.className = "ors";
+    var list = names.indexOf(cur) < 0 ? [cur].concat(names) : names.slice();
+    list.forEach(function (n) { var o = document.createElement("option"); o.value = n; o.textContent = n; sel.appendChild(o); });
+    var oc2 = document.createElement("option"); oc2.value = "__CLEAR__"; oc2.textContent = "— 비우기 (작업 안 함)"; sel.appendChild(oc2);
+    sel.value = cur;
+    var st = el("span", "ost");
+    sel.onchange = function () {
+      var to = sel.value, from = cur;
+      if (to === from) return;
+      sel.disabled = true; row.className = "orw busy"; st.textContent = "저장 중…";
+      callEdit("setOperator", [it.row, it.n, to, from]).then(function (r) {
+        sel.disabled = false;
+        if (r && r.error) { if (r.admBad) adminOff(); sel.value = from; row.className = "orw bad"; st.textContent = "실패"; toast("⚠️ " + r.error, true); return; }
+        cur = to === "__CLEAR__" ? "" : to; OP.dirty = true;
+        row.className = "orw ok"; st.textContent = to === "__CLEAR__" ? "✔ 비움" : "✔ 바꿈";
+        if (to === "__CLEAR__") sel.disabled = true;   // 비운 장비는 '작업자 미입력'으로 → 거기서 다시 입력
+      }).catch(function (e) {
+        sel.disabled = false; sel.value = from; row.className = "orw bad"; st.textContent = "실패";
+        toast("⚠️ 저장 실패: " + errText(e), true);
+      });
+    };
+    var rt = el("div", "orr"); rt.appendChild(sel); rt.appendChild(st);
+    row.appendChild(rt);
+    eq.appendChild(row);
   });
-  ["opchips", "opin", "opclr", "opgo"].forEach(function (id) { $(id).style.display = "none"; });
-  $("opob").style.gridTemplateColumns = "1fr";   // [취소]만 가로 전체
+  ["opchips", "opin", "opclr", "opgo", "ophint"].forEach(function (id) { $(id).style.display = "none"; });
+  $("opno").textContent = "닫기";
+  $("opob").style.gridTemplateColumns = "1fr";   // [닫기]만 가로 전체
 }
 
 function openOp(it, names, prev) {
-  $("opeq").style.display = "none"; $("opeq").innerHTML = "";
+  $("opeq").style.display = "none"; $("opeq").innerHTML = ""; $("opeq").className = "chips";
+  OP.rows = false; $("opno").textContent = "취소";
   ["opchips", "opin", "opgo"].forEach(function (id) { $(id).style.display = ""; });
   $("opob").style.gridTemplateColumns = "";
   OP.it = it; OP.pick = ""; OP.prev = prev || "";
@@ -3164,7 +3204,10 @@ function openOp(it, names, prev) {
   $("opov").className = "ov on";
 }
 
-function closeOp() { $("opov").className = "ov"; }
+function closeOp() {
+  $("opov").className = "ov";
+  if (OP.dirty) { OP.dirty = false; U.msg = { err: false, t: "작업자 수정 ✔" }; loadUpload(); }   // 표에서 바꾼 게 있으면 목록 새로
+}
 $("opno").onclick = closeOp;
 $("opov").onclick = function (e) { if (e.target === this) closeOp(); };
 $("opin").oninput = function () { if (this.value.trim()) opPick("", true); };   // 직접 입력하면 칩 선택만 해제
@@ -4803,10 +4846,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-26-13";
+var APP_VER = "2026-10-26-15";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-26-15", ["시트 업로드: 이름(✎)을 누르면 장비별 작업자를 한 화면에서 바꿀 수 있어요"]],
   ["2026-10-26-5", ["시트 업로드: 작업자가 틀렸으면 누구나 이름(✎)을 눌러 바꿀 수 있어요"]],
   ["2026-10-26-3", ["근무시간 미입력 이름 칸 깔끔하게", "알림 받기 화면 문구 정리"]],
   ["2026-10-26-1", ["시작 화면: 애니메이션과 빛이 끝까지 지나간 뒤 열려요", "탭을 누를 때 화면이 두 번 움직이던 것 고침"]],
