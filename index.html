@@ -1217,7 +1217,8 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 /* ✨ 위쪽 아이콘 버튼 · 검색 화면 */
 button.ref.ib{display:flex;align-items:center;justify-content:center;width:40px;height:40px;padding:0!important;border-radius:14px;color:var(--text)}
 button.ref.ib svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:2.1;stroke-linecap:round;stroke-linejoin:round}
-button.ref.rf{color:#fff;border:0;background:var(--gr);box-shadow:0 8px 18px -8px var(--glow)}
+button.ref.rf{color:var(--text)}   /* 🔄 검색·잠금과 똑같은 버튼 (강조 없음) · 받는 중엔 아이콘이 파랗게 돎 */
+button.ref.rf.busy{color:var(--accent)}
 button.ref.rf.busy svg{animation:pvSpin .8s linear infinite}
 button.ref.rf:disabled{opacity:1}
 @media (max-width:389px){button.ref.ib{width:36px;height:36px;border-radius:12px}}
@@ -1748,7 +1749,7 @@ A팀 모두 켜 두는 <b>필수 설정</b>이에요.</p>
 </div>
 
 <div id="toast"></div>
-<div class="ov" id="tmov"><div class="box"><h3>더보기</h3><div class="tmg" id="tmg"></div></div></div>
+<div class="ov" id="tmov"><div class="box"><h3>더보기</h3><div class="tmg" id="tmg"></div><div class="ob" style="grid-template-columns:1fr"><button id="tmno" type="button">닫기</button></div></div></div>
 
 <!-- 편집 PIN 입력창 -->
 <div class="ov" id="epov">
@@ -3839,6 +3840,7 @@ function tbBuild() {
   });
   $("app").appendChild(bar);
   $("tmov").onclick = function (e) { if (e.target === this) this.className = "ov"; };
+  $("tmno").onclick = function () { $("tmov").className = "ov"; };   // ✕ 닫기 버튼
   try { new MutationObserver(tbSync).observe(document.querySelector("header .tabs"), { subtree: true, childList: true, characterData: true, attributes: true }); } catch (e) {}
   // ⌨️ 글자 입력 중엔 탭바 숨김 (키보드 위로 떠오르지 않게)
   document.addEventListener("focusin", function (e) { if (/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) bar.classList.add("hide"); });
@@ -4981,10 +4983,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-26-25";
+var APP_VER = "2026-10-26-31";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-26-31", ["더보기 창에 닫기 버튼", "새로고침 버튼 차분하게 (자동으로 최신 정보로 바뀌어요)"]],
   ["2026-10-26-25", ["🔴 홈 화면 앱 아이콘에 업로드 대기 숫자가 떠요 (알림 켠 폰)", "📅 연차 현황: 팀 연차 달력 (같은 날 2명 이상이면 ⚠️)", "⏳ 업로드가 3일 넘게 밀리면 아침에 작업자에게 알림"]],
   ["2026-10-26-23", ["앱을 켜 둔 채로 보고 있으면 10분마다 자동으로 최신 정보로 바뀌어요"]],
   ["2026-10-26-21", ["⏳ 시트 업로드: 버튼에 D+숫자 = 업로드할 날부터 지난 날 (1차검수는 DRY · 2차검수·ISSUE는 Packing 날짜 기준)", "7일 넘으면 주황 · 14일 넘으면 빨강 · 카드 안에서는 오래된 장비가 위로"]],
