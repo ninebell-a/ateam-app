@@ -183,6 +183,10 @@ li:first-child{border-top:0}
 .sheet{display:inline-block;margin:6px 6px 0 0;padding:8px 14px;border-radius:999px;border:1.5px solid var(--warn);background:transparent;color:var(--warn);font-size:14px;font-weight:700;font-family:inherit}
 .sheet:active{background:rgba(229,72,77,.15)}
 .sheet.op{border-color:var(--accent);color:var(--accent)}
+.dd{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-style:normal;font-size:11.5px;font-weight:800;line-height:1.5;vertical-align:1px;background:rgba(100,116,139,.14);color:var(--sub)}
+.dd.o{background:#ff8a1f;color:#fff}.dd.r{background:#e5484d;color:#fff}
+.uplg{margin:6px 2px 0;font-size:12.5px;color:var(--sub);line-height:1.6;word-break:keep-all}
+.uplg b{color:var(--text)}
 .sheet.op:active{background:rgba(47,111,237,.12)}
 /* 📍 SITE (26_장비_LOG E열) */
 .mb{display:inline-block;margin-left:6px;padding:1px 7px;border-radius:999px;font-size:11.5px;font-weight:800;vertical-align:1px;background:rgba(245,158,11,.16);color:#b45309;white-space:nowrap}
@@ -435,6 +439,12 @@ li:first-child{border-top:0}
 #mnlist .dev{background:none;border-style:dashed}
 #dvmsg{white-space:pre-line;word-break:keep-all}
 #dllist{max-height:58vh;overflow:auto;display:grid;gap:8px}
+#erlist{max-height:58vh;overflow:auto;display:grid;gap:8px;margin:10px 0 4px}
+#erlist .er{display:block;width:100%;text-align:left;font-family:inherit;border:1px solid var(--line);border-left:4px solid var(--warn);border-radius:12px;background:var(--card);padding:9px 12px;color:var(--text)}
+#erlist .er small{display:block;font-size:11.5px;color:var(--sub);font-weight:600}
+#erlist .er b{display:block;font-size:13.5px;margin:3px 0 2px;word-break:break-all}
+#erlist .er i{display:block;font-style:normal;font-size:11.5px;color:var(--sub);word-break:break-all}
+#erlist .er.cp{border-left-color:var(--ok)}
 .dlc{border:1px solid var(--line);border-radius:12px;padding:12px 14px;background:var(--bg)}
 .dlc.mine{border-color:var(--accent)}
 .dlc .h{font-weight:700;font-size:16px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px}
@@ -1624,6 +1634,14 @@ A팀 모두 켜 두는 <b>필수 설정</b>이에요.</p>
   </div>
 </div>
 
+<div class="ov" id="erov">
+  <div class="box">
+    <h3>🐞 오류 기록</h3>
+    <p class="sub" style="margin:0;word-break:keep-all">팀원 폰에서 난 앱 오류 (최근 50개). 누르면 내용이 복사돼요.</p>
+    <div id="erlist"></div>
+    <div class="ob" style="grid-template-columns:1fr 1fr"><button id="erback" type="button">← Developer</button><button id="erno" type="button">닫기</button></div>
+  </div>
+</div>
 <div class="ov" id="dlov">
   <div class="box">
     <h3>📱 팀 기기 목록</h3>
@@ -1747,6 +1765,28 @@ function el(tag, cls, text) {
   return e;
 }
 function $(id) { return document.getElementById(id); }
+/* 🐞 폰 오류 자동 기록 → 서버 "앱_오류기록" 시트 (개발자 메뉴에서 봄)
+ *   우리 앱 안내 문구(한글 오류)·네트워크 끊김은 빼고 진짜 코드 오류만 · 한 번 켤 때 최대 5개 · 같은 건 한 번 */
+var ERRQ = { n: 0, seen: {} };
+function errReport(msg, src, line, col, stack, rej) {
+  try {
+    msg = String(msg || "").slice(0, 200);
+    if (!msg || /^Script error\.?$/i.test(msg) || /ResizeObserver|network|fetch|timeout|Load failed|Abort|resume|NotAllowedError|OneSignal/i.test(msg)) return;
+    if (rej && /[가-힣]/.test(msg)) return;   // 앱이 일부러 낸 안내 오류 (이미 화면에 보여줌)
+    var at = (String(src || "").split("/").pop().split("?")[0] || "") + (line ? ":" + line + (col ? ":" + col : "") : "");
+    var k = msg + "|" + at;
+    if (ERRQ.seen[k] || ERRQ.n >= 5) return;
+    ERRQ.seen[k] = 1; ERRQ.n++;
+    var tabs = ["금일", "명일", "업로드", "근무시간", "연차", "장비통계", "입출하", "부적합"];
+    var where = typeof cur === "number" ? (tabs[cur] || "-") : "-";
+    var ov = document.querySelector(".ov.on"); if (ov && ov.id) where += " · " + ov.id;
+    var info = { msg: msg, at: at, stack: String(stack || "").slice(0, 400), where: where, ver: APP_VER };
+    setTimeout(function () { try { var p = getPin(); if (p) rawCall(p, "logClientError", [info]).catch(function () {}); } catch (e2) {} }, 1500);
+  } catch (e) {}
+}
+window.addEventListener("error", function (e) { if (e && e.message) errReport(e.message, e.filename, e.lineno, e.colno, e.error && e.error.stack); });
+window.addEventListener("unhandledrejection", function (e) { var r = e && e.reason; errReport(r && r.message ? r.message : String(r), "", 0, 0, r && r.stack, true); });
+
 function errText(e) {
   var m = e && e.message ? e.message : String(e);
   if (/failed to fetch|load failed|network/i.test(m)) return "서버에 연결할 수 없어요. 네트워크를 확인해 주세요.";
@@ -3068,6 +3108,13 @@ function renderUpload(d) {
   if (d.total) sum.appendChild(el("b", null, d.total + "대"));
   box.appendChild(sum);
 
+  if (d.total && d.people.some(function (p) { return p.items.some(function (it) { return it.age >= 0; }); })) {   // ⏳ D+숫자 설명 (서버가 날짜를 줄 때만)
+    var lg = el("div", "uplg");   // ⏳ 한 줄 설명
+    lg.appendChild(el("b", null, "⏳ D+숫자"));
+    lg.appendChild(document.createTextNode(" 업로드할 날부터 지난 날"));
+    [[" o", "7일↑"], [" r", "14일↑"]].forEach(function (x) { lg.appendChild(el("em", "dd" + x[0], x[1])); });
+    box.appendChild(lg);
+  }
   if (d.total) box.appendChild(el("div", "hint", "서버 업로드를 마친 시트를 누르면 '완료 처리' 확인창이 떠요. 작업자가 비어 있는 장비는 작업자 이름까지 적어야 목록에서 없어져요. 작업자가 틀렸으면 이름(✎)을 눌러 바꿔 주세요."));
 
   d.people.forEach(function (p) {
@@ -3082,7 +3129,7 @@ function renderUpload(d) {
     hd.appendChild(el("span", "cnt", p.items.length + "대"));
     card.appendChild(hd);
     var ul = el("ul");
-    p.items.forEach(function (it) {
+    p.items.slice().sort(function (a, b) { return (b.age == null ? -1 : b.age) - (a.age == null ? -1 : a.age); }).forEach(function (it) {   // ⏳ 오래된 장비가 위로
       var li = el("li");
       var eqn = el("span", "eq tapn", it.n);
       eqn.onclick = function () { openEquip(it.n); };   // 장비명을 누르면 일정
@@ -3093,6 +3140,7 @@ function renderUpload(d) {
       li.appendChild(document.createElement("br"));
       it.sheets.forEach(function (s) {
         var b = el("button", "sheet", "☐ " + s.label);
+        if (s.d != null) b.appendChild(el("em", "dd" + (s.d > 14 ? " r" : s.d > 7 ? " o" : ""), "D+" + s.d));   // ⏳ 업로드할 날부터 지난 날
         b.type = "button";
         b.onclick = function () { openConfirm(it, s); };
         li.appendChild(b);
@@ -4848,10 +4896,12 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-26-17";
+var APP_VER = "2026-10-26-23";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-26-23", ["앱을 켜 둔 채로 보고 있으면 10분마다 자동으로 최신 정보로 바뀌어요"]],
+  ["2026-10-26-21", ["⏳ 시트 업로드: 버튼에 D+숫자 = 업로드할 날부터 지난 날 (1차검수는 DRY · 2차검수·ISSUE는 Packing 날짜 기준)", "7일 넘으면 주황 · 14일 넘으면 빨강 · 카드 안에서는 오래된 장비가 위로"]],
   ["2026-10-26-15", ["시트 업로드: 이름(✎)을 누르면 장비별 작업자를 한 화면에서 바꿀 수 있어요"]],
   ["2026-10-26-5", ["시트 업로드: 작업자가 틀렸으면 누구나 이름(✎)을 눌러 바꿀 수 있어요"]],
   ["2026-10-26-3", ["근무시간 미입력 이름 칸 깔끔하게", "알림 받기 화면 문구 정리"]],
@@ -5119,7 +5169,7 @@ function updDone() {
  * 아이폰 홈 화면 앱은 백그라운드에서 다시 켜면 예전 화면을 그대로 보여줌
  * → 날짜가 바뀌었거나 10분 넘게 지났으면 데이터를 새로 불러옴 (서버 캐시를 쓰니 빠름)
  */
-function refreshIfStale() {
+function refreshIfStale(quiet) {   // quiet = 켜 둔 채 자동 갱신 (시작 화면 없이 조용히)
   if ($("app").style.display === "none" || !getPin()) return;   // 잠금 화면이면 안 함
   if (!LAST.t) return;                                           // 아직 첫 로딩 전
   var dayChanged = LAST.d !== ymdLocal();
@@ -5127,17 +5177,26 @@ function refreshIfStale() {
   LAST.t = Date.now();   // 연속 호출 방지
   var pd = loadDash(false);
   // 📱 아이폰은 앱을 '다시 열어도' 처음부터 안 켜고 이어서 보여줌 → 오래됐으면 시작 화면을 띄우고 거기서 갱신 (받으면 바로 닫힘 · 최대 4초)
-  if (!BLOCKED && !document.querySelector(".ov.on") && !$("upddone")) splashRun(pd);
+  if (!quiet && !BLOCKED && !document.querySelector(".ov.on") && !$("upddone")) splashRun(pd);
   loadUpload();
   // 나머지 탭은 다음에 들어갈 때 새로 불러오게, 지금 보고 있는 탭은 바로
   LV.loaded = false; ST.loaded = false;
   if (dayChanged) { H.loaded = false; $("hdate").value = ""; }
   if (cur === 4) loadLeave(false);
   else if (cur === 5) loadStats(false);
-  else if (cur === 3 && !H.busy) loadHoursMeta(true);
+  else if (cur === 3 && !H.busy && !quiet) loadHoursMeta(true);   // 근무시간은 입력 중일 수 있어서 자동 갱신 땐 안 건드림
   if (dayChanged) toast("📅 날짜가 바뀌어서 오늘 기준으로 새로 불러왔어요");
 }
 
+// 🔄 앱을 켜 둔 채로 보고 있으면 10분마다 조용히 새로 받음 (1분마다 확인 · 창이 열려 있거나 글자 입력·검색 중이면 다음에)
+setInterval(function () {
+  try {
+    if (document.hidden || !SPL.done || BLOCKED || $("upddone") || document.querySelector(".ov.on")) return;
+    if (typeof SR !== "undefined" && SR && SR.open) return;
+    var a = document.activeElement; if (a && /INPUT|TEXTAREA|SELECT/.test(a.tagName)) return;
+    refreshIfStale(true);
+  } catch (e) {}
+}, 60000);
 function onResume() { blockCheck(); relCheck(); checkUpdate(); refreshIfStale(); try { adminUI(); } catch (e) {} }
 document.addEventListener("visibilitychange", function () { if (!document.hidden) onResume(); });
 window.addEventListener("pageshow", function (e) { if (e.persisted) onResume(); });
@@ -5913,6 +5972,31 @@ function dlDo(fn, args, msg, okText) {
 }
 function closeDevList() { $("dlov").className = "ov"; }
 $("dlno").onclick = closeDevList;
+// 🐞 오류 기록 (개발자)
+function openErrList() {
+  $("erov").className = "ov on";
+  var L = $("erlist"); L.innerHTML = ""; L.appendChild(el("span", "hint", "불러오는 중…"));
+  call("devErrors", [DV.pin]).then(function (r) {
+    L.innerHTML = "";
+    if (r && r.error) { var w = el("div", "warn", r.error); w.style.whiteSpace = "pre-line"; L.appendChild(w); return; }
+    if (!r.rows || !r.rows.length) { L.appendChild(el("span", "hint", "아직 기록된 오류가 없어요 👍")); return; }
+    if (r.total > r.rows.length) L.appendChild(el("span", "hint", "전체 " + r.total + "개 중 최근 " + r.rows.length + "개 · 나머지는 시트 '앱_오류기록'에서"));
+    r.rows.forEach(function (x) {
+      var b = el("button", "er"); b.type = "button";
+      b.appendChild(el("small", null, x.at + " · " + x.n + " · " + x.where + " · v" + String(x.ver).slice(5).replace("-", ".")));
+      b.appendChild(el("b", null, x.msg));
+      if (x.src || x.stack) b.appendChild(el("i", null, [x.src, x.stack].filter(Boolean).join(" · ").slice(0, 160)));
+      b.onclick = function () {
+        var t = [x.at, x.n, x.dev, "v" + x.ver, x.where, x.msg, x.src, x.stack].filter(Boolean).join("\n");
+        try { navigator.clipboard.writeText(t).then(function () { b.className = "er cp"; toast("📋 복사했어요"); }, function () { toast("복사가 안 돼요. 시트 '앱_오류기록'에서 확인해 주세요.", true); }); } catch (e) { toast("복사가 안 돼요.", true); }
+      };
+      L.appendChild(b);
+    });
+  }).catch(function (e) { L.innerHTML = ""; L.appendChild(el("div", "warn", "불러오기 실패: " + errText(e))); });
+}
+$("erno").onclick = function () { $("erov").className = "ov"; };
+$("erback").onclick = function () { $("erov").className = "ov"; openDevPanel(); };
+$("erov").onclick = function (e) { if (e.target === this) this.className = "ov"; };
 $("dlback").onclick = function () { closeDevList(); openDevPanel(); };
 $("dlov").onclick = function (e) { if (e.target === this) closeDevList(); };
 
@@ -5948,6 +6032,7 @@ function openDevPanel() {
   }
   item("👤 이 폰 이름 바꾸기", myName() || "-", function () { $("dvov").className = "ov"; openNameChange(); });
   item("📱 팀 기기 목록", "원격 이름 변경", function () { $("dvov").className = "ov"; openDevList(); });
+  item("🐞 오류 기록", "팀원 폰에서 난 앱 오류", function () { $("dvov").className = "ov"; openErrList(); });
   if (ONESIGNAL_APP_ID) item("🔁 알림 다시 연결", "알림이 안 올 때", function (b) {
     var n = myName();
     if (!n || !pushOn()) { $("dvmsg").style.color = "var(--warn)"; $("dvmsg").textContent = "이 폰은 알림이 꺼져 있어요.\n🔔 알림 설정에서 먼저 켜 주세요."; return; }
