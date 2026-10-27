@@ -498,6 +498,9 @@ li:first-child{border-top:0}
 .ob button:disabled{opacity:.6}
 #apmsg,#ntmsg,#pushmsg,#nmdesc,#nmmsg{white-space:pre-line;word-break:keep-all;line-height:1.5}
 #nmchips .chip.chf{border-color:#7c5cff;color:#5b3fd6;font-weight:700}
+#nmchips .chip.taken,#nmov.full #nmchips .chip.taken{border-style:dashed;color:var(--sub);opacity:.7}
+#nmchips .chip.taken small{display:block;font-size:10.5px;font-weight:700;opacity:.85}
+#nmchips .chip.taken.on,#nmov.full #nmchips .chip.taken.on{opacity:1;color:#fff;border-style:solid}
 #nmchips .chip.chf.on{background:#7c5cff;border-color:#7c5cff;color:#fff}
 #nmcp{display:none;margin-top:10px}
 #nmcp label{display:block;font-size:13px;font-weight:600;color:#5b3fd6;margin-bottom:6px}
@@ -5176,10 +5179,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-27-5";
+var APP_VER = "2026-10-27-7";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-27-7", ["이름 고르기: 다른 폰이 이미 쓰는 이름은 🔒 (같은 이름 중복 방지)"]],
   ["2026-10-27-5", ["금일·명일 진행 장비에서 ▲미지정 장비는 빠져요"]],
   ["2026-10-26-31", ["더보기 창에 닫기 버튼", "새로고침 버튼 차분하게 (자동으로 최신 정보로 바뀌어요)"]],
   ["2026-10-26-25", ["🔴 홈 화면 앱 아이콘에 업로드 대기 숫자가 떠요 (알림 켠 폰)", "📅 연차 현황: 팀 연차 달력 (같은 날 2명 이상이면 ⚠️)", "⏳ 업로드가 3일 넘게 밀리면 아침에 작업자에게 알림"]],
@@ -5491,7 +5495,9 @@ var CHIEF_NAME = "총괄팀장";   // 👔 총괄팀장 (시트 명단엔 없지
 function isChief() { return myName() === CHIEF_NAME && !!sget("chiefPin"); }
 function chiefClear() { if (sget("chiefPin")) { sdel("chiefPin"); sdel("admChief"); } }   // 다른 이름으로 바뀌면 총괄팀장 PIN 지움
 function nameDone() { return sget("nameOK") === "1" && !!myName(); }   // 이번 버전에서 직접 고른 적이 있는지
-var NM = { pick: "", confirm: false };
+var NM = { pick: "", confirm: false, taken: [] };
+// 🔒 다른 폰이 이미 쓰는 이름 (내 지금 이름 · 총괄팀장 · 개발자는 제외)
+function nmTaken(n) { return NM.taken.indexOf(n) >= 0 && n !== myName() && n !== CHIEF_NAME && n !== DEV_NAME; }
 
 function nmChips(names) {
   var b = $("nmchips"); b.innerHTML = "";
@@ -5499,11 +5505,15 @@ function nmChips(names) {
   if (NM.change && DV.pin && names.indexOf(DEV_NAME) < 0) names.push(DEV_NAME);   // (A팀) 개발자 이름은 개발자 PIN 확인 뒤에만 보임
   if (names.indexOf(CHIEF_NAME) < 0) names.push(CHIEF_NAME);   // 👔 총괄팀장은 맨 끝 (PIN 필요)
   names.forEach(function (n) {
-    var c = el("button", "chip" + (n === NM.pick ? " on" : "") + (n === DEV_NAME ? " devc" : "") + (n === CHIEF_NAME ? " chf" : ""), n === DEV_NAME ? "🛠 " + n + " (개발자)" : n === CHIEF_NAME ? "👔 " + n : n); c.type = "button";
+    var tk = nmTaken(n);
+    var c = el("button", "chip" + (n === NM.pick ? " on" : "") + (n === DEV_NAME ? " devc" : "") + (n === CHIEF_NAME ? " chf" : "") + (tk ? " taken" : ""), n === DEV_NAME ? "🛠 " + n + " (개발자)" : n === CHIEF_NAME ? "👔 " + n : tk ? "🔒 " + n : n); c.type = "button";
+    if (tk) c.appendChild(el("small", null, "사용 중"));
     c.onclick = function () {
       var was = NM.pick;
       NM.pick = n; NM.confirm = false; $("nmgo").disabled = false; $("nmmsg").textContent = "";
-      $("nmgo").textContent = n === CHIEF_NAME ? "PIN 확인하고 정하기" : NM.change ? "이 이름으로 바꾸기" : "이 이름으로 정하기";
+      var lk = nmTaken(n) && !NM.change;
+      $("nmgo").textContent = n === CHIEF_NAME ? "PIN 확인하고 정하기" : lk ? "관리자 PIN 확인하고 정하기" : NM.change ? "이 이름으로 바꾸기" : "이 이름으로 정하기";
+      if (nmTaken(n)) $("nmmsg").textContent = "'" + n + "'은(는) 이미 다른 폰에서 쓰고 있어요." + (lk ? "\n본인이 맞으면(새 폰·다시 설치) 관리자 PIN을 넣어 주세요." : "");
       nmChips(names);
       nmChiefBox(was !== n);
     };
@@ -5512,7 +5522,10 @@ function nmChips(names) {
 }
 // 👔 총괄팀장을 고르면 PIN 입력칸
 function nmChiefBox(focus) {
-  var on = NM.pick === CHIEF_NAME;
+  var tk = nmTaken(NM.pick) && !NM.change, on = NM.pick === CHIEF_NAME || tk;
+  var lb = document.querySelector('label[for="nmcpin"]');
+  if (lb) lb.textContent = tk ? "🔒 관리자 PIN (이미 쓰는 이름)" : "👔 총괄팀장 PIN";
+  $("nmcpin").placeholder = tk ? "관리자 PIN" : "총괄팀장 PIN";
   $("nmcp").style.display = on ? "block" : "none";
   if (!on) $("nmcpin").value = "";
   else if (focus) setTimeout(function () { try { $("nmcpin").focus(); } catch (e) {} }, 100);
@@ -5543,8 +5556,8 @@ function openNameChange() {
   NM.pick = ""; NM.confirm = false;
   $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 바꾸기"; $("nmmsg").textContent = ""; nmChiefBox();
   var cn = cget("names");
-  if (cn && cn.names) nmChips(cn.names);
-  call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; nmChips(r.names); } }).catch(function () {});
+  if (cn && cn.names) { NM.taken = cn.taken || []; nmChips(cn.names); }
+  call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; NM.taken = r.taken || []; nmChips(r.names); } }).catch(function () {});
   $("nmov").className = "ov on";
 }
 $("nmno").onclick = function () { $("nmov").className = "ov"; nmMode(false); };
@@ -5560,8 +5573,8 @@ function nameAsk(first) {
   NM.pick = ""; NM.confirm = false;
   $("nmgo").disabled = true; $("nmgo").textContent = "이 이름으로 정하기"; $("nmmsg").textContent = ""; nmChiefBox();
   var cn = cget("names");
-  if (cn && cn.names) nmChips(cn.names);
-  call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; nmChips(r.names); } }).catch(function () {});
+  if (cn && cn.names) { NM.taken = cn.taken || []; nmChips(cn.names); }
+  call("getTeamNames").then(function (r) { if (r && r.names) { cset("names", r); PUSH.names = r.names; NM.taken = r.taken || []; nmChips(r.names); } }).catch(function () {});
   $("nmov").className = "ov on full";   // 전체 화면 (관리자 이름 바꾸기 창은 원래 모양)
 }
 
@@ -5581,6 +5594,18 @@ $("nmgo").onclick = function () {
       $("nmgo").disabled = false; $("nmgo").textContent = "PIN 확인하고 정하기";
       msg.textContent = "확인 실패: " + errText(e);
     });
+    return;
+  }
+  if (nmTaken(NM.pick) && !NM.change) {   // 🔒 다른 폰이 쓰는 이름: 관리자 PIN이 맞아야 (본인이 새 폰으로 바꾼 경우)
+    var m2 = $("nmmsg"), ap = $("nmcpin").value.trim();
+    if (!ap) { m2.textContent = "관리자 PIN을 입력해 주세요.\n(이름이 겹치면 알림·근무시간이 섞여요)"; return; }
+    $("nmgo").disabled = true; $("nmgo").textContent = "확인 중…";
+    call("checkAdmin", [ap]).then(function (r) {
+      $("nmgo").disabled = false; $("nmgo").textContent = "관리자 PIN 확인하고 정하기";
+      if (!r || r.error) { m2.textContent = (r && r.error) || "확인 실패"; $("nmcpin").value = ""; return; }
+      $("nmcpin").value = "";
+      nmApply(NM.pick);
+    }).catch(function (e) { $("nmgo").disabled = false; $("nmgo").textContent = "관리자 PIN 확인하고 정하기"; m2.textContent = "확인 실패: " + errText(e); });
     return;
   }
   if (!NM.confirm) {   // 한 번 더 확인
