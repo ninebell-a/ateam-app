@@ -1206,6 +1206,10 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 .wkc.x b{color:var(--warn)}
 .wkc.ok{background:linear-gradient(135deg,rgba(31,157,85,.14),rgba(31,157,85,.05));box-shadow:inset 0 0 0 1px rgba(31,157,85,.25)}
 .wkc.ok b{color:var(--ok)}
+.wkc.na{background:linear-gradient(135deg,rgba(217,119,6,.14),rgba(217,119,6,.05));box-shadow:inset 0 0 0 1px rgba(217,119,6,.28)}
+.wkc.na b{color:#d97706}
+.wkc em{display:block;font-style:normal;font-size:11px;font-weight:700;color:var(--sub);margin-top:2px}
+#hweek .wkmiss.na .wkmg .wkn{color:#d97706;background:rgba(217,119,6,.12)}
 .wkme{border-radius:14px;padding:11px 12px;background:var(--card);box-shadow:inset 0 0 0 1.5px rgba(47,111,237,.35)}
 .wkml{display:flex;align-items:baseline;justify-content:space-between}
 .wkml span{font-size:12.5px;font-weight:800;color:var(--accent)}
@@ -4424,10 +4428,15 @@ function renderWeek(w) {
 
   var cw = w.cur;   // 이번 주 (시트 월이 이번 달이 아니면 -1)
   var ld = wkLastDone(w);
-  var miss = [];
-  // 실제 근무 숫자가 하나도 없는 주(입사 전, 휴일 표시만 있는 주 등)는 제외
-  if (ld >= 0) w.rows.forEach(function (r) { if (wkWorked(r, ld) && r.h[ld] < w.limit) miss.push(r.n); });
-  b.className = "wk" + (miss.length ? " x" : "");
+  var miss = [], noIn = [];
+  // 이번 달에 숫자가 하나도 없는 줄(공석·입사 전)은 인원에서 뺌
+  var act = w.rows.filter(function (r) { return r.h.some(function (x) { return x > 0; }); });
+  // 지난주: 실제 근무가 있는데 52 미만 = 미달 / 칸이 다 비어 있음 = 입력 없음 (달성으로 안 셈) / 휴가만 있는 주는 판정 안 함
+  if (ld >= 0) act.forEach(function (r) {
+    if (wkWorked(r, ld)) { if (r.h[ld] < w.limit) miss.push(r.n); }
+    else if (!r.h[ld]) noIn.push(r.n);
+  });
+  b.className = "wk" + (miss.length ? " x" : noIn.length ? " w" : "");
 
   var sm = el("summary", "wk2");   // ✨ 머리: 아이콘 · 제목 · 표 열기 / 지난주·이번 주 두 칸 / 내 이번 주 막대 / 미달 이름
   var hd = el("div", "wkh");
@@ -4437,17 +4446,18 @@ function renderWeek(w) {
   hd.appendChild(el("span", "tg", "주별 표 ▾"));
   sm.appendChild(hd);
   var two = el("div", "wk2c");
-  var c1 = el("div", "wkc" + (ld < 0 ? "" : miss.length ? " x" : " ok"));
+  var c1 = el("div", "wkc" + (ld < 0 ? "" : miss.length ? " x" : noIn.length ? " na" : " ok"));
   c1.appendChild(el("small", null, ld >= 0 ? "지난주 " + wkMd(w.weeks[ld].from) + "~" + wkMd(w.weeks[ld].to) : "지난주"));
   if (ld < 0) c1.appendChild(el("b", "s", "끝난 주 없음"));
-  else if (miss.length) { var mb = el("b", null, String(miss.length)); mb.appendChild(el("i", null, "명 미달")); c1.appendChild(mb); }
+  else if (miss.length) { var mb = el("b", null, String(miss.length)); mb.appendChild(el("i", null, "명 미달")); c1.appendChild(mb); if (noIn.length) c1.appendChild(el("em", null, "입력 없음 " + noIn.length + "명")); }
+  else if (noIn.length) { var nb = el("b", null, String(noIn.length)); nb.appendChild(el("i", null, "명 입력 없음")); c1.appendChild(nb); if (act.length > noIn.length) c1.appendChild(el("em", null, "입력한 사람은 모두 달성")); }
   else c1.appendChild(el("b", "s", "전원 달성 ✓"));
   two.appendChild(c1);
   var c2 = el("div", "wkc");
   if (cw >= 0) {
     var done = w.rows.filter(function (r) { return r.h[cw] >= w.limit; }).length;
     c2.appendChild(el("small", null, "이번 주 " + wkMd(w.weeks[cw].from) + "~" + wkMd(w.weeks[cw].to)));
-    var db = el("b", null, String(done)); db.appendChild(el("i", null, "/" + w.rows.length + "명 달성")); c2.appendChild(db);
+    var db = el("b", null, String(done)); db.appendChild(el("i", null, "/" + act.length + "명 달성")); c2.appendChild(db);
   } else { c2.appendChild(el("small", null, "이번 주")); c2.appendChild(el("b", "s", "시트 월이 달라요")); }
   two.appendChild(c2);
   sm.appendChild(two);
@@ -4473,6 +4483,18 @@ function renderWeek(w) {
       mg.appendChild(a2);
     });
     ml2.appendChild(mg); sm.appendChild(ml2);
+  }
+  if (noIn.length) {   // 지난주 근무시간을 하나도 안 넣은 사람
+    var nl = el("div", "wkmiss na");
+    nl.appendChild(el("small", null, "지난주 입력 없음 · 이름을 누르면 입력 내역"));
+    var ng = el("div", "wkmg");
+    noIn.forEach(function (n) {
+      var a3 = el("button", "wkn"); a3.type = "button";
+      a3.appendChild(document.createTextNode(n));
+      a3.onclick = function (e) { e.preventDefault(); e.stopPropagation(); goMon(n); };
+      ng.appendChild(a3);
+    });
+    nl.appendChild(ng); sm.appendChild(nl);
   }
   b.appendChild(sm);
 
@@ -5184,10 +5206,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-29-9";
+var APP_VER = "2026-10-29-11";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-29-11", ["주 52시간: 근무시간을 안 넣은 사람은 '입력 없음'으로 따로 표시 (달성으로 안 셈)"]],
   ["2026-10-29-9", ["▲미지정 → ▲팀/담당자 미지정으로 이름 바꿈 (장비 아래 줄에 표시)"]],
   ["2026-10-29-5", ["금일·명일: 동탄 자리 장비는 빠져요", "진행 장비 숫자에 ▲미지정 장비도 같이 세요"]],
   ["2026-10-27-7", ["이름 고르기: 다른 폰이 이미 쓰는 이름은 🔒 (같은 이름 중복 방지)"]],
