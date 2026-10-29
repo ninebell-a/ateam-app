@@ -2278,7 +2278,16 @@ function setGate(mode, msg, bad) {
   if (mode === "enter") {
     $("gin").value = "";
     setTimeout(function () { try { $("gin").focus(); } catch (e) {} }, 100);
+    gateHello();
   }
+}
+// 🔐 PIN 화면이 뜬 폰 → 서버 기기 목록에 "PIN 입력 전"으로 표시 (PIN 없이 · 데이터 안 받음)
+//    이미 이름까지 등록한 폰은 안 보냄 · 버전마다 한 번만 · 결과는 안 기다림
+function gateHello() {
+  try {
+    if (sget("devReg") || sget("gateHi") === APP_VER) return;
+    rawCall1("", "gateHello", [devInfo()]).then(function () { sset("gateHi", APP_VER); }).catch(function () {});
+  } catch (e) {}
 }
 
 function stopTimer() { if (G.timer) { clearInterval(G.timer); G.timer = null; } }
@@ -5206,7 +5215,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-29-11";
+var APP_VER = "2026-10-29-13";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
@@ -6251,16 +6260,19 @@ function dlErr(t) { var L = $("dllist"); L.innerHTML = ""; var w = el("div", "wa
 function dlRender() {
   var L = $("dllist"); L.innerHTML = "";
   if (!DL.rows.length) { L.appendChild(el("span", "hint", "아직 등록된 폰이 없어요. 업데이트 후 앱을 연 폰부터 나와요.")); return; }
-  var cnt = {}; DL.rows.forEach(function (r) { cnt[r.n] = (cnt[r.n] || 0) + 1; });
+  var cnt = {}; DL.rows.forEach(function (r) { if (!r.pre) cnt[r.n] = (cnt[r.n] || 0) + 1; });
+  var pre = DL.rows.filter(function (r) { return r.pre; }).length;
+  if (pre) L.appendChild(el("div", "hint", "🔐 PIN 입력 전 " + pre + "대 · 앱은 깔았는데 PIN을 아직 안 넣은 폰이에요 (누구 폰인지는 몰라요)"));
   var me = devId();
   DL.rows.forEach(function (r) {
     var mine = r.dev === me;
-    var c = el("div", "dlc" + (mine ? " mine" : ""));
-    var h = el("div", "h"); h.appendChild(document.createTextNode(r.n)); h.appendChild(el("small", null, "기기-" + r.dev));
+    var c = el("div", "dlc" + (mine ? " mine" : "") + (r.pre ? " pre" : ""));
+    var h = el("div", "h"); h.appendChild(document.createTextNode(r.pre ? "(이름 없음)" : r.n)); h.appendChild(el("small", null, "기기-" + r.dev));
+    if (r.pre) h.appendChild(el("span", "tg w", "PIN 입력 전"));
     if (mine) h.appendChild(el("span", "tg", "이 폰"));
-    if (cnt[r.n] > 1) h.appendChild(el("span", "tg w", "같은 이름 " + cnt[r.n] + "대"));
+    if (!r.pre && cnt[r.n] > 1) h.appendChild(el("span", "tg w", "같은 이름 " + cnt[r.n] + "대"));
     c.appendChild(h);
-    c.appendChild(el("div", "m", [r.kind || "-", r.push ? "🔔 알림 켬" : "🔕 알림 안 켬", r.ver || "", r.at || ""].filter(Boolean).join(" · ")));
+    c.appendChild(el("div", "m", [r.kind || "-", r.pre ? "" : r.push ? "🔔 알림 켬" : "🔕 알림 안 켬", r.ver || "", r.at || ""].filter(Boolean).join(" · ")));
     if (r.pend) {
       var p = el("div", "pend", "⏳ '" + r.pend + "'(으)로 바꾸기 예약됨\n그 폰에서 앱을 열면 바뀌어요");
       c.appendChild(p);
@@ -6269,7 +6281,7 @@ function dlRender() {
     function btn(t, cls, fn) { var b = el("button", cls, t); b.type = "button"; b.onclick = function () { fn(b); }; bt.appendChild(b); return b; }
     var msg = el("div", "em");
     if (r.pend) btn("예약 취소", null, function (b) { b.disabled = true; dlDo("devRenameCancel", [DV.pin, r.dev], msg, "예약을 취소했어요"); });
-    btn(DL.open === r.dev ? "닫기" : "이름 바꾸기", null, function () {
+    if (!r.pre) btn(DL.open === r.dev ? "닫기" : "이름 바꾸기", null, function () {
       if (mine) { closeDevList(); openNameChange(); return; }   // 이 폰은 바로 바꾸기
       DL.open = DL.open === r.dev ? "" : r.dev; DL.pick = ""; DL.forget = ""; dlRender();
     });
