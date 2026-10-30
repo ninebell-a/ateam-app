@@ -5006,7 +5006,8 @@ function loadHoursMeta(silent) {
       H.loaded = true;
       var c = m.cell;
       delete m.cell;
-      if (!m.virt) cset("hours", m);
+      if (!m.virt) cset("hours", m); else cset("hvm" + m.month, m);   // 📆 지난 달 화면도 폰에 저장 → 다음엔 바로 그림
+      if (!m.virt) hPrefetch(m);
       applyMeta(m, false);
       if (t !== H.token) return "";   // 그 사이 이름/날짜를 바꿨으면 그쪽 결과를 씀
       if (c && c.name === $("hname").value && c.ymd === $("hdate").value) applyCell(c);
@@ -5061,6 +5062,19 @@ function renderHMonth(m) {
     mid.appendChild(bk);
   }
   b.appendChild(pv); b.appendChild(mid); b.appendChild(nx);
+}
+// ⚡ 근무시간 탭을 열면 지난 달 화면을 뒤에서 한 번 미리 받아 둠 (앱 켤 때 한 번 · ◀ 누르면 바로)
+function hPrefetch(m) {
+  if (H.pf || !m.rng || !m.today) return;
+  var pm = +m.today.slice(5, 7) - 1;
+  if (pm === m.month) pm--;
+  if (pm < m.rng.lo) return;
+  H.pf = true;
+  setTimeout(function () {
+    call("getHoursMeta", [$("hname").value || "", m.today.slice(0, 5) + ("0" + pm).slice(-2) + "-01"])
+      .then(function (r) { if (r && r.virt) { delete r.cell; cset("hvm" + r.month, r); } })
+      .catch(function () {});
+  }, 1500);
 }
 function hMonLbl() { return H.meta && H.meta.virt ? H.meta.month + "월 계" : "이번 달 계"; }
 
@@ -5252,7 +5266,12 @@ function refreshCell() {
   if (H.meta.rng && mq !== H.meta.month && hInRange(date) && H.vmReq !== mq) {   // 📆 다른 달 → 그 달 화면 통째로
     checkMonth();
     H.vmReq = mq;
-    box.textContent = mq + "월 불러오는 중…"; monLoading(name);
+    var cv = cget("hvm" + mq);
+    if (cv && cv.names && cv.today === H.meta.today) {   // ⚡ 폰에 저장해 둔 그 달 화면을 먼저 → 서버 응답이 오면 덮어씀
+      applyMeta(cv, true); H.vmReq = mq;
+      var q1 = gridCell(name, date);
+      if (q1) applyCell(q1, true);
+    } else { box.textContent = mq + "월 불러오는 중…"; monLoading(name); }
     loadHoursMeta(true).then(function (err) { if (err) { H.vmReq = 0; showHErr("불러오기 실패: " + err); } });
     return;
   }
@@ -5404,7 +5423,7 @@ function doSave(value, force, delForce) {
         if (r.week && H.meta) { H.meta.week = r.week; renderWeek(r.week); }
         try { var gr = H.meta.grid.rows[name]; gr.v[+date.slice(8, 10) - 1] = r.cur; } catch (eg) {}   // 미리 받아둔 값도 갱신
         if (r.grid && H.meta) H.meta.grid = r.grid;
-        if (H.meta && !H.meta.virt) cset("hours", H.meta);
+        if (H.meta && !H.meta.virt) cset("hours", H.meta); else if (H.meta) cset("hvm" + H.meta.month, H.meta);
         if (!r.virt) renderMissing(r.missing);
         prevSaved(name, date, r.cur === "");
         H.token++;   // 진행 중인 조회 결과는 버리고 저장 응답으로 바로 갱신
@@ -5467,7 +5486,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-30-26";
+var APP_VER = "2026-10-30-27";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
