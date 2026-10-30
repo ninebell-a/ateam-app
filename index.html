@@ -315,7 +315,8 @@ li:first-child{border-top:0}
 #splash .spbar{position:relative;margin-top:24px;width:132px;height:3px;border-radius:3px;background:var(--sbar);overflow:hidden;animation:spUp .6s ease-out .65s both}
 #splash .spbar i{position:absolute;top:0;bottom:0;left:0;width:40%;border-radius:3px;background:linear-gradient(90deg,transparent,var(--sacc),var(--sacc2),transparent);animation:spLoad 1.3s ease-in-out infinite}
 #splash .spm{position:relative;visibility:hidden;margin-top:16px;font-size:13.5px;font-weight:600;color:var(--ssub);letter-spacing:.02em;min-height:20px;text-align:center;word-break:keep-all}
-#splash.wait .spm{visibility:visible}   /* 2.5초 넘으면 보임 · 자리는 미리 잡아 둬서 안 밀림 */
+#splash.wait .spm{visibility:visible}
+#splash .spm{white-space:pre-line;line-height:1.55}   /* 2.5초 넘으면 보임 · 자리는 미리 잡아 둬서 안 밀림 */
 #splash .spm i{font-style:normal;animation:spDot 1.2s infinite}
 #splash .spm i:nth-child(2){animation-delay:.2s}
 #splash .spm i:nth-child(3){animation-delay:.4s}
@@ -1406,7 +1407,9 @@ button.ref.rf:disabled{opacity:1}
 /* 👤 이름 고르기 (전체 화면) */
 #nmov.full{background:radial-gradient(130% 70% at 50% 18%,var(--pv1) 0%,var(--pv2) 78%);align-items:center;padding:20px 0 calc(20px + env(safe-area-inset-bottom));overflow-y:auto}
 #nmov.full .box{position:relative;max-width:420px;margin:auto 16px;padding:26px 20px 22px;gap:14px;border-radius:24px;border:1px solid var(--pvbd);background:var(--pvc);-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);box-shadow:0 30px 60px -30px var(--pvgl);color:var(--pvtx);animation:pvUp .5s ease-out both}
-#nmov.full .box::before{content:"처음 한 번만";justify-self:center;font-size:11.5px;font-weight:800;letter-spacing:.06em;color:#fff;background:var(--pvgr);padding:5px 12px;border-radius:999px;box-shadow:0 6px 16px -8px var(--pvgl)}
+#nmov.full .box>*{flex-shrink:0}
+#nmov.full .box{max-height:none;overflow:visible}
+#nmov.full .box::before{width:auto;height:auto;flex-shrink:0;line-height:1.4;white-space:nowrap;content:"처음 한 번만";justify-self:center;font-size:11.5px;font-weight:800;letter-spacing:.06em;color:#fff;background:var(--pvgr);padding:5px 12px;border-radius:999px;box-shadow:0 6px 16px -8px var(--pvgl)}
 #nmov.full #nmttl{text-align:center;font-size:21px;font-weight:900;letter-spacing:-.01em}
 #nmov.full #nmdesc{text-align:center;font-size:13.5px;color:var(--pvsb);margin-top:-4px}
 #nmov.full #nmdesc b{color:var(--pvac)!important}
@@ -2527,7 +2530,7 @@ function render() {
   var main = $("main");
   main.innerHTML = "";
   var d = store[cur];
-  if (!d) { main.appendChild(el("div", "msg", "불러오는 중…")); return; }
+  if (!d) { var lm = el("div", "msg", firstRun() ? "⏳ 처음 불러오는 중이에요\n처음엔 조금 오래 걸릴 수 있어요\n다음부터는 빨라요" : "불러오는 중…"); lm.style.whiteSpace = "pre-line"; lm.style.wordBreak = "keep-all"; main.appendChild(lm); return; }
   if (d.error) { main.appendChild(el("div", "warn", d.error)); return; }
 
   $("upd").textContent = updTxt(d, "dash");
@@ -5278,7 +5281,7 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-30-17";
+var APP_VER = "2026-10-30-21";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
@@ -6114,9 +6117,10 @@ function noticeBtn() {
 
 function ntChips() {
   var f = $("ntfrom"); f.innerHTML = "";
-  var list = [CHIEF_NAME].concat(NOTICE_ADMINS.filter(function (n) { return n !== DEV_NAME; }));   // 총괄팀장 맨 앞 · 손성민 이름은 보낸 사람에 안 나옴
-  if (isChief()) list = [CHIEF_NAME];   // 👔 총괄팀장 폰: 총괄팀장만
-  if (myName() === DEV_NAME) list.push(DEV_SENDER);   // 🛠 개발자로 보내기 (개발자 폰에서만, 개발자 PIN 필요)
+  // ✍️ 보낸 사람은 본인 이름만 (총괄팀장 폰 = 총괄팀장 · 개발자 폰 = 개발자 · 관리자 = 내 이름)
+  var me = myName() || sget("pushName") || "";
+  var list = isChief() ? [CHIEF_NAME] : me === DEV_NAME ? [DEV_SENDER] : NOTICE_ADMINS.indexOf(me) >= 0 ? [me] : [];
+  if (list.length === 1) NT.from = list[0];
   list.forEach(function (n) {
     var c = el("button", "chip" + (n === NT.from ? " on" : ""), n === DEV_SENDER ? "🛠 " + n : n); c.type = "button";
     c.onclick = function () { NT.from = n; ntChips(); ntPreview(); };
@@ -6835,8 +6839,11 @@ function igQR(box, hint) {
 var SPL = { t0: Date.now(), done: false, max: null, hold: false };
 var SPL_MSG_MS = 2500, SPL_MAX_MS = 8000, SPL_RING_MS = 2800;   // 2.8초 = 바깥 원이 한 바퀴 다 그려지고(1.85초) TEAM 1-A 위로 빛이 한 번 지나간 뒤(2.75초) (그 전엔 데이터가 와도 안 닫음)   // 2.5초 넘으면 "최신 정보 받는 중…" · 8초 넘으면 저장된 화면 먼저 (데이터가 오면 바로 바뀜)
 function splashMsg(t) { var m = $("spmsg"); if (!m) return; m.innerHTML = ""; m.appendChild(document.createTextNode(t)); if (/중$/.test(t)) for (var i = 0; i < 3; i++) m.appendChild(el("i", null, ".")); }
+// 🆕 처음 설치(저장된 화면이 아직 없음): 처음 불러오기는 느릴 수 있다고 안내
+function firstRun() { try { return !cget("dash"); } catch (e) { return false; } }
+var FIRST_MSG = "처음엔 조금 오래 걸려요 · 다음부터는 빨라요";
 function splashWait() {   // 받는 동안: 2.5초 뒤 안내 문구 · 8초에 닫고 저장된 화면 (갱신은 뒤에서 계속 → 오면 화면이 바로 바뀜)
-  splashMsg("최신 정보 받는 중");
+  if (firstRun()) splashMsg(FIRST_MSG); else splashMsg("최신 정보 받는 중");
   if (SPL.max) clearTimeout(SPL.max);
   if (SPL.msg) clearTimeout(SPL.msg);
   SPL.msg = setTimeout(function () { var s = $("splash"); if (s && !SPL.done) s.className = "wait"; }, SPL_MSG_MS);
