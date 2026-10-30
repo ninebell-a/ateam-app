@@ -945,6 +945,23 @@ button.ref:active{transform:scale(.95)}
 .chip{transition:transform .12s}
 .chip:active{transform:scale(.96)}
 /* 알림 띠(토스트) */
+#undobar{position:fixed;left:16px;right:16px;bottom:calc(92px + env(safe-area-inset-bottom));z-index:58;display:none;align-items:center;gap:10px;padding:12px 12px 12px 16px;border-radius:14px;background:#1f2937;color:#fff;font-size:14px;font-weight:700;box-shadow:0 14px 32px -10px rgba(0,0,0,.45);overflow:hidden}
+#undobar.on{display:flex;animation:pvUp .25s ease-out both}
+#undobar span{flex:1;min-width:0;word-break:keep-all}
+#undobar button{flex:none;border:0;border-radius:10px;padding:9px 12px;background:#fbbf24;color:#1f2937;font:inherit;font-weight:900}
+#undobar i{position:absolute;left:0;bottom:0;height:3px;background:#fbbf24;width:100%;transform-origin:left}
+#undobar.on i{animation:undoT 10s linear forwards}
+@keyframes undoT{to{transform:scaleX(0)}}
+.updone{margin-top:14px;border:1px solid var(--line);border-radius:14px;background:var(--card);overflow:hidden}
+.updone>button{width:100%;display:flex;justify-content:space-between;align-items:center;padding:13px 14px;border:0;background:transparent;color:var(--text);font:inherit;font-size:14px;font-weight:800}
+.updone>button small{color:var(--sub);font-weight:700}
+.updone ul{list-style:none;margin:0;padding:0 14px 8px}
+#upload .updone li,.updone li{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid var(--line);font-size:14px;color:var(--text);opacity:1}
+.updone li .udt{flex:1;min-width:0;color:var(--text);font-size:14px}
+.updone li .udt b{font-weight:800}
+.updone li .udt small{display:block;color:var(--sub);font-size:12px;margin-top:2px}
+.updone li button{flex:none;border:1px solid var(--line);border-radius:10px;padding:7px 10px;background:var(--bg);color:var(--text);font:inherit;font-size:13px;font-weight:800}
+.updone li .no{flex:none;font-size:11.5px;color:var(--sub)}
 #toast{border-radius:14px;box-shadow:0 14px 32px -10px rgba(0,0,0,.35),inset 0 1px 0 rgba(255,255,255,.2)}
 /* ✨ 금일·명일 요약 카드 + 공정 타임라인 */
 .dhero{position:relative;overflow:hidden;border-radius:18px;padding:12px 14px 11px 16px;color:#fff;background:linear-gradient(125deg,#2f6fed 0%,#5b7cff 55%,#8a6bff 100%);box-shadow:0 14px 30px -16px var(--glow),inset 0 1px 0 rgba(255,255,255,.25);display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px;transition:transform .12s;-webkit-tap-highlight-color:transparent}
@@ -1782,7 +1799,7 @@ html.xmas .tl>.card:not(.empty):nth-of-type(4n+4){background:var(--xholly) right
     <div class="who" id="cfwho"></div>
     <p><b id="cfsheet"></b> 시트 업로드를 마치셨나요?</p>
     <p class="sub" id="cfop" style="display:none;color:#d97706;font-weight:700">👷 이 장비는 작업자가 비어 있어요. 완료 후에도 작업자 이름을 적을 때까지 목록에 남아요.</p>
-    <p class="sub">'완료로 기록'을 누르면 시트에 <b style="color:var(--ok)">완료</b>로 저장돼요.<br>잘못 눌렀을 땐 시트에서 직접 수정해야 해요.</p>
+    <p class="sub">'완료로 기록'을 누르면 시트에 <b style="color:var(--ok)">완료</b>로 저장돼요.<br>잘못 눌렀으면 바로 뜨는 <b>되돌리기</b>나, 업로드 탭 맨 아래 <b>오늘 완료한 것</b>에서 되돌릴 수 있어요.</p>
     <div class="ob">
       <button id="cfno" type="button">취소</button>
       <button id="cfgo" type="button" class="go">✔ 완료로 기록</button>
@@ -1964,6 +1981,7 @@ A팀 모두 켜 두는 <b>필수 설정</b>이에요.</p>
 </div>
 
 <div id="toast"></div>
+<div id="undobar"><span id="undotx"></span><button id="undogo" type="button">↩ 되돌리기</button><i id="undoline"></i></div>
 <div class="ov" id="tmov"><div class="box"><h3>더보기</h3><div class="tmg" id="tmg"></div><div class="ob" style="grid-template-columns:1fr"><button id="tmno" type="button">닫기</button></div></div></div>
 
 <!-- 편집 PIN 입력창 -->
@@ -2197,7 +2215,7 @@ function rawCall1(pin, fn, args, editPin) {
   SPD.last = null;
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
   var body = JSON.stringify({ pin: pin, fn: fn, args: args || [], editPin: editPin || "", dev: devId(), rid: rid, prev: prev,
-    me: myName(), adm: (fn === "saveHours" || fn === "setOperator") && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
+    me: myName(), adm: (fn === "saveHours" || fn === "setOperator" || fn === "undoUploadDone") && adminOn() && !isChief() ? sget("admPin") : "" });   // me = 입력자(앱_수정기록), adm = 관리자 모드일 때만
   var ms0 = callTimeout(fn, args), rd = !!READ_FNS[fn];
   return fetchJson(body, ms0, rd)
     .catch(function (e) {
@@ -3358,8 +3376,8 @@ $("cfgo").onclick = function () {
       var m = (r && r.error) ? { err: true, t: r.error } : { err: false, t: it.n + " " + s.label + " → 완료 ✔" };
       U.msg = m;
       closeConfirm();
-      if (!m.err) { upFixAdd(it, s.col); upFixNow(); }   // ⚡ 성공하면 목록에서 바로 뺌 (실패하면 그대로)
-      toast((m.err ? "⚠️ " : "✔ ") + m.t, m.err);
+      if (!m.err) { upFixAdd(it, s.col); upFixNow(); undoBar(it.row, s.col, it.n, s.label); U.doneList = null; }   // ⚡ 성공하면 목록에서 바로 뺌 + ↩ 10초 되돌리기
+      else toast("⚠️ " + m.t, true);
       loadUpload();
     })
     .catch(function (e) {
@@ -3370,6 +3388,66 @@ $("cfgo").onclick = function () {
       loadUpload();
     });
 };
+
+/* ---------- ↩ 업로드 완료 되돌리기 ----------
+ * ① 완료 직후 10초 동안 아래 막대에 [되돌리기]
+ * ② 업로드 탭 맨 아래 "오늘 완료한 것" (오늘만 · 완료 누른 본인 또는 관리자 모드)
+ */
+var UNDO = { t: null };
+function undoBar(row, col, n, label) {
+  var b = $("undobar");
+  $("undotx").textContent = "✔ " + n + " " + label + " 완료";
+  b.className = ""; void b.offsetWidth; b.className = "on";
+  $("undogo").disabled = false;
+  $("undogo").onclick = function () { $("undogo").disabled = true; undoHide(); undoDo(row, col, n, label); };
+  if (UNDO.t) clearTimeout(UNDO.t);
+  UNDO.t = setTimeout(undoHide, 10000);
+}
+function undoHide() { $("undobar").className = ""; if (UNDO.t) { clearTimeout(UNDO.t); UNDO.t = null; } }
+function undoDo(row, col, n, label, btn) {
+  toast("↩ 되돌리는 중…");
+  return callEdit("undoUploadDone", [row, col, n]).then(function (r) {
+    if (r && r.error) { toast("⚠️ " + r.error, true); if (btn) btn.disabled = false; return; }
+    var f = UPFIX[row + "|" + n];
+    if (f) { f.cols = f.cols.filter(function (c) { return c !== col; }); if (!f.cols.length && !f.op && !f.site) delete UPFIX[row + "|" + n]; }
+    U.doneList = null;
+    toast("↩ " + n + " " + label + " → 다시 업로드 필요로 되돌렸어요");
+    loadUpload();
+  }).catch(function (e) { toast("⚠️ 되돌리기 실패: " + errText(e), true); if (btn) btn.disabled = false; });
+}
+// ② 오늘 완료한 것 (접어 둠 · 펼칠 때만 서버에서 받음)
+function upDoneBox(box) {
+  var w = el("div", "updone");
+  var hd = el("button"); hd.type = "button";
+  var n0 = U.doneList ? U.doneList.length : null;
+  hd.appendChild(el("span", null, "✔ 오늘 완료한 것" + (n0 != null ? " " + n0 + "건" : "")));
+  hd.appendChild(el("small", null, U.doneOpen ? "접기 ▴" : "잘못 눌렀으면 여기서 되돌리기 ▾"));
+  hd.onclick = function () { U.doneOpen = !U.doneOpen; if (U.doneOpen && !U.doneList) upDoneLoad(); renderUpload(U.data); };
+  w.appendChild(hd);
+  if (U.doneOpen) {
+    var ul = el("ul");
+    if (!U.doneList) ul.appendChild(el("li", null, "불러오는 중…"));
+    else if (!U.doneList.length) ul.appendChild(el("li", null, "오늘 앱에서 완료 처리한 게 없어요."));
+    else U.doneList.forEach(function (x) {
+      var li = el("li"), t = el("div", "udt");
+      var bb = el("b", null, x.n + " "); t.appendChild(bb); t.appendChild(document.createTextNode(x.label));
+      t.appendChild(el("small", null, (x.by || "-") + " · " + x.at));
+      li.appendChild(t);
+      if (!x.by || x.by === myName() || adminOn()) {
+        var b = el("button", null, "↩ 되돌리기"); b.type = "button";
+        b.onclick = function () { b.disabled = true; undoDo(x.row, x.col, x.n, x.label, b); };
+        li.appendChild(b);
+      } else li.appendChild(el("span", "no", "본인·관리자만"));
+      ul.appendChild(li);
+    });
+    w.appendChild(ul);
+  }
+  box.appendChild(w);
+}
+function upDoneLoad() {
+  call("getUploadDoneToday").then(function (r) { U.doneList = r || []; if (cur === 2) renderUpload(U.data); })
+    .catch(function (e) { U.doneList = []; toast("⚠️ 불러오기 실패: " + errText(e), true); });
+}
 
 function renderUpload(d) {
   var box = $("upload");
@@ -3440,6 +3518,7 @@ function renderUpload(d) {
     box.appendChild(card);
   });
   // (✏️ 최근 입력한 작업자 칸은 뺌 — 작업자 수정은 내 이름 카드 ✎에서)
+  upDoneBox(box);   // ↩ 오늘 완료한 것 (되돌리기)
 }
 
 /* ---------- 👷 작업자 입력 (26_장비_LOG F열) ---------- */
@@ -5281,10 +5360,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-30-21";
+var APP_VER = "2026-10-30-23";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-30-23", ["↩ 시트 업로드: 완료를 잘못 눌렀으면 되돌리기 (누른 직후 10초 · 업로드 탭 맨 아래 '오늘 완료한 것')"]],
   ["2026-10-30-5", ["🌱 연차 현황: 입사 1년 미만이면 매달 연차 +1 되는 날 안내"]],
   ["2026-10-30-1", ["근무시간: 시트 월이 바뀌는 중엔 저장을 잠시 막아요 (다른 달 칸에 잘못 들어가지 않게)"]],
   ["2026-10-29-11", ["주 52시간: 근무시간을 안 넣은 사람은 '입력 없음'으로 따로 표시 (달성으로 안 셈)"]],
