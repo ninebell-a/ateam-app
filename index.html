@@ -373,6 +373,7 @@ li:first-child{border-top:0}
 #ubov{position:fixed;inset:0;z-index:9997;display:none;align-items:center;justify-content:center;padding:calc(24px + env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));background:var(--bg);text-align:center;word-break:keep-all}
 #blockov.on{display:flex}
 #ubov.on{display:flex}
+#offov #offgo{background:linear-gradient(135deg,#ef4444,#d92d2d)!important;border-color:transparent!important;color:#fff!important;box-shadow:0 8px 20px -8px rgba(217,45,45,.6)!important}
 #blockov .bx{width:100%;max-width:400px}
 #ubov .bx{width:100%;max-width:400px}
 #blockov .bl{height:22px;margin-bottom:26px}
@@ -662,6 +663,15 @@ li.tap:active{background:rgba(47,111,237,.08)}
 .delbox input{width:18px;height:18px}
 .cur .sch{display:block;margin-top:2px;color:var(--accent);font-weight:700}
 .cur{font-size:14px;line-height:1.5;padding:10px 12px;border-radius:10px;background:var(--bg);border:1px dashed var(--line)}
+#hmonth.hmsw{display:flex;align-items:center;gap:8px;padding:6px 8px}
+.hmsw .hmb{flex:0 0 40px;height:40px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--fg);font-size:15px;font-weight:700;cursor:pointer}
+.hmsw .hmb:disabled{opacity:.3;cursor:default}
+.hmsw .hmm{flex:1;text-align:center;line-height:1.3}
+.hmsw .hmm b{font-size:17px}
+.hmsw .hmm small{display:block;font-size:11.5px;color:var(--mut)}
+.hmsw .hmm small.vt{color:var(--accent);font-weight:600}
+.hmsw .hmback{margin-top:3px;border:0;background:none;color:var(--accent);font-size:12px;font-weight:600;text-decoration:underline;cursor:pointer;padding:2px 4px}
+#hwarn.hinfo{background:rgba(47,111,237,.1);color:var(--accent)}
 .cur b{color:var(--accent)}
 .btns{display:grid;grid-template-columns:1fr auto;gap:8px}
 .save{padding:14px;border:0;border-radius:12px;background:var(--accent);color:#fff;font-size:16px;font-weight:700}
@@ -1853,6 +1863,17 @@ html.xmas .tl>.card:not(.empty):nth-of-type(4n+4){background:var(--xholly) right
   </div>
 </div>
 
+<div class="ov" id="offov">
+  <div class="box">
+    <h3>⛔ 앱 사용 중지</h3>
+    <p>누르면 <b>A팀 모든 폰</b>에서 앱이 멈추고<br>'사용이 중지되었습니다' 화면만 떠요.</p>
+    <p class="sub">· 근무시간·업로드 등 앱 기능과 알림(푸시)이 모두 멈춰요.<br>· 다시 켜려면 손성민 프로에게 말씀해 주세요.</p>
+    <div class="ob">
+      <button id="offno" type="button">취소</button>
+      <button id="offgo" type="button" class="go" style="background:var(--warn);border-color:var(--warn)">사용 중지</button>
+    </div>
+  </div>
+</div>
 <div class="ov" id="clrov">
   <div class="box">
     <h3>🗑 입력값 지우기</h3>
@@ -2083,11 +2104,25 @@ function blockCheck() {
       var was = BLOCKED;
       sset("blocked", on ? "1" : "");
       if (on) blockShow(true);
-      else if (was) location.reload();   // 멈춤 → 작동: 처음부터 새로 열기
+      else if (was && !OFF.on) location.reload();   // 멈춤 → 작동: 처음부터 새로 열기
     })
     .catch(function () {});
 }
 blockShow(BLOCKED);   // 지난번에 멈춤이었으면 바로 가림 (깜빡임 없이)
+/* ⛔ 앱 사용 중지 (관리자가 팀 전체 중지 · 서버가 STOP(off)으로 답함) → 중지 화면만 · 1분마다 다시 확인 → 다시 켜지면 자동으로 열림 */
+var OFF = { on: false, timer: null };
+function offShow() {
+  sset("appoff", "1");
+  OFF.on = true; BLOCKED = true;
+  var b = document.getElementById("blockov");
+  if (!b) return;
+  var c = b.querySelector(".bc");
+  if (c) c.innerHTML = '<div class="bi">⛔</div><h2>제조1-A 앱 사용이<br>중지되었습니다</h2><p>김은수 팀장님 요청으로<br>앱 사용을 중지했어요.</p><div class="bh">그동안 사용해 주셔서 감사합니다.</div>';
+  b.className = "on";
+  if (!OFF.timer) OFF.timer = setInterval(function () { if (!document.hidden && typeof getPin === "function") rawCall1(getPin() || "", "ping", []).catch(function () {}); }, 60000);
+}
+function offEnd() { sdel("appoff"); location.reload(); }
+if (sget("appoff") === "1") offShow();
 blockCheck();
 setInterval(function () { if (!document.hidden) blockCheck(); }, 60000);
 /* 🚫 사람별 사용 중지 (관리자 → 팀 기기 정리 → 사용 중지) — 서버가 BLOCK으로 답하면 가림 · 1분마다 다시 확인 */
@@ -2210,7 +2245,7 @@ function rawCall(pin, fn, args, editPin) {
   return rawCall1(pin, fn, args, editPin);
 }
 function rawCall1(pin, fn, args, editPin) {
-  if (BLOCKED) return Promise.reject(new Error("앱을 잠시 멈춰 두었어요."));   // ⏸ 멈춤 중엔 서버에 안 보냄
+  if (BLOCKED && !(OFF.on && fn === "ping")) return Promise.reject(new Error("앱을 잠시 멈춰 두었어요."));   // ⏸ 멈춤 중엔 서버에 안 보냄 (⛔ 중지 중엔 다시 켜졌는지 확인만)
   var rid = Math.random().toString(36).slice(2, 10), t0 = Date.now(), prev = SPD.last;
   SPD.last = null;
   var a0 = (fn === "getDashboardAll" || fn === "getEquipIndex") ? [args && args[0] === true] : [];
@@ -2227,6 +2262,8 @@ function rawCall1(pin, fn, args, editPin) {
     .then(function (j) {
       var ms = Date.now() - t0;
       if (ms >= SLOW_MS) SPD.last = { rid: rid, ms: ms, fn: fn, args: a0, at: t0 };
+      if (j && j.code === "STOP" && j.off) { if (!OFF.on) offShow(); }   // ⛔ 앱 전체 사용 중지
+      else if (OFF.on && j && (j.ok || j.code === "PIN")) offEnd();      // ✅ 다시 켜짐
       if (j && j.code === "BLOCK") ubShow(j.name || myName(), j.by);   // 🚫 관리자가 사용 중지함
       else if (j && j.ok && UB.on) ubOff();                      // ✅ 다시 허용됨
       if (j && j.rn && fn === "getDashboardAll") remoteRenameLater(j.rn);   // 📱 개발자가 원격으로 이름 바꿈
@@ -4564,7 +4601,7 @@ function wkCls(h, w, i, r) {
 // 이 사람의 이번 주 합계 (없으면 null)
 function wkMine(name) {
   var w = H.meta && H.meta.week;
-  if (!w || w.cur < 0) return null;
+  if (!w || w.cur < 0 || H.meta.virt) return null;   // 📆 다른 달 볼 때는 "이번 주" 안 보여줌
   var r = w.rows.filter(function (x) { return x.n === name; })[0];
   return r ? r.h[w.cur] : null;
 }
@@ -4929,6 +4966,8 @@ function ymdLocal() {
 // 이름 목록·월·TOP1·미입력자 화면에 반영
 function applyMeta(m, fromCache) {
   H.meta = m;
+  if (!m.virt) H.home = m;   // 시트 기준 달 (금일 미입력·어제 미입력은 지난 달을 볼 때도 이걸로)
+  var hm = m.virt ? H.home : m;
   var sel = $("hname");
   var keep = sel.value || sget("hoursName") || myName() || "";
   sel.innerHTML = "";
@@ -4937,11 +4976,10 @@ function applyMeta(m, fromCache) {
   });
   if (keep && m.names.indexOf(keep) >= 0) sel.value = keep;
   if (!$("hdate").value) $("hdate").value = fromCache ? ymdLocal() : m.today;
-  $("hmonth").innerHTML = "";
-  $("hmonth").appendChild(document.createTextNode("시트 기준 월: "));
-  $("hmonth").appendChild(el("b", null, m.month + "월"));
-  renderMissing(m.bad ? null : m.missing);
-  renderPrev(m.bad ? null : (m.prev || store.prevMiss));
+  if (H.vmReq === m.month) H.vmReq = 0;
+  renderHMonth(m);
+  renderMissing(!hm || hm.bad ? null : hm.missing);
+  renderPrev(!hm || hm.bad ? null : (hm.prev || store.prevMiss));
   renderTop(m.top);
   renderWeek(m.bad ? null : m.week);
   checkMonth();
@@ -4968,7 +5006,7 @@ function loadHoursMeta(silent) {
       H.loaded = true;
       var c = m.cell;
       delete m.cell;
-      cset("hours", m);
+      if (!m.virt) cset("hours", m);
       applyMeta(m, false);
       if (t !== H.token) return "";   // 그 사이 이름/날짜를 바꿨으면 그쪽 결과를 씀
       if (c && c.name === $("hname").value && c.ymd === $("hdate").value) applyCell(c);
@@ -4982,6 +5020,50 @@ function loadHoursMeta(silent) {
     });
 }
 
+/* ---------- 📆 달 바꾸기 (올해 1월 ~ 이번 달 · 연차·반차·공가는 다음 달까지) ----------
+ * 시트 AE1에 없는 달은 서버가 근무_데이터 + schedule로 화면을 만들어 줌 (시트 AE1은 안 바뀜) */
+function hInRange(d) {
+  var r = H.meta && H.meta.rng;
+  if (!r || !d) return true;
+  var t = H.meta.today || ymdLocal(), mm = +d.slice(5, 7);
+  return d.slice(0, 4) === t.slice(0, 4) && mm >= r.lo && mm <= r.hiL;
+}
+function hGoMonth(m) {
+  var r = H.meta && H.meta.rng;
+  if (!r || H.busy || m < r.lo || m > r.hiL) return;
+  var t = H.meta.today || ymdLocal();
+  $("hdate").value = m === +t.slice(5, 7) ? t : t.slice(0, 5) + ("0" + m).slice(-2) + "-01";
+  H.otherOK = false; resetConfirm(); refreshCell();
+}
+function renderHMonth(m) {
+  var b = $("hmonth"), r = m.rng;
+  b.innerHTML = "";
+  if (!r) {   // 예전 서버: 시트 기준 월만
+    b.className = "cur";
+    b.appendChild(document.createTextNode("시트 기준 월: "));
+    b.appendChild(el("b", null, m.month + "월"));
+    return;
+  }
+  b.className = "cur hmsw";
+  var y = (m.today || ymdLocal()).slice(0, 4);
+  $("hdate").min = y + "-" + ("0" + r.lo).slice(-2) + "-01";
+  $("hdate").max = y + "-" + ("0" + r.hiL).slice(-2) + "-" + new Date(+y, r.hiL, 0).getDate();
+  var pv = el("button", "hmb", "◀"); pv.type = "button"; pv.disabled = m.month <= r.lo; pv.setAttribute("aria-label", "이전 달");
+  pv.onclick = function () { hGoMonth(m.month - 1); };
+  var nx = el("button", "hmb", "▶"); nx.type = "button"; nx.disabled = m.month >= r.hiL; nx.setAttribute("aria-label", "다음 달");
+  nx.onclick = function () { hGoMonth(m.month + 1); };
+  var mid = el("div", "hmm");
+  mid.appendChild(el("b", null, m.month + "월"));
+  mid.appendChild(el("small", m.virt ? "vt" : null, m.leaveOnly ? "다음 달 · 연차·반차·공가만" : m.virt ? "지난 달 · 보기·입력 가능" : "시트 기준 월"));
+  if (m.virt) {
+    var bk = el("button", "hmback", "↩ " + r.sheet + "월로 돌아가기"); bk.type = "button";
+    bk.onclick = function () { hGoMonth(r.sheet); };
+    mid.appendChild(bk);
+  }
+  b.appendChild(pv); b.appendChild(mid); b.appendChild(nx);
+}
+function hMonLbl() { return H.meta && H.meta.virt ? H.meta.month + "월 계" : "이번 달 계"; }
+
 function checkMonth() {
   var w = $("hwarn");
   var ok = true;
@@ -4991,13 +5073,24 @@ function checkMonth() {
     w.textContent = "🚧 " + H.meta.bad;
     ok = false;
   } else if (H.meta && d) {
-    var mm = parseInt(d.split("-")[1], 10);
-    if (mm !== H.meta.month) {
+    var mm = parseInt(d.split("-")[1], 10), rg = H.meta.rng;
+    w.style.whiteSpace = "";
+    if (rg && !hInRange(d)) {
       w.style.display = "block";
-      w.textContent = "⚠️ 시트 월(" + H.meta.month + "월)과 선택한 날짜(" + mm + "월)가 달라요. 시트 AE1 월을 먼저 바꿔 주세요.";
+      w.textContent = "⚠️ 근무시간은 올해 " + rg.lo + "월~" + rg.hi + "월만 볼 수 있어요. (연차·반차·공가는 " + rg.hiL + "월까지)";
       ok = false;
+    } else if (mm !== H.meta.month) {
+      w.style.display = "block";
+      w.textContent = rg && H.vmReq !== mm ? "⏳ " + mm + "월 불러오는 중…" : "⚠️ 시트 월(" + H.meta.month + "월)과 선택한 날짜(" + mm + "월)가 달라요. 시트 AE1 월을 먼저 바꿔 주세요.";
+      ok = false;
+    } else if (H.meta.leaveOnly) {   // 📆 다음 달: 연차류만 (막지는 않음)
+      w.style.display = "block"; w.className = "warn hinfo";
+      w.textContent = "📅 " + mm + "월은 연차·반차·공가만 미리 넣을 수 있어요. (근무시간 숫자는 그 달이 되면)";
+      $("hsave").disabled = false; $("hclr").disabled = false;
+      return true;
     } else w.style.display = "none";
   }
+  w.className = "warn";
   $("hsave").disabled = !ok;
   $("hclr").disabled = !ok;
   return ok;
@@ -5055,7 +5148,7 @@ function renderMonth(name, r) {
   h4.appendChild(el("span", null, name));
   h4.appendChild(document.createTextNode(" · " + mm + "월 입력 내역"));
   b.appendChild(h4);
-  var sum = el("div", "msum", "입력 " + filled + "일 · 이번 달 계 " + (r.total || "-"));
+  var sum = el("div", "msum", "입력 " + filled + "일 · " + hMonLbl() + " " + (r.total || "-"));
   var wm = wkMine(name), wl = H.meta && H.meta.week;
   if (wm != null && wl) {
     sum.appendChild(document.createElement("br"));
@@ -5116,7 +5209,7 @@ function applyCell(r, pending) {
   box.appendChild(document.createTextNode("현재 입력값: "));
   box.appendChild(el("b", null, r.cur === "" ? "(비어 있음)" : r.cur + (r.formula ? " (수식)" : "")));
   box.appendChild(document.createElement("br"));
-  box.appendChild(document.createTextNode("이번 달 계: " + (r.total == null ? "갱신 중…" : (r.total || "-"))));
+  box.appendChild(document.createTextNode(hMonLbl() + ": " + (r.total == null ? "갱신 중…" : (r.total || "-"))));
   H.curSched = r.sched || "";
   H.curVal = r.cur === "" && r.formula ? "(수식)" : String(r.cur == null ? "" : r.cur);
   if (H.curSched) box.appendChild(el("span", "sch", "📅 schedule: " + H.curSched));
@@ -5155,6 +5248,14 @@ function refreshCell() {
   var name = $("hname").value, date = $("hdate").value;
   var box = $("hcur");
   if (!H.meta || !name || !date) { box.textContent = "이름과 날짜를 선택하세요."; $("hmon").style.display = "none"; return; }
+  var mq = +date.slice(5, 7);
+  if (H.meta.rng && mq !== H.meta.month && hInRange(date) && H.vmReq !== mq) {   // 📆 다른 달 → 그 달 화면 통째로
+    checkMonth();
+    H.vmReq = mq;
+    box.textContent = mq + "월 불러오는 중…"; monLoading(name);
+    loadHoursMeta(true).then(function (err) { if (err) { H.vmReq = 0; showHErr("불러오기 실패: " + err); } });
+    return;
+  }
   if (!checkMonth()) { box.textContent = "-"; $("hmon").style.display = "none"; return; }
   var t = ++H.token;
   // ⚡ 미리 받아둔 전원 입력값으로 달력·현재값을 바로 그림 → 서버 응답(schedule·수식 여부)은 뒤에서 덮어씀
@@ -5191,7 +5292,7 @@ function updNote0() {
   var chips = $("chips").children, lk = leaveLocked();
   for (var i = 0; i < chips.length; i++) {
     chips[i].className = "chip" + (chips[i].textContent === val ? " on" : "");
-    chips[i].disabled = lk && LEAVE_RX.test(chips[i].textContent);   // 🔒 남의 연차류는 관리자만 (숫자 대신 입력은 됨)
+    chips[i].disabled = (lk && LEAVE_RX.test(chips[i].textContent)) || (!!(H.meta && H.meta.leaveOnly) && !LEAVE_RX.test(chips[i].textContent));   // 📆 다음 달: 숫자 칩 막음   // 🔒 남의 연차류는 관리자만 (숫자 대신 입력은 됨)
   }
   $("hlvlock").style.display = lk ? "block" : "none";
   $("hclr").className = "clr" + (lk ? " lock" : "");
@@ -5248,6 +5349,11 @@ function doSave(value, force, delForce) {
     return;
   }
 
+  if (H.meta && H.meta.virt && value !== "__CLEAR__") {   // 📆 다른 달: 숫자·연차류만 / 다음 달: 연차류만
+    var vv = String(value).trim();
+    if (H.meta.leaveOnly && !LEAVE_RX.test(vv)) { showHErr(H.meta.month + "월은 아직 근무시간을 넣을 수 없어요. 연차·반차·공가만 미리 넣을 수 있어요."); return; }
+    if (!LEAVE_RX.test(vv) && !/^\d+(\.\d+)?$/.test(vv)) { showHErr(H.meta.month + "월은 숫자 또는 연차·반차·공가만 넣을 수 있어요."); return; }
+  }
   var label = $("hsave").textContent;
   var note = $("hnoteBox").style.display === "none" ? "" : $("hnote").value.trim();
   var leave = "";
@@ -5297,8 +5403,9 @@ function doSave(value, force, delForce) {
         if (r.top !== undefined) renderTop(r.top);
         if (r.week && H.meta) { H.meta.week = r.week; renderWeek(r.week); }
         try { var gr = H.meta.grid.rows[name]; gr.v[+date.slice(8, 10) - 1] = r.cur; } catch (eg) {}   // 미리 받아둔 값도 갱신
-        if (H.meta) cset("hours", H.meta);
-        renderMissing(r.missing);
+        if (r.grid && H.meta) H.meta.grid = r.grid;
+        if (H.meta && !H.meta.virt) cset("hours", H.meta);
+        if (!r.virt) renderMissing(r.missing);
         prevSaved(name, date, r.cur === "");
         H.token++;   // 진행 중인 조회 결과는 버리고 저장 응답으로 바로 갱신
         if (r.cell && $("hname").value === name && $("hdate").value === date) applyCell(r.cell);
@@ -5360,10 +5467,11 @@ $("hval").oninput = function () { resetConfirm(); updNote(); };
  * 앱을 열거나, 백그라운드에서 다시 켤 때 서버의 index.html을 캐시 없이 확인해서
  * 버전이 다르면 자동으로 새로 불러와요. (폰이 예전 화면을 붙잡고 있는 문제 해결)
  */
-var APP_VER = "2026-10-30-23";
+var APP_VER = "2026-10-30-26";
 // ✨ 버전별 바뀐 점 (최신이 맨 위 · JSON 모양 그대로 · 버전 올릴 때 맨 위에 한 줄 추가 · 한 줄씩 짧게)
 //    업데이트 화면은 "그 폰이 마지막으로 쓰던 버전 이후" 것을 전부 모아서 보여줌
 var APP_HISTORY = [
+  ["2026-10-30-24", ["📆 근무시간: 올해 지난 달도 ◀ ▶로 보고 입력할 수 있어요 (연차·반차·공가는 다음 달까지 미리)"]],
   ["2026-10-30-23", ["↩ 시트 업로드: 완료를 잘못 눌렀으면 되돌리기 (누른 직후 10초 · 업로드 탭 맨 아래 '오늘 완료한 것')"]],
   ["2026-10-30-5", ["🌱 연차 현황: 입사 1년 미만이면 매달 연차 +1 되는 날 안내"]],
   ["2026-10-30-1", ["근무시간: 시트 월이 바뀌는 중엔 저장을 잠시 막아요 (다른 달 칸에 잘못 들어가지 않게)"]],
@@ -6247,6 +6355,19 @@ $("ntbody").oninput = ntPreview;
 $("ntno").onclick = function () { NT.chiefPin = ""; closeNotice(); };
 $("ntov").onclick = function (e) { if (e.target === this) closeNotice(); };
 // 🔒 메뉴 → 공지 보내기: 관리자 PIN 먼저 (매번 확인)
+function offOpen() { $("offgo").disabled = false; $("offgo").textContent = "사용 중지"; $("offgo").removeAttribute("data-2"); $("offov").className = "ov on"; }
+// ⛔ 앱 사용 중지: 한 번 누르면 "한 번 더", 두 번째에 실제로 중지
+$("offno").onclick = function () { $("offov").className = "ov"; };
+$("offov").onclick = function (e) { if (e.target === this) this.className = "ov"; };
+$("offgo").onclick = function () {
+  var g = $("offgo");
+  if (!g.getAttribute("data-2")) { g.setAttribute("data-2", "1"); g.textContent = "한 번 더 누르면 중지"; return; }
+  g.disabled = true; g.textContent = "중지하는 중…";
+  call("appOff", [sget("admPin")]).then(function (r) {
+    if (r && r.error) { g.disabled = false; g.removeAttribute("data-2"); g.textContent = "사용 중지"; toast("⚠️ " + r.error, true); return; }
+    $("offov").className = "ov"; offShow();
+  }).catch(function (e) { g.disabled = false; g.removeAttribute("data-2"); g.textContent = "사용 중지"; toast("⚠️ " + errText(e), true); });
+};
 var DEV_NAME = "손성민";   // 🛠 개발자 (이름 변경 요청 받는 사람)
 
 /* ---------- 🔑 관리자 모드 (관리자 PIN 확인 → 오늘 자정까지, 제목 빨강) ----------
@@ -6293,8 +6414,8 @@ function openAdminGate(next) {
   setTimeout(function () { try { $("appin").focus(); } catch (e) {} }, 200);
 }
 function closeAdminGate() { $("apov").className = "ov"; }
-$("apno").onclick = function () { var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); else if (nx === "devnotice" || nx === "chiefnotice") { var kp = NT.keepPin || "", kb = NT.keep || ""; openNotice(); NT.pin = kp; $("ntbody").value = kb; ntPreview(); } };   // 개발자 확인 취소 → 이름 고르기로
-$("apov").onclick = function (e) { if (e.target === this) closeAdminGate(); };
+$("apno").onclick = function () { OFF.after = false; var nx = NT.next; closeAdminGate(); if (nx === "devname") setTimeout(nameAsk, 200); else if (nx === "devnotice" || nx === "chiefnotice") { var kp = NT.keepPin || "", kb = NT.keep || ""; openNotice(); NT.pin = kp; $("ntbody").value = kb; ntPreview(); } };   // 개발자 확인 취소 → 이름 고르기로
+$("apov").onclick = function (e) { if (e.target === this) { OFF.after = false; closeAdminGate(); } };
 $("appin").onkeydown = function (e) { if (e.key === "Enter") $("apgo").click(); };
 $("apgo").onclick = function () {
   var pin = $("appin").value.trim(), msg = $("apmsg");
@@ -6333,7 +6454,7 @@ $("apgo").onclick = function () {
       return;
     }
     if (dev) { DV.pin = pin; adminUI(); closeAdminGate(); mnBackHide(); openDevPanel(); if (cur === 0) render(); return; }
-    if (NT.next === "mode") { adminSet(pin); closeAdminGate(); mnBackHide(); toast("🔑 관리자 모드 켜짐 · 오늘 자정까지"); return; }   // 관리자 모드는 이 메뉴로만 켜짐 (공지 보내기로는 안 켜짐)
+    if (NT.next === "mode") { adminSet(pin); closeAdminGate(); mnBackHide(); toast("🔑 관리자 모드 켜짐 · 오늘 자정까지"); if (OFF.after) { OFF.after = false; offOpen(); } return; }   // 관리자 모드는 이 메뉴로만 켜짐 (공지 보내기로는 안 켜짐)
     NT.pin = pin;
     closeAdminGate(); mnBackHide();
     openNotice();
@@ -6391,7 +6512,7 @@ function openMenu() {
   if (noticeIsAdmin()) item("🔑 관리자 모드", adminOn() ? "켜짐 · 누르면 끄기" : "꺼짐", function () {
     if (adminOn()) { adminOff(); toast("🔑 관리자 모드 꺼짐"); }
     else if (isChief()) { adminSetChief(); toast("🔑 관리자 모드 켜짐 · 오늘 자정까지"); }
-    else openAdminGate("mode");
+    else { OFF.after = false; openAdminGate("mode"); }
   }, adminOn() || isChief() ? null : "apov");
   if (noticeIsAdmin()) item("📢 공지 보내기", isChief() ? "총괄팀장" : "관리자", function () { openAdminGate("notice"); }, isChief() ? null : "apov");
   if (noticeIsAdmin() && ONESIGNAL_APP_ID) item("👥 알림 현황", (function () { var r = cget("pushst"); if (!r || !r.on) return "누가 켰는지"; var on = r.on.filter(function (x) { return x.n !== CHIEF_NAME; }).length; return on + "/" + (on + r.off.filter(function (n) { return n !== CHIEF_NAME; }).length) + "명 켬"; })(), openPushStatus);   // 알림 현황은 아래쪽에 "← 메뉴로" 버튼
@@ -6399,6 +6520,10 @@ function openMenu() {
     if (!adminOn() || !sget("admPin")) { toast("🔑 관리자 모드를 먼저 켜 주세요"); return; }
     openDevList(true);
   });
+  if (myName() === APPROVE_TO) item("⛔ 앱 사용 중지", "팀 전체 · 앱 멈춤", function () {   // 🔑 김은수 팀장님만 (관리자 모드)
+    if (!adminOn() || !sget("admPin")) { OFF.after = true; openAdminGate("mode"); return; }   // 관리자 모드가 꺼져 있으면 PIN 먼저 → 넣으면 바로 중지 창
+    offOpen();
+  }, adminOn() ? "offov" : "apov");
   item("🔄 앱 새로 불러오기", "v" + APP_VER.slice(5).replace("-", "."), function () { location.reload(); });
   item("🛠 Developer", "개발자", function () { openAdminGate("dev"); }, "apov");
   L.lastChild.className = "dev";
